@@ -5,7 +5,7 @@ def bedtools_getfasta(dyad_file: Path, fasta_file: Path):
     """runs `bedtools getfasta` on the input dyad file and returns fasta file
 
     Args:
-        dyad_file (Path): .bed file with +/- 500 generated from General.py/adjust_dyad_positions()\n
+        dyad_file (Path): .bed file with +/- 500 generated from General.adjust_dyad_positions()\n
         fasta_file (Path): .fa file that is the genome fasta file associated with the dyad positions (ex: hg19.fa)
     """
 
