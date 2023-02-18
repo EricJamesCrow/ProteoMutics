@@ -2,6 +2,7 @@ from pathlib import Path
 import pandas as pd
 import multiprocessing as mp
 
+
 def position_percentages_in_dyad(dyad_fasta_file: Path):
     """creates a file using the expanded dyad position file to calculate the percentages of each base at each position to use later in normalization.
 
@@ -40,79 +41,106 @@ def position_percentages_in_dyad(dyad_fasta_file: Path):
 
 
 
-########################### multiprocess for counting #######################################33
-# def mp_position_percentages_in_dyad(fasta_file: Path):
-#     '''
-    
-#     '''
-    
-#     with open(fasta_file, 'r') as f:
-#         process_id = -1
-#         line = f.readline()
-#         while line:
-#             if '_' in line: line = f.readline()
-#             if 'M' in line: line = f.readline()
-#             if '>' in line[0]:
-#                 process_id += 1
-#                 chromosome_number = line.strip().split('>')[1]
-#                 fasta_position = f.tell()
-#                 pool.apply_async(func = count_chromosome, args=[process_id, fasta_file, fasta_position, context_length, chromosome_number], callback = collect_result)
-#             line = f.readline()
+########################## multiprocess for counting #######################################33
 
-# def count_chromosome(process_id: int, file: str, position:int, context_length: int, chromosome_number: str):
-#     """Counts `context_length` sequences starting at the given file `position` in a file until the end of the `chromosome`.
-#         Returns the counts of the chromosome in a dictionary with the contexts as `keys` and the counts as `values`."""
-#     with open(file, 'r') as f:
-#         context_dict = {}
-#         f.seek(position)
-#         chromosome = f.readline().strip().upper()
-#         next_line = chromosome
-#         in_chromosome = True
-#         while next_line and in_chromosome:
-#             while len(chromosome) >= context_length:
-#                 context_dict[chromosome[:context_length]] = context_dict.setdefault(chromosome[:context_length], 0) + 1
-#                 chromosome = chromosome[1:]
-#             else:
-#                 next_line = f.readline().strip().upper()
-#                 if '>' in next_line:
-#                     in_chromosome = False
-#                     break
-#                 else:
-#                     chromosome += next_line
-#                     continue
-#         return (process_id, context_dict)
+class DyadFastaCounter:
 
+    def __init__(self, file: Path) -> None:
+        self.path = file
+        self.results = []
+        self.final_counts = {}
+        self.percentages = {}
+        for i in range(-500,501):
+            self.final_counts.setdefault(i, [0,0,0,0,0])
+        self.pool = mp.Pool(mp.cpu_count())
 
-# # Step 2: Define callback function to collect the output in `results`
-# def collect_result(result):
-#     global results
-#     results.append(result)
+    def run(self):
+        
+        # creates processes for each entry
+        self.create_counting_per_line(self.path)  
+        
+        # closes the pool of processes and runs them. Then waits for processes to finish
+        self.pool.close()
+        self.pool.join()
 
-# # Merge dictionaroes together to combine resuls after collection
-# def merge_dicts(keep: dict, add: dict):
-#     for k, v in add.items():
-#         try: keep[k] += v
-#         except KeyError: keep[k] = v
-#     return keep
+        # collects results from each process and combines them into one dictionary
+        for r in self.results: self.merge_dicts(self.final_counts, r[1])
 
-# # Step 3: Use loop to parallelize
+        self.calculate_percentages()
 
+    def create_counting_per_line(self, fasta_path):
+        """reads through file and assigns functions async to process pool for Statistics.count_line() function
 
-# def results_to_file(output_file: str):
-#     with open(output_file, 'w') as o:
-#         o.write('CONTEXTS\tCOUNTS\n')
-#         global genome_counts
-#         for k, v in genome_counts.items():
-#             o.write(f'{k}\t{v}\n')
+        Args:
+            fasta_file (Path): .fa file from BedtoolsCommands.bedtools_getfasta()
+        """
 
-# pool = mp.Pool(mp.cpu_count())
-# fasta_file = 'hg19.fa'
-# context_length = 3
-# count_fasta_contexts(fasta_file, context_length)
-# # Step 4: Close Pool and let all the processes complete    
-# pool.close()
-# pool.join()  # postpones the execution of next line of code until all processes in the queue are done.
+        # open the fasta file
+        with open(fasta_path, 'r') as f:
+            # creates a process ID for each event so you can track each individual output
+            process_id = -1
+            
+            # reads the first line of the file into memory
+            f.readline()
 
-# for r in results: merge_dicts(genome_counts, r[1])
-# results_to_file('hg19_3mer_contexts.txt')
-# print(f'Process Complete!\nFinished counting {context_length}mer contexts in {fasta_file}.\nProcess completed in {(time.time()-start_time):.2f} seconds.\nProcess complete at {datetime.datetime.now()}')
+            while line:
+                # checks for beginning of a line by checking for the 'chr' and adds the process to the pool
+                if 'chr' in line:
+                    process_id += 1
+                    fasta_position = f.tell()
+                    self.pool.apply_async(func = self.count_line, args=[process_id, fasta_file, fasta_position], callback = collect_result)
+                    line = f.readline()
+
+    def count_line(self, process_id: int, file: str, position:int):
+        
+        # creates a dictionary that will hold onto the nucleotide position and the counts of each nucleotide
+        counts = {}
+        for i in range(-500,501):
+            counts.setdefault(i, [0,0,0,0,0])
+        
+        # counts the nucleotides at each position 
+        with open(file, 'r') as f:
+            f.seek(position)
+            chromosome = f.readline().strip().upper()
+            for i, base in zip(range(-500,501), chromosome):
+                    if base == 'A': counts[i][0] += 1
+                    elif base == 'C': counts[i][1] += 1
+                    elif base == 'G': counts[i][2] += 1
+                    elif base == 'T': counts[i][3] += 1
+                    else: counts[i][4] += 1
+            return (process_id, counts)
+
+    def collect_result(self, result):
+        """collects results from each function
+
+        Args:
+            result (list): list object from count_line() function
+        """
+        self.results.append(result)
+
+    def merge_dicts(self, keep: dict, add: dict):
+        """merges dictionaries by updating the 'keep' dictionary with the 'add' dictionary
+
+        Args:
+            keep (dict): dictionary containing the items you want to update
+            add (dict): dictionary containing items you want to add to 'keep'
+
+        Returns:
+            dict: returns updated 'keep' dictionary
+        """
+        for k, v in add.items():
+            keep[k] = v
+        return keep
+
+    def calculate_percentages(self):
+        for i in range(-500,501):
+            total = sum(counts[i])
+            self.percentages[i] = []
+            for counts in counts[i]:
+                self.percentages[i].append(counts/total)
+
+    def results_to_file(self):
+        output_file = self.path.with_name(f'{self.path.stem}_counts.txt')
+        with open(output_file, 'w') as o:
+            df = pd.DataFrame.from_dict(self.percentages, orient='index', columns=['A','C','G','T','N'])
+            df.to_csv(output_file, sep = '\t')
