@@ -2,47 +2,6 @@ from pathlib import Path
 import pandas as pd
 import multiprocessing as mp
 
-
-def position_percentages_in_dyad(dyad_fasta_file: Path):
-    """creates a file using the expanded dyad position file to calculate the percentages of each base at each position to use later in normalization.
-
-    Args:
-        dyad_fasta_file (Path): .fa file coming from BedtoolsCommands.bedtools_getfasta() 
-    """
-    
-    # creates a dictionary that will keep track of each nucleotide at each position
-    counts = {}
-    for i in range(-500,501):
-        counts.setdefault(i, [0,0,0,0,0])
-
-    # opens the dyad file and reads through the information
-    with open(dyad_fasta_file, 'r') as f:
-        for line in f:
-            fasta_info = line
-            sequence = f.readline()
-            for i, base in zip(range(-500,501), sequence):
-                if base == 'A': counts[i][0] += 1
-                elif base == 'C': counts[i][1] += 1
-                elif base == 'G': counts[i][2] += 1
-                elif base == 'T': counts[i][3] += 1
-                else: counts[i][4] += 1
-    
-    # generates percentages at each position 
-    percentages = {}
-    for i in range(-500,501):
-        total = sum(counts[i])
-        percentages[i] = []
-        for counts in counts[i]:
-            percentages[i].append(counts/total)
-    
-    # writes the dictionary to a file using pandas for format
-    df = pd.DataFrame.from_dict(percentages, orient='index', columns=['A','C','G','T','N'])
-    df.to_csv(dyad_fasta_file.with_name(f'{dyad_fasta_file.stem}_counts.txt'), sep = '\t')
-
-
-
-########################## multiprocess for counting #######################################33
-
 class DyadFastaCounter:
 
     def __init__(self, file: Path) -> None:
@@ -66,7 +25,11 @@ class DyadFastaCounter:
         # collects results from each process and combines them into one dictionary
         for r in self.results: self.merge_dicts(self.final_counts, r[1])
 
+        # converts the dictionary self.final_counts 
         self.calculate_percentages()
+
+        # writes the results to a file
+        self.results_to_file()
 
     def create_counting_per_line(self, fasta_path):
         """reads through file and assigns functions async to process pool for Statistics.count_line() function
