@@ -10,7 +10,7 @@ class DyadFastaCounter:
     def run(self):
         # Count sequences in parallel using a process pool
         with open(self.path) as f:
-            num_lines = sum(1 for line in f)
+            num_lines = sum(1 for _ in f)
 
         num_blocks = mp.cpu_count()
         block_size = num_lines // num_blocks
