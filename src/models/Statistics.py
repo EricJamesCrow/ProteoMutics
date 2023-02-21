@@ -26,10 +26,9 @@ class DyadFastaCounter:
 
         # converts the dictionary self.final_counts 
         print(self.results)
-        # self.calculate_percentages()
-
-        # writes the results to a file
-        # self.results_to_file()
+        for counts in self.results:
+            self.final_counts = self.merge_dicts(self.final_counts, counts)
+        # print(self.final_counts)
 
 
     def create_counting_per_line(self, fasta_path):
@@ -74,29 +73,16 @@ class DyadFastaCounter:
             else:
                 counts[i][4] += 1
 
-        # append counts dictionary to results list
-        self.results.append(counts)
+        # return counts
+        return counts
 
     def collect_result(self, counts):
-        """collects results from each function
-
-        Args:
-            counts (dict): dictionary of nucleotide counts
-        """
-        self.merge_dicts(self.final_counts, counts)
+        self.results.append(counts)
 
     def merge_dicts(self, keep: dict, add: dict):
-        """merges dictionaries by updating the 'keep' dictionary with the 'add' dictionary
-
-        Args:
-            keep (dict): dictionary containing the items you want to update
-            add (dict): dictionary containing items you want to add to 'keep'
-
-        Returns:
-            dict: returns updated 'keep' dictionary
-        """
         for k, v in add.items():
-            keep[k] = v
+            for i in range(len(v)):
+                keep[k][i] += v[i]
         return keep
 
     def calculate_percentages(self) -> dict:
@@ -113,4 +99,5 @@ class DyadFastaCounter:
         output_file = self.path.with_name(f'{self.path.stem}_counts.txt')
         with open(output_file, 'w') as o:
             df = pd.DataFrame.from_dict(self.percentages, orient='index', columns=['A','C','G','T','N'])
+            print(df)
             df.to_csv(output_file, sep = '\t')
