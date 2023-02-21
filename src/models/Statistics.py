@@ -1,61 +1,36 @@
 from pathlib import Path
 import pandas as pd
 import multiprocessing as mp
-import sys
 
 class DyadFastaCounter:
 
     def __init__(self, file: Path) -> None:
         self.path = file
-        self.results = []
         self.final_counts = {}
         self.percentages = {}
-        self.process_counter = 0
-        for i in range(-500,501):
-            self.final_counts.setdefault(i, [0,0,0,0,0])
+        self.results = []
+        for i in range(-500, 501):
+            self.final_counts.setdefault(i, [0,0,0,0])
 
     def run(self):
-        pool = mp.Pool(mp.cpu_count())
-        # creates processes for each entry
-        with open(self.path, 'r') as f:
-            # iterates through lines
-            for line in f:
-                tsv = line.strip().split('\t')
-                sequence = tsv[1].upper()
-                pool.apply_async(func=self.count_line, args=[sequence], callback=self.collect_result)
-                # prints how many processses it's counting
-                self.process_counter += 1
-                sys.stdout.write(f'Processed {self.process_counter} lines\r')
-                sys.stdout.flush()
+        # Count sequences in parallel using a process pool
+        with mp.Pool() as pool:
+            with open(self.path, 'r') as f:
+                counts = pool.map(self.count_line, (line.strip().split('\t')[1].upper() for line in f))
 
-        # closes the pool of processes and runs them. Then waits for processes to finish
-        pool.close()
-        pool.join()
+        # Combine results from all processes
+        for c in counts:
+            self.final_counts = self.merge_dicts(self.final_counts, c)
 
-            # converts the dictionary self.final_counts 
-            print(self.results)
-            for counts in self.results:
-                self.final_counts = self.merge_dicts(self.final_counts, counts)
-            # print(self.final_counts)
-
-    def create_counting_per_line(self, fasta_path):
-        # open the fasta file
-        with open(fasta_path, 'r') as f:
-            # iterates through lines
-            for line in f:
-                tsv = line.strip().split('\t')
-                sequence = tsv[1].upper()
-                self.pool.apply_async(func=self.count_line, args=[sequence], callback=self.collect_result)
-                # prints how many processses it's counting
-                # self.process_counter += 1
-                # sys.stdout.write(f'Processed {self.process_counter} lines\r')
-                # sys.stdout.flush()
+        # Calculate percentages and write results to file
+        self.calculate_percentages()
+        self.results_to_file()
 
     def count_line(self, sequence: str):
         # creates a dictionary that will hold onto the nucleotide position and the counts of each nucleotide
         counts = {}
         for i in range(-500, 501):
-            counts.setdefault(i, [0, 0, 0, 0, 0])
+            counts.setdefault(i, [0, 0, 0, 0])
 
         # counts the nucleotides at each position
         for i, base in zip(range(-500, 501), sequence):
@@ -73,10 +48,6 @@ class DyadFastaCounter:
         # return counts
         return counts
 
-    def collect_result(self, counts):
-        print(counts)
-        self.results.append(counts)
-
     def merge_dicts(self, keep: dict, add: dict):
         for k, v in add.items():
             for i in range(len(v)):
@@ -91,16 +62,18 @@ class DyadFastaCounter:
                 for temp_counts in self.final_counts[i]:
                     self.percentages[i].append(temp_counts/total)
             else:
-                self.percentages[i] = [0.25, 0.25, 0.25, 0.25, 0.0]
+                print('ERROR!')
 
     def results_to_file(self):
         output_file = self.path.with_name(f'{self.path.stem}_counts.txt')
         with open(output_file, 'w') as o:
-            df = pd.DataFrame.from_dict(self.percentages, orient='index', columns=['A','C','G','T','N'])
+            df = pd.DataFrame.from_dict(self.percentages, orient='index', columns=['A','C','G','T'])
             print(df)
             df.to_csv(output_file, sep = '\t')
 
+
+
 if __name__ == '__main__':
     mp.freeze_support()
-    fasta_counter = DyadFastaCounter(Path('models/test_counting_file.fa'))
+    fasta_counter = DyadFastaCounter(Path('/media/cam/Data9/CortezAnalysis/Cam_calls/nucleosome_stuff/dyads_plus-minus_500.fa'))
     fasta_counter.run()
