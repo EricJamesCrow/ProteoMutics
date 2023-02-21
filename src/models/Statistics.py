@@ -13,16 +13,24 @@ class DyadFastaCounter:
         self.process_counter = 0
         for i in range(-500,501):
             self.final_counts.setdefault(i, [0,0,0,0,0])
-        self.pool = mp.Pool(mp.cpu_count())
 
     def run(self):
-        
+        pool = mp.Pool(mp.cpu_count())
         # creates processes for each entry
-        self.create_counting_per_line(self.path)
+        with open(self.path, 'r') as f:
+            # iterates through lines
+            for line in f:
+                tsv = line.strip().split('\t')
+                sequence = tsv[1].upper()
+                pool.apply_async(func=self.count_line, args=[sequence], callback=self.collect_result)
+                # prints how many processses it's counting
+                self.process_counter += 1
+                sys.stdout.write(f'Processed {self.process_counter} lines\r')
+                sys.stdout.flush()
 
         # closes the pool of processes and runs them. Then waits for processes to finish
-        self.pool.close()
-        self.pool.join()
+        pool.close()
+        pool.join()
 
         # converts the dictionary self.final_counts 
         print(self.results)
@@ -35,19 +43,15 @@ class DyadFastaCounter:
         with open(fasta_path, 'r') as f:
             # iterates through lines
             for line in f:
-                try:
-                    tsv = line.strip().split('\t')
-                    sequence = tsv[1].upper()
-                    self.pool.apply_async(func=self.count_line, args=[sequence], callback=self.collect_result)
-                    # prints how many processses it's counting
-                    # self.process_counter += 1
-                    # sys.stdout.write(f'Processed {self.process_counter} lines\r')
-                    # sys.stdout.flush()
-                except Exception as e:
-                    print(f"Error processing line {self.process_counter}: {e}")
+                tsv = line.strip().split('\t')
+                sequence = tsv[1].upper()
+                self.pool.apply_async(func=self.count_line, args=[sequence], callback=self.collect_result)
+                # prints how many processses it's counting
+                # self.process_counter += 1
+                # sys.stdout.write(f'Processed {self.process_counter} lines\r')
+                # sys.stdout.flush()
 
     def count_line(self, sequence: str):
-        print('count_line_runs')
         # creates a dictionary that will hold onto the nucleotide position and the counts of each nucleotide
         counts = {}
         for i in range(-500, 501):
@@ -70,6 +74,7 @@ class DyadFastaCounter:
         return counts
 
     def collect_result(self, counts):
+        print(counts)
         self.results.append(counts)
 
     def merge_dicts(self, keep: dict, add: dict):
@@ -94,3 +99,8 @@ class DyadFastaCounter:
             df = pd.DataFrame.from_dict(self.percentages, orient='index', columns=['A','C','G','T','N'])
             print(df)
             df.to_csv(output_file, sep = '\t')
+
+if __name__ == '__main__':
+    mp.freeze_support()
+    fasta_counter = DyadFastaCounter(Path('models/test_counting_file.fa'))
+    fasta_counter.run()
