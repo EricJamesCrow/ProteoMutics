@@ -16,35 +16,33 @@ class DyadFastaCounter:
         self.pool = mp.Pool(mp.cpu_count())
 
     def run(self):
-        
-        # creates processes for each entry
-        self.create_counting_per_line(self.path)
+        if __name__ == '__main__':
+            # creates processes for each entry
+            self.create_counting_per_line(self.path)
 
-        # closes the pool of processes and runs them. Then waits for processes to finish
-        self.pool.close()
-        self.pool.join()
+            # closes the pool of processes and runs them. Then waits for processes to finish
+            self.pool.close()
+            self.pool.join()
 
-        # converts the dictionary self.final_counts 
-        print(self.results)
-        for counts in self.results:
-            self.final_counts = self.merge_dicts(self.final_counts, counts)
-        # print(self.final_counts)
+            # converts the dictionary self.final_counts 
+            print(self.results)
+            for counts in self.results:
+                self.final_counts = self.merge_dicts(self.final_counts, counts)
+            # print(self.final_counts)
 
     def create_counting_per_line(self, fasta_path):
         # open the fasta file
         with open(fasta_path, 'r') as f:
             # iterates through lines
             for line in f:
-                try:
-                    tsv = line.strip().split('\t')
-                    sequence = tsv[1].upper()
-                    self.pool.apply_async(func=self.count_line, args=[sequence], callback=self.collect_result)
-                    # prints how many processses it's counting
-                    # self.process_counter += 1
-                    # sys.stdout.write(f'Processed {self.process_counter} lines\r')
-                    # sys.stdout.flush()
-                except Exception as e:
-                    print(f"Error processing line {self.process_counter}: {e}")
+                tsv = line.strip().split('\t')
+                sequence = tsv[1].upper()
+                self.pool.apply_async(func=self.count_line, args=[sequence], callback=self.collect_result)
+                # prints how many processses it's counting
+                # self.process_counter += 1
+                # sys.stdout.write(f'Processed {self.process_counter} lines\r')
+                # sys.stdout.flush()
+                print(f"Error processing line {self.process_counter}: {e}")
 
     def count_line(self, sequence: str):
         print('count_line_runs')
