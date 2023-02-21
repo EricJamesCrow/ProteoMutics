@@ -30,20 +30,12 @@ class DyadFastaCounter:
             self.final_counts = self.merge_dicts(self.final_counts, counts)
         # print(self.final_counts)
 
-
     def create_counting_per_line(self, fasta_path):
-        """reads through file and assigns functions async to process pool for Statistics.count_line() function
-
-        Args:
-            fasta_file (Path): .fa file from BedtoolsCommands.bedtools_getfasta()
-        """
-
         # open the fasta file
         with open(fasta_path, 'r') as f:
-            # reads the first line of the file into memory
+            # iterates through lines
             for line in f:
                 try:
-                    # checks for beginning of a line by checking for the 'chr' and adds the process to the pool
                     tsv = line.strip().split('\t')
                     sequence = tsv[1].upper()
                     self.pool.apply_async(func=self.count_line, args=[sequence], callback=self.collect_result)
@@ -55,6 +47,7 @@ class DyadFastaCounter:
                     print(f"Error processing line {self.process_counter}: {e}")
 
     def count_line(self, sequence: str):
+        print('count_line_runs')
         # creates a dictionary that will hold onto the nucleotide position and the counts of each nucleotide
         counts = {}
         for i in range(-500, 501):
