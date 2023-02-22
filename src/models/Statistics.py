@@ -18,12 +18,10 @@ class DyadFastaCounter:
         # Process each block in parallel
         with mp.Pool(processes=num_blocks) as pool:
             results = []
-            temp = 0
             with open(self.path) as f:
                 for i in range(num_blocks):
                     # Read a block of lines from the file
                     block = [next(f).strip().split('\t')[1].upper() for _ in range(block_size)]
-                    temp += 1
                     # Process the block in a separate process
                     result = pool.apply_async(self.process_block, (block,))
                     results.append(result)
