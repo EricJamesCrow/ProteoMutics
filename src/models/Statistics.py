@@ -7,7 +7,7 @@ class DyadFastaCounter:
         self.path = file
         self.counts = [[0] * 4 for _ in range(1001)]
 
-    def run(self):
+    def run(self) -> None:
         # Count sequences in parallel using a process pool
         with open(self.path) as f:
             num_lines = sum(1 for _ in f)
@@ -41,7 +41,7 @@ class DyadFastaCounter:
         self.results_to_file()
 
 
-    def process_block(self, block: list[str]):
+    def process_block(self, block: list[str]) -> list[list[int]]:
         # creates a list of lists that will hold the nucleotide counts for each position
         counts = [[0] * 4 for _ in range(1001)]
 
@@ -59,7 +59,7 @@ class DyadFastaCounter:
 
         return counts
 
-    def results_to_file(self):
+    def results_to_file(self) -> None:
         output_file = self.path.with_name(f'{self.path.stem}_counts.txt')
         with open(output_file, 'w') as o:
             o.write('Position\tA\tC\tG\tT\n')
@@ -75,9 +75,3 @@ class DyadFastaCounter:
 
                 # Write the percentages to the file
                 o.write(f'{i-500}\t{percentages[0]:.4f}\t{percentages[1]:.4f}\t{percentages[2]:.4f}\t{percentages[3]:.4f}\n')
-
-
-if __name__ == '__main__':
-    mp.freeze_support()
-    fasta_counter = DyadFastaCounter(Path('/media/cam/Data9/CortezAnalysis/Cam_calls/nucleosome_stuff/dyads_plus-minus_500.fa'))
-    fasta_counter.run()

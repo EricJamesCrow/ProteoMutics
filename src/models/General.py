@@ -19,7 +19,8 @@ def adjust_dyad_positions(dyad_file: Path):
                 tsv = line.strip().split()
                 new_start = str(int(tsv[1])-500)
                 new_end = str(int(tsv[2])+500)
-                new_line_values = [tsv[0]]+[new_start,new_end]+tsv[3:]+['\n']
+                new_line_values = [tsv[0]]+[new_start,new_end]+tsv[3:]
                 o.write('\t'.join(new_line_values))
+                o.write('\n')
 
 
