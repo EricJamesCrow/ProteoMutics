@@ -6,17 +6,26 @@ from typing import Tuple, List
 
 class DyadFastaCounter:
     def __init__(self, file: Path) -> None:
+        """Creates and runs a class that counts trinucleotide contexts at every position relative to a pool of dyads.
+
+        Args:
+            file (Path): ex: pathlib.Path('path/to/file.txt') format file input. Path object path to dyad file
+        """
         self.path = file
         self.context_list = Tools.contexts_in_iupac('NNN')
         self.counts = {i: {key: 0 for key in self.context_list} for i in range(-1000,1001)}
         self.run()
     
     def handle_result(self, result):
+        """Combines results from `process_block()` functions and adds them to the DyadFastaCounter `counts` property.
+        """
         for pos, counts in result:
             for context in self.context_list:
                 self.counts[pos][context] += counts[context]
 
     def handle_error(self, error: Exception, task_id: int) -> None:
+        """Prints the error from the process to the terminal
+        """
         print(f"Error in process {task_id}: {error}")
 
     def results_to_file(self, context_list: list, counts: dict, path: Path) -> None:
@@ -27,6 +36,21 @@ class DyadFastaCounter:
         df.to_csv(output_file, sep='\t')
     
     def process_block(self, start_pos: int, end_pos: int, context_list: list, path: Path) -> List[Tuple[int, dict]]:
+        """Processes a block from the file from the given start and end positions. It will create a dictionary with positions
+        relative to the dyad and count all the diffent trinucleotide contexts at the given position.
+
+        Args:
+            start_pos (int): byte file pointer to the start positon
+            end_pos (int): byte file pointer to the end positon
+            context_list (list): the list of all 96 possible trinucleotide contexts to count
+            path (Path): ex: pathlib.Path('path/to/file.txt') format file input. Path object path to dyad file
+
+        Raises:
+            ValueError: Error if the context cannot be added to the dictionary.
+
+        Returns:
+            List[Tuple[int, dict]]: [process_id, resulting nested dictionary]
+        """
         counts = {i: {key: 0 for key in context_list} for i in range(-1000,1001)}
         lines_counted = 0
         with open(path) as f:
@@ -48,6 +72,8 @@ class DyadFastaCounter:
         return [(i, counts[i]) for i in range(-1000,1001)]
 
     def run(self) -> None:
+        """Runs the program by..
+        """
         num_blocks = mp.cpu_count()
 
         with mp.Pool(num_blocks) as pool:
