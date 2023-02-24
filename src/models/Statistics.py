@@ -36,7 +36,7 @@ class DyadFastaCounter:
                 for i in range(num_blocks):
                     start_pos = block_positions[i]
                     end_pos = block_positions[i+1]
-                    result = pool.apply_async(self.process_block, (start_pos, end_pos), error_callback=lambda e: self.handle_error(e, i), callback=self.handle_result)
+                    result = pool.apply_async(self.process_block, (start_pos, end_pos, self.context_list, self.path), error_callback=lambda e: self.handle_error(e, i), callback=self.handle_result)
                     results.append((result, i))
 
             # Wait for all processes to finish
@@ -48,16 +48,16 @@ class DyadFastaCounter:
             # Wait for all the processes to finish
             pool.join()
 
-            # Get the results
-            self.counts = {k: {sk: v.get(sk, 0) for sk in self.context_list} for d in results for k, v in d[0].get().items()}
+            # # Get the results
+            # counts = {k: {sk: v.get(sk, 0) for sk in self.context_list} for d in results for k, v in d[0].get().items()}
 
         # Write the results to a file
-        self.results_to_file()
+        self.results_to_file(self.context_list, self.counts, self.path)
 
-    def process_block(self, start_pos: int, end_pos: int) -> List[Tuple[int, dict]]:
-        counts = {i: {key: 0 for key in self.context_list} for i in range(-1000,1001)}
+    def process_block(self, start_pos: int, end_pos: int, context_list: list, path: Path) -> List[Tuple[int, dict]]:
+        counts = {i: {key: 0 for key in context_list} for i in range(-1000,1001)}
         lines_counted = 0
-        with open(self.path) as f:
+        with open(path) as f:
             f.seek(start_pos)
             while not end_pos or f.tell() < end_pos:
                 line = f.readline()
@@ -69,7 +69,7 @@ class DyadFastaCounter:
 
                 for i in range(-1000,1001):
                     context = sequence[i+1000 : i + 1003]
-                    if context not in self.context_list:
+                    if context not in context_list:
                         raise ValueError(f"Error in process {mp.current_process().pid}: Invalid context {context} at position {i}")
                     counts[i][context] += 1
 
@@ -79,17 +79,16 @@ class DyadFastaCounter:
         print(f"Error in process {task_id}: {error}")
 
     def handle_result(self, result):
-        task_id = mp.current_process().pid
         for pos, counts in result:
             for context in self.context_list:
                 self.counts[pos][context] += counts[context]
 
 
 
-    def results_to_file(self) -> None:
-        output_file = self.path.with_suffix('.txt').with_stem(f'{self.path.stem}_counts')
-        df = pd.DataFrame.from_dict(self.counts, orient='index')
-        df.columns = self.context_list
+    def results_to_file(self, context_list: list, counts: dict, path: Path) -> None:
+        output_file = path.with_name(f'{path.stem}_counts.txt')
+        df = pd.DataFrame.from_dict(counts, orient='index')
+        df.columns = context_list
         df.index.name = 'Position'
         df.to_csv(output_file, sep='\t')
 
