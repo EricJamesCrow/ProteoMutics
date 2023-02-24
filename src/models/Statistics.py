@@ -9,12 +9,14 @@ class DyadFastaCounter:
         self.path = file
         self.context_list = Tools.contexts_in_iupac('NNN')
         self.counts = {i: {key: 0 for key in self.context_list} for i in range(-1000,1001)}
+        self.lock = mp.Lock()  # create a lock object
         self.run()
     
     def handle_result(self, result):
         for pos, counts in result:
-            for context in self.context_list:
-                self.counts[pos][context] += counts[context]
+            with self.lock:  # acquire the lock before accessing self.counts
+                for context in self.context_list:
+                    self.counts[pos][context] += counts[context]
 
     def handle_error(self, error: Exception, task_id: int) -> None:
         print(f"Error in process {task_id}: {error}")
