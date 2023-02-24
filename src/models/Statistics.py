@@ -10,6 +10,42 @@ class DyadFastaCounter:
         self.context_list = Tools.contexts_in_iupac('NNN')
         self.counts = {i: {key: 0 for key in self.context_list} for i in range(-1000,1001)}
         self.run()
+    
+    def handle_result(self, result):
+        for pos, counts in result:
+            for context in self.context_list:
+                self.counts[pos][context] += counts[context]
+
+    def handle_error(self, error: Exception, task_id: int) -> None:
+        print(f"Error in process {task_id}: {error}")
+
+    def results_to_file(self, context_list: list, counts: dict, path: Path) -> None:
+        output_file = path.with_name(f'{path.stem}_counts.txt')
+        df = pd.DataFrame.from_dict(counts, orient='index')
+        df.columns = context_list
+        df.index.name = 'Position'
+        df.to_csv(output_file, sep='\t')
+    
+    def process_block(self, start_pos: int, end_pos: int, context_list: list, path: Path) -> List[Tuple[int, dict]]:
+        counts = {i: {key: 0 for key in context_list} for i in range(-1000,1001)}
+        lines_counted = 0
+        with open(path) as f:
+            f.seek(start_pos)
+            while not end_pos or f.tell() < end_pos:
+                line = f.readline()
+                lines_counted += 1
+                if not line:
+                    continue
+
+                sequence = line.split("\t")[1].upper().strip()
+
+                for i in range(-1000,1001):
+                    context = sequence[i+1000 : i + 1003]
+                    if context not in context_list:
+                        raise ValueError(f"Error in process {mp.current_process().pid}: Invalid context {context} at position {i}")
+                    counts[i][context] += 1
+
+        return [(i, counts[i]) for i in range(-1000,1001)]
 
     def run(self) -> None:
         num_blocks = mp.cpu_count()
@@ -53,44 +89,6 @@ class DyadFastaCounter:
 
         # Write the results to a file
         self.results_to_file(self.context_list, self.counts, self.path)
-
-    def process_block(self, start_pos: int, end_pos: int, context_list: list, path: Path) -> List[Tuple[int, dict]]:
-        counts = {i: {key: 0 for key in context_list} for i in range(-1000,1001)}
-        lines_counted = 0
-        with open(path) as f:
-            f.seek(start_pos)
-            while not end_pos or f.tell() < end_pos:
-                line = f.readline()
-                lines_counted += 1
-                if not line:
-                    continue
-
-                sequence = line.split("\t")[1].upper().strip()
-
-                for i in range(-1000,1001):
-                    context = sequence[i+1000 : i + 1003]
-                    if context not in context_list:
-                        raise ValueError(f"Error in process {mp.current_process().pid}: Invalid context {context} at position {i}")
-                    counts[i][context] += 1
-
-        return [(i, counts[i]) for i in range(-1000,1001)]
-
-    def handle_error(self, error: Exception, task_id: int) -> None:
-        print(f"Error in process {task_id}: {error}")
-
-    def handle_result(self, result):
-        for pos, counts in result:
-            for context in self.context_list:
-                self.counts[pos][context] += counts[context]
-
-
-
-    def results_to_file(self, context_list: list, counts: dict, path: Path) -> None:
-        output_file = path.with_name(f'{path.stem}_counts.txt')
-        df = pd.DataFrame.from_dict(counts, orient='index')
-        df.columns = context_list
-        df.index.name = 'Position'
-        df.to_csv(output_file, sep='\t')
 
 if __name__ == '__main__':
     mp.freeze_support()
