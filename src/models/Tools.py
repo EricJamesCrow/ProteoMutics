@@ -21,7 +21,7 @@ def contexts_in_iupac(iupac_val: str):
 
     iupac_trans = { "R":"AG", "Y":"CT", "S":"GC", "W":"AT", "K":"GT",
                     "M":"AC","B":"CGT", "D":"AGT", "H":"ACT", "V":"ACG",
-                    "N":"ACTG", 'A':'A', 'T':'T', 'C':'C', 'G':'G'}
+                    "N":"ACGT", 'A':'A', 'T':'T', 'C':'C', 'G':'G'}
     possible_contexts = []
     
     def convertTuple(tup):

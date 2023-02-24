@@ -1,5 +1,5 @@
 from pathlib import Path
-import multiprocessing as mp
+import pandas as pd
 
 def adjust_dyad_positions(dyad_file: Path):
     """Takes a dyad file with single nucleotide positions and creates a new bed file with -500 and +500 positions
@@ -9,7 +9,7 @@ def adjust_dyad_positions(dyad_file: Path):
     """
     
     # Create the new filename
-    output_file = dyad_file.with_stem(dyad_file.stem + '_plus-minus_500')
+    output_file = dyad_file.with_stem(dyad_file.stem + '_plus-minus_1000')
 
     # Use a with statement to read and write to the files
     with open(dyad_file, 'r') as f, open(output_file, 'w') as o:
@@ -17,28 +17,19 @@ def adjust_dyad_positions(dyad_file: Path):
         # Loop through the lines in the input file and expand the positions by 500 on either side
         for line in f:
             tsv = line.strip().split()
-            new_start = str(int(tsv[1]) - 500)
-            new_end = str(int(tsv[2]) + 500)
+            new_start = str(int(tsv[1]) - 1001)
+            new_end = str(int(tsv[2]) + 1001)
             new_line_values = [tsv[0], new_start, new_end] + tsv[3:]
             o.write('\t'.join(new_line_values) + '\n')
 
-# parallelize this tomorrow using blocks
-def mutation_position(intersect_file: Path):
-    with open(intersect_file, 'r') as f:
-        # Read the first line of the file to get the column names
-        header = f.readline().strip().split('\t')
-        # Find the index of any string that contains the substring "chr"
-        chr_positions = [i for i, col in enumerate(header) if 'chr' in col]
-        mutation_file_start = chr_positions[0]+1
-        dyad_file_start = chr_positions[1]+1
-        f.seek(0)
-        mutations_dyad = [0 for _ in range(1001)]
-        for line in f:
-            tsv = line.strip().split('\t')
-            mutations_dyad[int(tsv[dyad_file_start])-int(tsv[mutation_file_start])] += 1
-        return(mutations_dyad)
-
-
-
-
+def filter_lines_with_n(dyad_fasta: Path, dyad_bed: Path):
+    # Filter lines and write to new files
+    with open(dyad_fasta, 'r') as fa, open(dyad_bed, 'r') as bed, \
+         open(dyad_fasta.with_stem(f'{dyad_fasta.stem}_filtered'), 'w') as new_fa, \
+         open(dyad_bed.with_stem(f'{dyad_bed.stem}_filtered'), 'w') as new_bed:
+        for line1, line2 in zip(fa, bed):
+            cols1 = line1.strip().split('\t')
+            if 'N' not in cols1[0].upper():
+                new_fa.write(line1)
+                new_bed.write(line2)
 
