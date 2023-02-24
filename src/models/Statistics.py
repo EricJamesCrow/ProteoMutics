@@ -1,7 +1,6 @@
 import multiprocessing as mp
 import pandas as pd
 from pathlib import Path
-import traceback
 import Tools
 from typing import Tuple, List
 
@@ -24,10 +23,10 @@ class DyadFastaCounter:
                 f.seek(0)  # Reset the file pointer to the beginning of the file
 
                 # Split the file into blocks of approximately equal number of lines
-                lines_per_block = end_pos// num_blocks
+                bytes_per_block = end_pos // num_blocks
                 block_positions = [0]
                 for i in range(1, num_blocks):
-                    f.seek(lines_per_block * i)
+                    f.seek(bytes_per_block * i)
                     # Read forward to the next newline character
                     f.readline()
                     block_positions.append(f.tell())
@@ -156,9 +155,3 @@ if __name__ == '__main__':
 #             counts[int(tsv[counts])-int(tsv[counts])] += 1
 
 #         return counts
-
-# def g_only_normalize_counts():
-#     with open('/media/cam/Data9/CortezAnalysis/Cam_calls/nucleosome_stuff/dyads_plus-minus_500_counts.txt', 'r') as f:
-#         header = f.readline()
-#         g_list = [float(line.strip().split("\t")[3]) for line in f]
-#     return g_list

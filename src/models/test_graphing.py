@@ -78,10 +78,3 @@ from scipy import stats
 # plt.show()
 # counts all the different positions in the dyad file
 # counts all the different positions in the dyad file
-import multiprocessing as mp
-import Statistics
-from pathlib import Path
-
-if __name__ == '__main__':
-    mp.freeze_support()
-    fasta_counter = Statistics.DyadFastaCounter(Path('/media/cam/Data9/CortezAnalysis/Cam_calls/nucleosome_stuff/dyads_files/dyads_plus-minus_1000_hg19_fasta_filtered.fa'))

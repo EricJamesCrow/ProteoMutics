@@ -27,9 +27,8 @@ def filter_lines_with_n(dyad_fasta: Path, dyad_bed: Path):
     with open(dyad_fasta, 'r') as fa, open(dyad_bed, 'r') as bed, \
          open(dyad_fasta.with_stem(f'{dyad_fasta.stem}_filtered'), 'w') as new_fa, \
          open(dyad_bed.with_stem(f'{dyad_bed.stem}_filtered'), 'w') as new_bed:
-        for line1, line2 in zip(fa, bed):
-            cols1 = line1.strip().split('\t')
-            if 'N' not in cols1[0].upper():
-                new_fa.write(line1)
-                new_bed.write(line2)
+        for fa_line, bed_line in zip(fa, bed):
+            if 'N' not in fa_line:
+                new_fa.write(fa_line)
+                new_bed.write(bed_line)
 
