@@ -29,7 +29,7 @@ class DyadFastaCounter:
         df.index.name = 'Position'
         df.to_csv(output_file, sep='\t')
     
-    def process_block(self, lock, start_pos: int, end_pos: int, context_list: list, path: Path) -> List[Tuple[int, dict]]:
+    def process_block(self, start_pos: int, end_pos: int, context_list: list, path: Path) -> List[Tuple[int, dict]]:
         """Processes a block from the file from the given start and end positions. It will create a dictionary with positions
         relative to the dyad and count all the diffent trinucleotide contexts at the given position.
 
@@ -53,7 +53,7 @@ class DyadFastaCounter:
                 line = f.readline()
                 lines_counted += 1
                 if not line:
-                    continue
+                    break
 
                 sequence = line.split("\t")[1].upper().strip()
 
@@ -63,16 +63,14 @@ class DyadFastaCounter:
                         raise ValueError(f"Error in process {mp.current_process().pid}: Invalid context {context} at position {i}")
                     counts[i][context] += 1
         print(lines_counted)
-        with lock:
-            for i in range(-1000, 1001):
-                for context in self.context_list:
-                    self.counts[i][context] += counts[i][context]
+        for i in range(-1000, 1001):
+            for context in self.context_list:
+                self.counts[i][context] += counts[i][context]
 
     def run(self) -> None:
         """Runs the program by..
         """
         num_blocks = mp.cpu_count()
-        lock = mp.Lock()
         with mp.Pool(num_blocks) as pool:
             results = []
             with open(self.path) as f:
@@ -95,7 +93,7 @@ class DyadFastaCounter:
                 for i in range(num_blocks):
                     start_pos = block_positions[i]
                     end_pos = block_positions[i+1]
-                    result = pool.apply_async(self.process_block, (lock, start_pos, end_pos, self.context_list, self.path), error_callback=lambda e: self.handle_error(e, i))
+                    result = pool.apply_async(self.process_block, (start_pos, end_pos, self.context_list, self.path), error_callback=lambda e: self.handle_error(e, i))
                     results.append((result, i))
 
             # Wait for all processes to finish
