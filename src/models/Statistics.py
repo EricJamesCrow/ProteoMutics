@@ -2,6 +2,7 @@ import multiprocessing as mp
 import pandas as pd
 from pathlib import Path
 import Tools
+import traceback
 from typing import Tuple, List
 
 class DyadFastaCounter:
@@ -14,21 +15,12 @@ class DyadFastaCounter:
         self.path = file
         self.context_list = Tools.contexts_in_iupac('NNN')
         self.counts = {i: {key: 0 for key in self.context_list} for i in range(-1000,1001)}
-        self.lock = mp.Lock()  # create a lock object
         self.run()
-    
-    def handle_result(self, result):
-        """Combines results from `process_block()` functions and adds them to the DyadFastaCounter `counts` property.
-        """
-        for pos, counts in result:
-            with self.lock:  # acquire the lock before accessing self.counts
-                for context in self.context_list:
-                    self.counts[pos][context] += counts[context]
 
     def handle_error(self, error: Exception, task_id: int) -> None:
-        """Prints the error from the process to the terminal
-        """
+        """Prints the error from the process to the terminal, including a traceback."""
         print(f"Error in process {task_id}: {error}")
+        traceback.print_tb(error.__traceback__)
 
     def results_to_file(self, context_list: list, counts: dict, path: Path) -> None:
         output_file = path.with_name(f'{path.stem}_counts.txt')
@@ -37,7 +29,7 @@ class DyadFastaCounter:
         df.index.name = 'Position'
         df.to_csv(output_file, sep='\t')
     
-    def process_block(self, start_pos: int, end_pos: int, context_list: list, path: Path) -> List[Tuple[int, dict]]:
+    def process_block(self, lock, start_pos: int, end_pos: int, context_list: list, path: Path) -> List[Tuple[int, dict]]:
         """Processes a block from the file from the given start and end positions. It will create a dictionary with positions
         relative to the dyad and count all the diffent trinucleotide contexts at the given position.
 
@@ -70,14 +62,17 @@ class DyadFastaCounter:
                     if context not in context_list:
                         raise ValueError(f"Error in process {mp.current_process().pid}: Invalid context {context} at position {i}")
                     counts[i][context] += 1
-
-        return [(i, counts[i]) for i in range(-1000,1001)]
+        print(lines_counted)
+        with lock:
+            for i in range(-1000, 1001):
+                for context in self.context_list:
+                    self.counts[i][context] += counts[i][context]
 
     def run(self) -> None:
         """Runs the program by..
         """
         num_blocks = mp.cpu_count()
-
+        lock = mp.Lock()
         with mp.Pool(num_blocks) as pool:
             results = []
             with open(self.path) as f:
@@ -100,20 +95,18 @@ class DyadFastaCounter:
                 for i in range(num_blocks):
                     start_pos = block_positions[i]
                     end_pos = block_positions[i+1]
-                    result = pool.apply_async(self.process_block, (start_pos, end_pos, self.context_list, self.path), error_callback=lambda e: self.handle_error(e, i), callback=self.handle_result)
+                    result = pool.apply_async(self.process_block, (lock, start_pos, end_pos, self.context_list, self.path), error_callback=lambda e: self.handle_error(e, i))
                     results.append((result, i))
 
             # Wait for all processes to finish
             for result, i in results:
                 result.wait()
 
+            # Close the pool so no more processes can be added to it
             pool.close()
 
             # Wait for all the processes to finish
             pool.join()
-
-            # # Get the results
-            # counts = {k: {sk: v.get(sk, 0) for sk in self.context_list} for d in results for k, v in d[0].get().items()}
 
         # Write the results to a file
         self.results_to_file(self.context_list, self.counts, self.path)
