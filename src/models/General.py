@@ -32,3 +32,5 @@ def filter_lines_with_n(dyad_fasta: Path, dyad_bed: Path):
                 new_fa.write(fa_line)
                 new_bed.write(bed_line)
 
+def check_and_sort():
+    
