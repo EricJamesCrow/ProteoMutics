@@ -127,34 +127,49 @@ class MutationIntersector:
         print(f"Error in process {task_id}: {error}")
         traceback.print_tb(error.__traceback__)
 
+    def results_to_file(self, context_list: list, counts: dict, mutation_file: Path, dyad_file: Path) -> None:
+        output_file = mutation_file.with_name(f'{mutation_file.stem}_{dyad_file.stem}_intersected_mutations_counts.txt')
+        df = pd.DataFrame.from_dict(counts, orient='index')
+        df.columns = context_list
+        df.index.name = 'Position'
+        df.to_csv(output_file, sep='\t')
+
     def process_block(dyad_start: int, dyad_end: int, mut_start: int, mut_end: int, context_list: list[str], mutation_file: Path, dyad_file: Path) -> List[Tuple[int, dict]]:
         counts = {i: {key: 0 for key in context_list} for i in range(-1000,1001)}
         with open(dyad_file) as d_file, open(mutation_file) as m_file:
             m_file.seek(mut_start)
             d_file.seek(dyad_start)
+            # initialize mut_data variables and reads in the next line
             mut_line = m_file.readline()
+            mut_data = mut_line.strip().split('\t')
+            mut_chrom, mut_0, mut_1 = mut_data[:3]
+            mut_0, mut_1 = int(mut_0), int(mut_1)
+            strand, context = mut_line[5:]
+            # initialize dyad_data variables and reads in the next line
             dyad_line = d_file.readline()
+            dyad_data = mut_line.strip().split('\t')
+            dyad_chrom, dyad_0, dyad_1 = dyad_data[:3]
+            dyad_0, dyad_1 = int(dyad_0), int(dyad_1)
+            # loops through files
             while not (dyad_end and mut_end) or (m_file.tell() <= mut_end and d_file.tell() <= dyad_end) or mut_line or dyad_line:
-                # initialize mut_data variables and reads in the next line
-                mut_data = mut_line.strip().split('\t')
-                mut_chrom, mut_0, mut_1 = mut_data[:3]
-                mut_0, mut_1 = int(mut_0), int(mut_1)
-                # initialize dyad_data variables and reads in the next line
-                dyad_data = mut_line.strip().split('\t')
-                dyad_chrom, dyad_0, dyad_1 = dyad_data[:3]
-                dyad_0, dyad_1 = int(dyad_0), int(dyad_1)
+                # make sure on the same chromosome
                 if mut_chrom != dyad_chrom:
                     print('ERROR!')
                     break
-                if mut_0 > dyad_0 and mut_1 < dyad_1:
-
-
-                for i in range(-1000,1001):
-                    context = sequence[i+1000 : i + 1003]
-                    if context not in context_list:
-                        raise ValueError(f"Error in process {mp.current_process().pid}: Invalid context {context} at position {i}")
-                    counts[i][context] += 1
-        
+                while mut_0 < dyad_0:
+                    mut_line = m_file.readline()
+                    mut_data = mut_line.strip().split('\t')
+                    mut_chrom, mut_0, mut_1 = mut_data[:3]
+                    mut_0, mut_1 = int(mut_0), int(mut_1)
+                    strand, context = mut_line[5:]
+                while mut_1 > dyad_1:
+                    dyad_line = d_file.readline()
+                    dyad_data = mut_line.strip().split('\t')
+                    dyad_chrom, dyad_0, dyad_1 = dyad_data[:3]
+                    dyad_0, dyad_1 = int(dyad_0), int(dyad_1)
+                while mut_0 > dyad_0 and mut_1 < dyad_1:
+                    if strand == '+': counts[mut_0-dyad_0-1000][context] += 1
+                    else: counts[mut_0-dyad_0-1000][Tools.reverse_complement(context)] += 1
         return counts
 
     def run(self) -> None:
@@ -190,3 +205,24 @@ class MutationIntersector:
                     mut_end = mut_chroms[i+1]
                     result = pool.apply_async(self.process_block, (dyad_start, dyad_end, mut_start, mut_end, self.context_list, self.mutation_file, self.dyad_file), error_callback=lambda e: self.handle_error(e, i))
                     results.append((result, i))
+                
+            # Wait for all processes to finish
+            for result, i in results:
+                result.wait()
+
+            # Close the pool so no more processes can be added to it
+            pool.close()
+
+            # Wait for all the processes to finish
+            pool.join()
+
+            for result, i in results:
+                self.results.append(result.get())
+
+            for result in self.results:
+                for i in range(-1000, 1001):
+                    for context in self.context_list:
+                        self.counts[i][context] += result[i][context]
+        
+        # Write the results to a file
+        self.results_to_file(self.context_list, self.counts, self.mutation_file, self.dyad_file)
