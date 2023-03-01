@@ -1,5 +1,6 @@
 from pathlib import Path
 import pandas as pd
+import subprocess
 
 def adjust_dyad_positions(dyad_file: Path):
     """Takes a dyad file with single nucleotide positions and creates a new bed file with -500 and +500 positions
@@ -32,5 +33,19 @@ def filter_lines_with_n(dyad_fasta: Path, dyad_bed: Path):
                 new_fa.write(fa_line)
                 new_bed.write(bed_line)
 
-def check_and_sort():
-    pass
+def check_and_sort(input_file: Path):
+    # PLACE CHECK CODE HERE WITH -c METHOD
+    sorted_name = input_file.with_stem(f'{input_file.stem}_sorted')
+    command = f'sort -k1,1 -k2,2 -k3,3 -k6,6 {input_file} > {sorted_name}'
+    with subprocess.Popen(args=command, stdout=subprocess.PIPE, shell=True) as p:
+        return p, sorted_name
+    
+def filter_acceptable_chromosomes(input_file: Path, genome: str):
+    human = ['1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','20','21','22','X']
+    output_file = input_file.with_stem(input_file.stem+'_filtered')
+    if genome == 'human':
+        with open(input_file, 'r') as f, open(output_file, 'w') as o:
+            for line in f:
+                chrom = line.strip().split('\t')[0][3:]
+                if chrom in human:
+                    o.write(line)

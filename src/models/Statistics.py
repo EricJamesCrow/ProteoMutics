@@ -5,6 +5,13 @@ import Tools
 import traceback
 from typing import Tuple, List
 
+def df_division_and_standardization(mutation_counts: Path, dyad_counts: Path):
+    mutations_df = pd.read_csv(mutation_counts, sep= '\t', index_col=0, header=0)
+    dyads_df = pd.read_csv(dyad_counts, sep= '\t', index_col=0, header=0)
+    result_df = mutations_df.div(dyads_df)
+    result_df_normalized = result_df.divide(result_df.median())
+    return result_df_normalized
+
 class DyadFastaCounter:
     def __init__(self, file: Path) -> None:
         """Creates and runs a class that counts trinucleotide contexts at every position relative to a pool of dyads.
@@ -121,6 +128,8 @@ class MutationIntersector:
         self.context_list = Tools.contexts_in_iupac('NNN')
         self.counts = {i: {key: 0 for key in self.context_list} for i in range(-1000,1001)}
         self.results = []
+        self.dyad_chrom_names = []
+        self.mutations_chrom_names = []
         self.run()
 
     def handle_error(self, error: Exception, task_id: int) -> None:
@@ -134,7 +143,7 @@ class MutationIntersector:
         df.index.name = 'Position'
         df.to_csv(output_file, sep='\t')
 
-    def process_block(dyad_start: int, dyad_end: int, mut_start: int, mut_end: int, context_list: list[str], mutation_file: Path, dyad_file: Path) -> List[Tuple[int, dict]]:
+    def process_block(self, dyad_start: int, dyad_end: int, mut_start: int, mut_end: int, context_list: list[str], mutation_file: Path, dyad_file: Path, process_id: int) -> List[Tuple[int, dict]]:
         counts = {i: {key: 0 for key in context_list} for i in range(-1000,1001)}
         with open(dyad_file) as d_file, open(mutation_file) as m_file:
             m_file.seek(mut_start)
@@ -144,66 +153,88 @@ class MutationIntersector:
             mut_data = mut_line.strip().split('\t')
             mut_chrom, mut_0, mut_1 = mut_data[:3]
             mut_0, mut_1 = int(mut_0), int(mut_1)
-            strand, context = mut_line[5:]
+            strand, context = mut_line[5:7]
             # initialize dyad_data variables and reads in the next line
             dyad_line = d_file.readline()
             dyad_data = mut_line.strip().split('\t')
             dyad_chrom, dyad_0, dyad_1 = dyad_data[:3]
             dyad_0, dyad_1 = int(dyad_0), int(dyad_1)
             # loops through files
-            while not (dyad_end and mut_end) or (m_file.tell() <= mut_end and d_file.tell() <= dyad_end) or mut_line or dyad_line:
+            in_crossection = True
+            while in_crossection:
+                if not (mut_line and dyad_line):
+                    print('out of lines in both files')
+                    in_crossection = False
+                    break
+                if (m_file.tell() >= mut_end or d_file.tell() >= dyad_end):
+                    print('reached end points in both files')
+                    in_crossection = False
+                    break
                 # make sure on the same chromosome
                 if mut_chrom != dyad_chrom:
-                    print('ERROR!')
+                    print('ERROR! Files are not on the same chromosome', mut_chrom, dyad_chrom)
+                    in_crossection = False
                     break
-                while mut_0 < dyad_0:
+                while mut_0 <= dyad_0 or (m_file.tell() <= mut_end or d_file.tell() <= dyad_end) or not (mut_line and dyad_line):
                     mut_line = m_file.readline()
+                    if mut_line == '':
+                        in_crossection = False
+                        break
                     mut_data = mut_line.strip().split('\t')
                     mut_chrom, mut_0, mut_1 = mut_data[:3]
                     mut_0, mut_1 = int(mut_0), int(mut_1)
-                    strand, context = mut_line[5:]
-                while mut_1 > dyad_1:
+                    strand, context = mut_data[5:7]
+                while mut_1 >= dyad_1 or (m_file.tell() <= mut_end or d_file.tell() <= dyad_end) or not (mut_line and dyad_line):
                     dyad_line = d_file.readline()
-                    dyad_data = mut_line.strip().split('\t')
+                    if dyad_line == '':
+                        in_crossection = False
+                        break
+                    dyad_data = dyad_line.strip().split('\t')
                     dyad_chrom, dyad_0, dyad_1 = dyad_data[:3]
                     dyad_0, dyad_1 = int(dyad_0), int(dyad_1)
-                while mut_0 > dyad_0 and mut_1 < dyad_1:
+                while mut_0 > dyad_0 and mut_1 < dyad_1 or (m_file.tell() <= mut_end and d_file.tell() <= dyad_end) or not (mut_line and dyad_line):
                     if strand == '+': counts[mut_0-dyad_0-1000][context] += 1
                     else: counts[mut_0-dyad_0-1000][Tools.reverse_complement(context)] += 1
+        print('Processed block', self.mutations_chrom_names[process_id])
         return counts
 
     def run(self) -> None:
         with mp.Pool(mp.cpu_count()) as pool:
             with open(self.dyad_file, 'r') as dyad_file, open(self.mutation_file, 'r') as mut_file:
                 dyad_chroms = [0]
-                dyad_line = dyad_file.readline()
-                while dyad_line:
-                    current_chrom = dyad_line.strip().split('\t')[0]
+                current_chrom = dyad_file.readline().strip().split('\t')[0]
+                while current_chrom != '':
                     location = dyad_file.tell()
                     next_chrom = dyad_file.readline().strip().split('\t')[0]
-                    if current_chrom != next_chrom:
+                    if current_chrom != next_chrom and next_chrom != '':
                         dyad_chroms.append(location)
-                    dyad_line = dyad_file.readline()
-                dyad_chroms.append(None)
-                
+                        self.dyad_chrom_names.append(current_chrom)
+                    current_chrom = next_chrom
+                dyad_chroms.append(dyad_file.tell())
+                print('Pre-processed dyad file.')
+
                 mut_chroms = [0]
-                mut_line = mut_file.readline()
-                while mut_line:
-                    current_chrom = mut_line.strip().split('\t')[0]
+                current_chrom = mut_file.readline().strip().split('\t')[0]
+                while current_chrom != '':
                     location = mut_file.tell()
                     next_chrom = mut_file.readline().strip().split('\t')[0]
-                    if current_chrom != next_chrom:
+                    if current_chrom != next_chrom and next_chrom != '':
                         mut_chroms.append(location)
-                    mut_line = dyad_file.readline()
-                mut_chroms.append(None)
+                        self.mutations_chrom_names.append(current_chrom)
+                    current_chrom = next_chrom
+                mut_chroms.append(mut_file.tell())
+                self.mutations_chrom_names.append(current_chrom)
+                print('Pre-processed mutation file.')
 
                 results = []
-                for i in range(len(dyad_chroms)):
+                if self.mutations_chrom_names != self.dyad_chrom_names:
+                    print('NOT THE SAME')
+                for i in range(len(mut_chroms)-1):
                     dyad_start = dyad_chroms[i]
                     dyad_end = dyad_chroms[i+1]
                     mut_start = mut_chroms[i]
                     mut_end = mut_chroms[i+1]
-                    result = pool.apply_async(self.process_block, (dyad_start, dyad_end, mut_start, mut_end, self.context_list, self.mutation_file, self.dyad_file), error_callback=lambda e: self.handle_error(e, i))
+                    result = pool.apply_async(self.process_block, (dyad_start, dyad_end, mut_start, mut_end, self.context_list, self.mutation_file, self.dyad_file, i), error_callback=lambda e: self.handle_error(e, i))
                     results.append((result, i))
                 
             # Wait for all processes to finish
@@ -226,3 +257,15 @@ class MutationIntersector:
         
         # Write the results to a file
         self.results_to_file(self.context_list, self.counts, self.mutation_file, self.dyad_file)
+
+# counts all the different positions in the dyad file
+import multiprocessing as mp
+import Statistics
+from pathlib import Path
+
+if __name__ == '__main__':
+    mp.freeze_support()
+    fasta_counter = Statistics.MutationIntersector(
+        mutation_file = Path('/media/cam/Data9/CortezAnalysis/Cam_calls/8-oxo-G_Mapping_Data/split-reads/joined_bed/SRR_67-68_sorted_sorted_filtered.bed'),
+        dyad_file = Path('/media/cam/Data9/CortezAnalysis/Cam_calls/nucleosome_stuff/dyads_files/dyads_plus-minus_1000_filtered_sorted.bed')
+    )
