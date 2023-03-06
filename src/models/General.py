@@ -1,6 +1,7 @@
 from pathlib import Path
 import pandas as pd
 import subprocess
+import BedtoolsCommands
 
 def adjust_dyad_positions(dyad_file: Path):
     """Takes a dyad file with single nucleotide positions and creates a new bed file with -500 and +500 positions
@@ -49,3 +50,34 @@ def filter_acceptable_chromosomes(input_file: Path, genome: str):
                 chrom = line.strip().split('\t')[0][3:]
                 if chrom in human:
                     o.write(line)
+
+def vcf_snp_to_intermediate_bed(vcf_file: Path):
+    intermediate_bed = vcf_file.with_suffix('.tmp')
+    with open(vcf_file) as f, open(intermediate_bed, 'w') as o:
+        for line in f:
+            if line[0] == '#': continue
+            if 'CHROM' in line:
+                header = line
+                continue
+            tsv = line.strip().split('\t')
+            chrom = tsv[0]
+            base_0 = str(int(tsv[1])-1)
+            base_1 = tsv[1]
+            name = '.'
+            score = '0'
+            strand = '+'
+            mutation_type = f'{tsv[3]}>{tsv[4]}'
+            new_line = '\t'.join[chrom, base_0, base_1, name, score, strand, mutation_type]
+            o.write(new_line+'\n')
+
+def expand_context_custom_bed(intermediate_bed: Path, fasta_file: Path):
+    bed_file = intermediate_bed.with_suffix('.bed')
+    _, getfasta_output = BedtoolsCommands.bedtools_getfasta(intermediate_bed, fasta_file)
+    with open(getfasta_output) as f, open(intermediate_bed) as i, open(bed_file, 'w') as o:
+        for fasta_line, bed_line in zip(f, i):
+            fasta_context = fasta_line.strip().split('\t')[-1]
+            bed_info = bed_line.strip().split('\t')
+            new_line = '\t'.join[bed_info[0], bed_info[1], bed_info[2], bed_info[3], bed_info[4], bed_info[5], fasta_context, bed_info[6]]
+            o.write(new_line+'\n')
+
+# def make_graph_from_df():
