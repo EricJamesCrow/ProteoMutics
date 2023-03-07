@@ -6,11 +6,24 @@ import traceback
 from typing import Tuple, List
 import time
 
-def df_division_and_standardization(mutation_counts: Path, dyad_counts: Path):
+def df_division_and_standardization(mutation_counts: Path, dyad_counts: Path, iupac: str):
     mutations_df = pd.read_csv(mutation_counts, sep= '\t', index_col=0, header=0)
     dyads_df = pd.read_csv(dyad_counts, sep= '\t', index_col=0, header=0)
-    result_df = mutations_df.div(dyads_df)
-    result_df_normalized = result_df.divide(result_df.median()).fillna(0)
+    contexts = Tools.contexts_in_iupac('NCN')
+    all_contexts = contexts
+    for item in contexts:
+        rev_comp = Tools.reverse_complement(item)
+        if rev_comp not in all_contexts:
+            all_contexts.append(rev_comp)
+    new_mut_df = mutations_df.loc[:,all_contexts]
+    new_dyad_df = dyads_df.loc[:,all_contexts]
+    results_dict = {}
+    i = -1000
+    for mut_index, mut_row in new_mut_df.iterrows():
+        results_dict[i] = [(sum(mut_row.tolist())/sum(new_dyad_df.loc[mut_index].tolist()))]
+        i += 1
+    result_df = pd.DataFrame.from_dict(results_dict, orient='index', columns=['Counts'])
+    result_df_normalized = result_df.divide(result_df.median())
     return result_df_normalized
 
 class DyadFastaCounter:
@@ -165,7 +178,8 @@ class MutationIntersector:
             next_start = mut_start
             while d_file.tell() <= dyad_end and dyad_line:
                 if mut_chrom != dyad_chrom:
-                    print('ERROR! Files are not on the same chromosome', mut_chrom, dyad_chrom)
+                    print('ERROR! Files are not on the same chromosome', mut_chrom, dyad_chrom, self.mutations_chrom_names[process_id])
+                    # print(counts)
                     break
 
                 while mut_0 <= dyad_0 and m_file.tell() <= mut_end:
@@ -190,6 +204,7 @@ class MutationIntersector:
                     strand, context = mut_data[5:7]
                 m_file.seek(next_start)
                 mut_line = m_file.readline()
+                if m_file.tell() > mut_end: break
                 if mut_line == '': break
                 mut_data = mut_line.strip().split('\t')
                 mut_chrom, mut_0, mut_1 = mut_data[:3]
@@ -209,6 +224,7 @@ class MutationIntersector:
             with open(self.dyad_file, 'r') as dyad_file, open(self.mutation_file, 'r') as mut_file:
                 start_time = time.time()
                 overall_time = start_time
+                #### make process run with MB blocks to read file faster ####                
                 dyad_chroms = [0]
                 current_chrom = dyad_file.readline().strip().split('\t')[0]
                 while current_chrom != '':
@@ -267,14 +283,14 @@ class MutationIntersector:
         self.results_to_file(self.context_list, self.counts, self.mutation_file, self.dyad_file)
         print('Overall time:', abs(overall_time) - time.time(), 'seconds')
 
-# counts all the different positions in the dyad file
-import multiprocessing as mp
-import Statistics
-from pathlib import Path
+# # counts all the different positions in the dyad file
+# import multiprocessing as mp
+# import Statistics
+# from pathlib import Path
 
-if __name__ == '__main__':
-    mp.freeze_support()
-    fasta_counter = Statistics.MutationIntersector(
-        mutation_file = Path('/media/cam/Data9/CortezAnalysis/Cam_calls/Analysis/vcf_files/concat/KM_treated_filtered_sorted.bed'),
-        dyad_file = Path('/media/cam/Data9/CortezAnalysis/Cam_calls/nucleosome_stuff/dyads_files/dyads_plus-minus_1000_filtered_sorted.bed')
-    )
+# if __name__ == '__main__':
+#     mp.freeze_support()
+#     fasta_counter = Statistics.MutationIntersector(
+#         mutation_file = Path('/media/cam/Data9/CortezAnalysis/Cam_calls/Analysis/vcf_files/concat/KM_treated_filtered_sorted.bed'),
+#         dyad_file = Path('/media/cam/Data9/CortezAnalysis/Cam_calls/nucleosome_stuff/dyads_files/dyads_plus-minus_1000_filtered_sorted.bed')
+#     )

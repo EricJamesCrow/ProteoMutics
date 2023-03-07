@@ -2,6 +2,7 @@ from pathlib import Path
 import pandas as pd
 import subprocess
 import BedtoolsCommands
+import Tools
 
 def adjust_dyad_positions(dyad_file: Path):
     """Takes a dyad file with single nucleotide positions and creates a new bed file with -500 and +500 positions
@@ -81,4 +82,4 @@ def expand_context_custom_bed(intermediate_bed: Path, fasta_file: Path):
             new_line = '\t'.join([bed_info[0], str(int(bed_info[1])+1), str(int(bed_info[2])-1), bed_info[3], bed_info[4], bed_info[5], fasta_context.upper(), bed_info[6]])
             o.write(new_line+'\n')
 
-# def make_graph_from_df():
+

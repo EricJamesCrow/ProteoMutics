@@ -6,6 +6,7 @@ from statsmodels.nonparametric.smoothers_lowess import lowess
 import matplotlib.pyplot as plt
 from scipy.optimize import curve_fit
 from sklearn.metrics import r2_score
+from astropy.timeseries import LombScargle
 
 def contexts_in_iupac(iupac_val: str):
     """Takes a string that has IUPAC characters and returns all of the possible nucleotide sequences that fit that 
@@ -75,8 +76,9 @@ def smooth_data(x, y, method='moving_average', window_size=5, poly_order=2, alph
     """
     if method == 'moving_average':
         weights = np.repeat(1.0, window_size) / window_size
-        smoothed_x = x[window_size-1:]
         smoothed_y = np.convolve(y, weights, 'valid')
+        shift = (window_size - 1) // 2
+        smoothed_x = x[shift:len(x) - shift]
     elif method == 'savgol_filter':
         smoothed_y = savgol_filter(y, window_size, poly_order)
         smoothed_x = x
@@ -84,7 +86,7 @@ def smooth_data(x, y, method='moving_average', window_size=5, poly_order=2, alph
         smoothed_y = lowess(y, x, frac=1./window_size)[:, 1]
         smoothed_x = x
     elif method == 'median_filter':
-        smoothed_y = medfilt(y, window_size, mode=mode)
+        smoothed_y = medfilt(y, window_size)
         smoothed_x = x
     elif method == 'gaussian_filter':
         smoothed_y = gaussian_filter1d(y, sigma=sigma, mode=mode)
@@ -96,6 +98,34 @@ def smooth_data(x, y, method='moving_average', window_size=5, poly_order=2, alph
         raise ValueError("Invalid method specified.")
 
     return smoothed_x, smoothed_y
+
+def find_periodicity(x, y, avg_period):
+    # Calculate power spectrum using Lomb-Scargle periodogram
+    freq, power = LombScargle(x, y).autopower()
+    period = 1 / freq
+
+    # Find frequency window around average period
+    period_diff = np.abs(period - avg_period)
+    period_window = period[period_diff < 2]
+    freq_window = freq[period_diff < 2]
+    power_window = power[period_diff < 2]
+
+    # Check if no suitable period found
+    if len(period_window) == 0:
+        return None
+
+    # Calculate confidence as sum of power in frequency window
+    confidence = np.sum(power_window)
+
+    # Find dominant period in window
+    period = 1 / freq_window[np.argmax(power_window)]
+
+    # Calculate signal-to-noise ratio
+    signal = np.max(y) - np.min(y)
+    noise = np.std(y)
+    snr = signal / noise
+
+    return {'period': period, 'confidence': confidence, 'snr': snr}
 
 
 def exponential_smoothing(y, alpha):
