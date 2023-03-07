@@ -167,16 +167,18 @@ class MutationIntersector:
                 if mut_chrom != dyad_chrom:
                     print('ERROR! Files are not on the same chromosome', mut_chrom, dyad_chrom)
                     break
+
                 while mut_0 <= dyad_0 and m_file.tell() <= mut_end:
-                    # next_start = m_file.tell()
+                    next_start = m_file.tell()
                     mut_line = m_file.readline()
                     if mut_line == '':
                         break
                     mut_data = mut_line.strip().split('\t')
                     mut_chrom, mut_0, mut_1 = mut_data[:3]
                     mut_0, mut_1 = int(mut_0), int(mut_1)
+
                 while mut_0 > dyad_0 and mut_1 < dyad_1 and m_file.tell() <= mut_end:
-                    position = int(mut_0) - int((int(dyad_1)+int(dyad_0))/2)+1
+                    position = int(mut_0) - int((int(dyad_1)+int(dyad_0))/2)
                     if strand == '+': counts[position][context] += 1
                     else: counts[position][Tools.reverse_complement(context)] += 1
                     mut_line = m_file.readline()
@@ -186,13 +188,13 @@ class MutationIntersector:
                     mut_chrom, mut_0, mut_1 = mut_data[:3]
                     mut_0, mut_1 = int(mut_0), int(mut_1)
                     strand, context = mut_data[5:7]
-                if mut_0 >= dyad_0 and mut_1 >= dyad_1:
-                    m_file.seek(next_start)
-                    mut_line = m_file.readline()
-                    mut_data = mut_line.strip().split('\t')
-                    mut_chrom, mut_0, mut_1 = mut_data[:3]
-                    mut_0, mut_1 = int(mut_0), int(mut_1)
-                    strand, context = mut_data[5:7]
+                m_file.seek(next_start)
+                mut_line = m_file.readline()
+                if mut_line == '': break
+                mut_data = mut_line.strip().split('\t')
+                mut_chrom, mut_0, mut_1 = mut_data[:3]
+                mut_0, mut_1 = int(mut_0), int(mut_1)
+                strand, context = mut_data[5:7]
                 dyad_line = d_file.readline()
                 if dyad_line == '': break
                 dyad_data = dyad_line.strip().split('\t')
@@ -206,6 +208,7 @@ class MutationIntersector:
         with mp.Pool(mp.cpu_count()) as pool:
             with open(self.dyad_file, 'r') as dyad_file, open(self.mutation_file, 'r') as mut_file:
                 start_time = time.time()
+                overall_time = start_time
                 dyad_chroms = [0]
                 current_chrom = dyad_file.readline().strip().split('\t')[0]
                 while current_chrom != '':
@@ -262,7 +265,7 @@ class MutationIntersector:
         
         # Write the results to a file
         self.results_to_file(self.context_list, self.counts, self.mutation_file, self.dyad_file)
-        print(time.time()-start_time, 'seconds')
+        print('Overall time:', abs(overall_time) - time.time(), 'seconds')
 
 # counts all the different positions in the dyad file
 import multiprocessing as mp
@@ -272,6 +275,6 @@ from pathlib import Path
 if __name__ == '__main__':
     mp.freeze_support()
     fasta_counter = Statistics.MutationIntersector(
-        mutation_file = Path('/media/cam/Data9/CortezAnalysis/Cam_calls/8-oxo-G_Mapping_Data/split-reads/joined_bed/SRR_67-68_sorted_sorted_filtered.bed'),
+        mutation_file = Path('/media/cam/Data9/CortezAnalysis/Cam_calls/Analysis/vcf_files/concat/KM_treated_filtered_sorted.bed'),
         dyad_file = Path('/media/cam/Data9/CortezAnalysis/Cam_calls/nucleosome_stuff/dyads_files/dyads_plus-minus_1000_filtered_sorted.bed')
     )

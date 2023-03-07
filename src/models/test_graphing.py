@@ -13,6 +13,7 @@ from scipy import stats
 ###################################################33 plotnine graph code ##################################33
 
 df = pd.read_csv('/home/cam/Documents/repos/Nucleomutics/src/models/test.txt', sep = '\t', index_col=0, header=0)
+# df = df[(np.abs(stats.zscore(df)) < 4).all(axis=1)]
 indexes = df.index.tolist()
 graph_values = []
 for item in indexes:
