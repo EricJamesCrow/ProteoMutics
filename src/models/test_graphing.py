@@ -14,6 +14,8 @@ from scipy import stats
 
 df = Statistics.df_division_and_standardization(
     mutation_counts=Path('/media/cam/Data9/CortezAnalysis/Cam_calls/Analysis/vcf_files/concat/KM_treated_filtered_sorted_dyads_plus-minus_1000_filtered_sorted_intersected_mutations_counts.txt'), 
+    # mutation_counts=Path('/media/cam/Data9/CortezAnalysis/Cam_calls/8-oxo-G_Mapping_Data/split-reads/joined_bed/SRR_64-65-66_sorted_sorted_filtered_adjusted_dyads_plus-minus_1000_filtered_sorted_intersected_mutations_counts.txt'),
+    # mutation_counts=Path('/home/cam/Documents/UV_Data/MELA-AU_trinuc_context_mutations_sorted_filtered_dyads_plus-minus_1000_filtered_sorted_intersected_mutations_counts.txt'),
     dyad_counts=Path('/media/cam/Data9/CortezAnalysis/Cam_calls/nucleosome_stuff/dyads_files/dyads_plus-minus_1000_hg19_fasta_filtered_counts.txt'),
     iupac = 'NCN'
     )
@@ -48,13 +50,6 @@ ax.set_title('Nucleomutics?')
 
 # Disable scientific notation on the x-axis
 ax.ticklabel_format(axis='x', style='plain')
-
-# # Format y-axis tick labels as whole numbers
-# formatter = plt.FuncFormatter(lambda x, pos: '{:,.0f}'.format(x))
-# ax.yaxis.set_major_formatter(formatter)
-
-# # Set the number of ticks on the y-axis
-# ax.yaxis.set_major_locator(plt.MaxNLocator(5))
 
 # Display the plot
 # plt.savefig('/home/cam/Documents/repos/Nucleomutics/Mutations_nucleosome.png', dpi = 300)

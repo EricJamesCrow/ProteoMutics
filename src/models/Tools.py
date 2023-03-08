@@ -127,7 +127,6 @@ def find_periodicity(x, y, avg_period):
 
     return {'period': period, 'confidence': confidence, 'snr': snr}
 
-
 def exponential_smoothing(y, alpha):
     """
     Applies exponential smoothing to the data.
@@ -145,7 +144,6 @@ def exponential_smoothing(y, alpha):
     for i in range(1, n):
         smoothed[i] = alpha * y[i] + (1 - alpha) * smoothed[i-1]
     return smoothed
-
 
 def fit_curve(x, y):
     """

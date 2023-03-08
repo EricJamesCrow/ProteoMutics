@@ -182,22 +182,22 @@ class MutationIntersector:
                     # print(counts)
                     break
 
-                while mut_0 <= dyad_0 and m_file.tell() <= mut_end:
+                while mut_0 <= dyad_0:
                     next_start = m_file.tell()
                     mut_line = m_file.readline()
-                    if mut_line == '':
-                        break
+                    if m_file.tell() > mut_end: break
+                    if mut_line == '': break
                     mut_data = mut_line.strip().split('\t')
                     mut_chrom, mut_0, mut_1 = mut_data[:3]
                     mut_0, mut_1 = int(mut_0), int(mut_1)
 
-                while mut_0 > dyad_0 and mut_1 < dyad_1 and m_file.tell() <= mut_end:
-                    position = int(mut_0) - int((int(dyad_1)+int(dyad_0))/2)
+                while mut_0 > dyad_0 and mut_1 < dyad_1:
+                    position = mut_0 - int((dyad_1+dyad_0)/2)
                     if strand == '+': counts[position][context] += 1
                     else: counts[position][Tools.reverse_complement(context)] += 1
                     mut_line = m_file.readline()
-                    if mut_line == '':
-                        break
+                    if m_file.tell() > mut_end: break
+                    if mut_line == '': break
                     mut_data = mut_line.strip().split('\t')
                     mut_chrom, mut_0, mut_1 = mut_data[:3]
                     mut_0, mut_1 = int(mut_0), int(mut_1)
@@ -281,16 +281,17 @@ class MutationIntersector:
         
         # Write the results to a file
         self.results_to_file(self.context_list, self.counts, self.mutation_file, self.dyad_file)
-        print('Overall time:', abs(overall_time) - time.time(), 'seconds')
+        print('Overall time:', abs((overall_time) - time.time())/60, 'minutes')
 
-# # counts all the different positions in the dyad file
-# import multiprocessing as mp
-# import Statistics
-# from pathlib import Path
+# counts all the different positions in the dyad file
+import multiprocessing as mp
+import Statistics
+from pathlib import Path
 
-# if __name__ == '__main__':
-#     mp.freeze_support()
-#     fasta_counter = Statistics.MutationIntersector(
-#         mutation_file = Path('/media/cam/Data9/CortezAnalysis/Cam_calls/Analysis/vcf_files/concat/KM_treated_filtered_sorted.bed'),
-#         dyad_file = Path('/media/cam/Data9/CortezAnalysis/Cam_calls/nucleosome_stuff/dyads_files/dyads_plus-minus_1000_filtered_sorted.bed')
-#     )
+if __name__ == '__main__':
+    mp.freeze_support()
+    fasta_counter = Statistics.MutationIntersector(
+        # mutation_file = Path('/home/cam/Documents/UV_Data/MELA-AU_trinuc_context_mutations_sorted_filtered.bed6'),
+        mutation_file = Path('/media/cam/Data9/CortezAnalysis/Cam_calls/Analysis/vcf_files/concat/KM_treated_filtered_sorted.bed'),
+        dyad_file = Path('/media/cam/Data9/CortezAnalysis/Cam_calls/nucleosome_stuff/dyads_files/dyads_plus-minus_1000_filtered_sorted.bed')
+    )
