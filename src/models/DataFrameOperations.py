@@ -57,17 +57,3 @@ def df_just_raw_counts(mutation_counts: Path, iupac: str):
         i += 1
     result_df = pd.DataFrame.from_dict(results_dict, orient='index', columns=['Counts'])
     return result_df
-
-
-# counts all the different positions in the dyad file
-import multiprocessing as mp
-import Statistics
-from pathlib import Path
-
-if __name__ == '__main__':
-    mp.freeze_support()
-    fasta_counter = Statistics.MutationIntersector(
-        mutation_file = Path('/media/cam/Data9/CortezAnalysis/Cam_calls/8-oxo-G_Mapping_Data/split-reads/joined_bed/SRR_69-70_adjusted_filtered_sorted.bed'),
-        # mutation_file = Path('/media/cam/Data9/CortezAnalysis/Cam_calls/Analysis/vcf_files/concat/KM_treated_filtered_sorted.bed'),
-        dyad_file = Path('/media/cam/Data9/CortezAnalysis/Cam_calls/nucleosome_stuff/dyads_filtered_sorted.bed')
-    )

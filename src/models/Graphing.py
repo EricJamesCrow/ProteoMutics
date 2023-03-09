@@ -1,4 +1,4 @@
-import Statistics
+import models.DataFrameOperations as DataFrameOperations
 import Tools
 from pathlib import Path
 import multiprocessing as mp
@@ -9,7 +9,7 @@ import numpy as np
 from scipy import stats
 
 
-df = Statistics.df_division_and_standardization(
+df = DataFrameOperations.df_division_and_standardization(
     # mutation_counts=Path('/media/cam/Data9/CortezAnalysis/Cam_calls/8-oxo-G_Mapping_Data/split-reads/joined_bed/SRR_69-70_adjusted_filtered_sorted_dyads_filtered_sorted_intersected_mutations_counts.txt'),
     # mutation_counts=Path('/media/cam/Data9/CortezAnalysis/Cam_calls/8-oxo-G_Mapping_Data/split-reads/joined_bed/SRR_67-68_adjusted_filtered_sorted_dyads_filtered_sorted_intersected_mutations_counts.txt'),
     # mutation_counts=Path('/media/cam/Data9/CortezAnalysis/Cam_calls/8-oxo-G_Mapping_Data/split-reads/joined_bed/SRR_64-65-66_adjusted_filtered_sorted_dyads_filtered_sorted_intersected_mutations_counts.txt'),
