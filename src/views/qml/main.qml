@@ -1,5 +1,7 @@
 import QtQuick
 import QtQuick.Window
+import Qt.labs.platform 1.1
+import './javascript/App.js' as App
 
 Window {
     // Set the initial size of the window to 1280x720
@@ -13,12 +15,11 @@ Window {
     // Determine the DPI of the screen using the Screen element
     property real dpi: Screen.logicalDotsPerInch
 
-    // Calculate the scaling factor to make the window appear as if it has a resolution of 1280x720
-    property real scaleFactor: Math.min(screenPhysicalWidth / (dpi * 5.5 / 2.54), screenPhysicalHeight / (dpi * 3.1 / 2.54))
+    property double scaleFactor: App.determineScaleFactor(Qt.platform.os, Screen.devicePixelRatio)
 
     // Adjust the size of the window based on the scaling factor
-    width: Math.round(initialWidth)
-    height: Math.round(intiialHeight)
+    width: Math.round(initialWidth * scaleFactor)
+    height: Math.round(intiialHeight * scaleFactor)
     visible: true
     title: qsTr("Hello World")
 }
