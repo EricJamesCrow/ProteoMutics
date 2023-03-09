@@ -1,5 +1,5 @@
 import BedtoolsCommands
-import models.DataFrameOperations as DataFrameOperations
+import DataFrameOperations
 import General
 import Tools
 from pathlib import Path
@@ -19,7 +19,6 @@ df = DataFrameOperations.df_division_and_standardization(
     mutation_counts=Path('/home/cam/Documents/UV_Data/MELA-AU_trinuc_context_mutations_filtered_sorted_dyads_filtered_sorted_intersected_mutations_counts.txt'),
     # mutation_counts=Path('/media/cam/Data9/CortezAnalysis/Cam_calls/Analysis/vcf_files/concat/KM_treated_filtered_sorted_dyads_filtered_sorted_intersected_mutations_counts.txt'),
     dyad_counts=Path('/media/cam/Data9/CortezAnalysis/Cam_calls/nucleosome_stuff/dyads_plus-minus_1000_hg19_fasta_filtered_counts.txt'),
-    iupac = 'NCN'
     )
 
 # df = Statistics.df_just_raw_counts(
