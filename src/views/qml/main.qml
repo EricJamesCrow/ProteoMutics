@@ -6,8 +6,11 @@ Window {
     property real screenPhysicalWidth: Screen.width / Screen.pixelDensity
     property real screenPhysicalHeight: Screen.height / Screen.pixelDensity
 
-    // Adjust the size of the window based on the physical size of the screen
-    property real scaleFactor: Math.min(screenPhysicalWidth / 360.0, screenPhysicalHeight / 202.5)
+    // Determine the DPI of the screen using the Screen element
+    property real dpi: Screen.logicalDotsPerInch
+
+    // Adjust the size of the window based on the physical size of the screen and the DPI of the screen
+    property real scaleFactor: Math.min(screenPhysicalWidth / (dpi * 5.5 / 2.54), screenPhysicalHeight / (dpi * 3.1 / 2.54))
     width: Math.round(1280 * scaleFactor)
     height: Math.round(720 * scaleFactor)
     visible: true
