@@ -5,7 +5,7 @@ import QtQuick.Controls 2.15
 Button{
     id: btnToggle
     // CUSTOM PROPERTIES
-    property url btnIconSource: "../../../images/svg_images/settings_icon.svg"
+    property url btnIconSource: "../../images/svg_images/settings_icon.svg"
     property color btnColorDefault: "#087589"
     property color btnColorMouseOver: "#b8e3ee"
     property color btnColorClicked: "#191818"

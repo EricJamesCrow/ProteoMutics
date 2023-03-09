@@ -6,7 +6,7 @@ Button {
     property string checkBoxTheme: buttonColorDefault
     property string checkBoxThemeClicked: backgroundColor
     property bool checkedState: false
-    property var checkboxSvgIcon: "../../../images/svg_images/checkmark_icon_087589.svg"//checkBoxIcon
+    property var checkboxSvgIcon: "../../images/svg_images/checkmark_icon_087589.svg"//checkBoxIcon
 
 
     display: AbstractButton.IconOnly

@@ -5,7 +5,7 @@ import QtQuick.Controls 2.15
 Button{
     id: btnTopBar
     // CUSTOM PROPERTIES
-    property url btnIconSource: "../../../images/svg_images/close_icon_white.svg"
+    property url btnIconSource: "../../images/svg_images/close_icon_white.svg"
     property color btnColorDefault: "#ffffff"
     property color btnColorMouseOver: "#ff007f"
     property color btnColorClicked: "#00a1f1"
