@@ -21,5 +21,65 @@ Window {
     width: Math.round(initialWidth * scaleFactor)
     height: Math.round(intiialHeight * scaleFactor)
     visible: true
-    title: qsTr("Hello World")
+    property int windowMargin: 10
+    color: "#00000000"
+    title: qsTr("Nucelomutics")
+    
+    // Remove title bar
+    flags: Qt.Window | Qt.FramelessWindowHint
+
+        Rectangle {
+        id: appContainer
+        color: "#F5F5F5"
+        radius: 10 * scaleFactor
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.top: parent.top
+        anchors.bottom: parent.bottom
+        clip: false
+        anchors.rightMargin: windowMargin
+        anchors.bottomMargin: windowMargin
+        anchors.leftMargin: windowMargin
+        anchors.topMargin: windowMargin
+
+        Rectangle {
+            id: topBar
+            color: "#ACACAC"
+            height: 36 * scaleFactor
+            radius: 10 * scaleFactor
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.top: parent.top
+            anchors.topMargin: 0
+            anchors.rightMargin: 0
+            anchors.leftMargin: 0
+
+            Rectangle {
+                id: titleBar
+                height: 36 * scaleFactor
+                color: "#00000000"
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.top: parent.top
+                z: 0
+                anchors.rightMargin: 0
+                anchors.leftMargin: 5  * scaleFactor
+                anchors.topMargin: 0
+                
+                DragHandler {
+                    onActiveChanged: if(active){
+                                            mainWindow.startSystemMove()
+                                            App.ifMaximizedWindowRestore()
+                                        }
+                    }
+
+            }
+        }
+        }
 }
+
+/*##^##
+Designer {
+    D{i:0;formeditorZoom:0.5}D{i:2}
+}
+##^##*/
