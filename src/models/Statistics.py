@@ -157,66 +157,49 @@ class MutationIntersector:
         df.index.name = 'Position'
         df.to_csv(output_file, sep='\t')
 
-    def process_block(self, dyad_start: int, dyad_end: int, mut_start: int, mut_end: int, context_list: list[str], mutation_file: Path, dyad_file: Path, process_id: int) -> List[Tuple[int, dict]]:
+    def process_block(self, dyad_start_position: int, dyad_end_position: int, mut_start_position: int, mut_end_position: int, context_list: list[str], mutation_file_path: Path, dyad_file_path: Path, process_id: int) -> List[Tuple[int, dict]]:
         counts = {i: {key: 0 for key in context_list} for i in range(-1000,1001)}
-        with open(dyad_file) as d_file, open(mutation_file) as m_file:
-            start_time = time.time()
-            d_file.seek(dyad_start)
-            # initialize mut_data variables and reads in the next line
-            m_file.seek(mut_start)
-            mut_line = m_file.readline()
-            mut_data = mut_line.strip().split('\t')
-            mut_chrom, mut_0, mut_1 = mut_data[:3]
-            mut_0, mut_1 = int(mut_0), int(mut_1)
-            strand, context = mut_data[5:7]
-            # initialize dyad_data variables and reads in the next line
-            dyad_line = d_file.readline()
-            dyad_data = dyad_line.strip().split('\t')
-            dyad_chrom, dyad_0, dyad_1 = dyad_data[:3]
-            dyad_0, dyad_1 = int(dyad_0), int(dyad_1)
-            # loops through files
-            next_start = mut_start
-            while d_file.tell() <= dyad_end and dyad_line:
-                if mut_chrom != dyad_chrom:
-                    print('ERROR! Files are not on the same chromosome', mut_chrom, dyad_chrom, self.mutations_chrom_names[process_id])
-                    # print(counts)
+        with open(dyad_file_path) as dyad_file, open(mutation_file_path) as mut_file:
+            dyad_file.seek(dyad_start_position)
+            mut_file.seek(mut_start_position)
+            jump_back_position = mut_start_position
+            mut_data = mut_file.readline().strip().split('\t')
+            mut_start = int(mut_data[1])
+            context = mut_data[6]
+            while True:
+                dyad_data = dyad_file.readline().strip().split('\t')                
+                if dyad_file.tell() > dyad_end_position:
                     break
-
-                while mut_0 <= dyad_0:
-                    next_start = m_file.tell()
-                    mut_line = m_file.readline()
-                    if m_file.tell() > mut_end: break
-                    if mut_line == '': break
-                    mut_data = mut_line.strip().split('\t')
-                    mut_chrom, mut_0, mut_1 = mut_data[:3]
-                    mut_0, mut_1 = int(mut_0), int(mut_1)
-
-                while mut_0 > dyad_0 and mut_1 < dyad_1:
-                    position = mut_0 - int((dyad_1+dyad_0)/2)
-                    if strand == '+': counts[position][context] += 1
-                    else: counts[position][Tools.reverse_complement(context)] += 1
-                    mut_line = m_file.readline()
-                    if m_file.tell() > mut_end: break
-                    if mut_line == '': break
-                    mut_data = mut_line.strip().split('\t')
-                    mut_chrom, mut_0, mut_1 = mut_data[:3]
-                    mut_0, mut_1 = int(mut_0), int(mut_1)
-                    strand, context = mut_data[5:7]
-                m_file.seek(next_start)
-                mut_line = m_file.readline()
-                if m_file.tell() > mut_end: break
-                if mut_line == '': break
-                mut_data = mut_line.strip().split('\t')
-                mut_chrom, mut_0, mut_1 = mut_data[:3]
-                mut_0, mut_1 = int(mut_0), int(mut_1)
-                strand, context = mut_data[5:7]
-                dyad_line = d_file.readline()
-                if dyad_line == '': break
-                dyad_data = dyad_line.strip().split('\t')
-                dyad_chrom, dyad_0, dyad_1 = dyad_data[:3]
-                dyad_0, dyad_1 = int(dyad_0), int(dyad_1)
+                if dyad_data == ['']:
+                    break
+                dyad_start = int(dyad_data[1])
+                while mut_start-dyad_start < -1000:
+                    jump_back_position = mut_file.tell()
+                    mut_data = mut_file.readline().strip().split('\t')
+                    if mut_file.tell() > mut_end_position:
+                        break
+                    if mut_data == ['']:
+                        break
+                    mut_start = int(mut_data[1])
+                    context = mut_data[6]
+                while -1000 <= mut_start-dyad_start <= 1000:
+                    counts[mut_start-dyad_start][context] += 1
+                    mut_data = mut_file.readline().strip().split('\t')
+                    if mut_file.tell() > mut_end_position:
+                        break
+                    if mut_data == ['']:
+                        break
+                    mut_start = int(mut_data[1])
+                    context = mut_data[6]
+                mut_file.seek(jump_back_position)
+                mut_data = mut_file.readline().strip().split('\t')
+                if mut_file.tell() > mut_end_position:
+                    break
+                if mut_data == ['']:
+                    break
+                mut_start = int(mut_data[1])
+                context = mut_data[6]
                 
-        print('Processed block', self.mutations_chrom_names[process_id], time.time() - start_time, 'seconds')
         return counts
 
     def run(self) -> None:
@@ -237,7 +220,7 @@ class MutationIntersector:
                 dyad_file.seek(0,2)
                 dyad_chroms[-1] = dyad_file.tell()
                 self.dyad_chrom_names.append(current_chrom)
-                print('Pre-processed dyad file.', time.time()-start_time, 'seconds')
+                print('Pre-processed dyad file.', (time.time()-start_time)/60, 'minutes')
                 start_time = time.time()
                 mut_chroms = [0]
                 current_chrom = mut_file.readline().strip().split('\t')[0]
@@ -251,7 +234,8 @@ class MutationIntersector:
                 mut_file.seek(0,2)
                 mut_chroms[-1] = mut_file.tell()
                 self.mutations_chrom_names.append(current_chrom)
-                print('Pre-processed mutation file.', time.time()-start_time, 'seconds')
+                process_time = time.time()
+                print('Pre-processed mutation file.', (time.time()-start_time)/60, 'minutes')
                 start_time = time.time()
                 results = []
                 if self.mutations_chrom_names != self.dyad_chrom_names:
@@ -281,7 +265,8 @@ class MutationIntersector:
         
         # Write the results to a file
         self.results_to_file(self.context_list, self.counts, self.mutation_file, self.dyad_file)
-        print('Overall time:', abs((overall_time) - time.time())/60, 'minutes')
+        print('Counting time:', (time.time() - process_time)/60, 'minutes')
+        print('Overall time:', (time.time() - overall_time)/60, 'minutes')
 
 # counts all the different positions in the dyad file
 import multiprocessing as mp
@@ -291,7 +276,7 @@ from pathlib import Path
 if __name__ == '__main__':
     mp.freeze_support()
     fasta_counter = Statistics.MutationIntersector(
-        # mutation_file = Path('/home/cam/Documents/UV_Data/MELA-AU_trinuc_context_mutations_sorted_filtered.bed6'),
-        mutation_file = Path('/media/cam/Data9/CortezAnalysis/Cam_calls/Analysis/vcf_files/concat/KM_treated_filtered_sorted.bed'),
-        dyad_file = Path('/media/cam/Data9/CortezAnalysis/Cam_calls/nucleosome_stuff/dyads_files/dyads_plus-minus_1000_filtered_sorted.bed')
+        mutation_file = Path('/media/cam/Data9/CortezAnalysis/Cam_calls/8-oxo-G_Mapping_Data/split-reads/joined_bed/SRR_69-70_adjusted_filtered_sorted.bed'),
+        # mutation_file = Path('/media/cam/Data9/CortezAnalysis/Cam_calls/Analysis/vcf_files/concat/KM_treated_filtered_sorted.bed'),
+        dyad_file = Path('/media/cam/Data9/CortezAnalysis/Cam_calls/nucleosome_stuff/dyads_filtered_sorted.bed')
     )

@@ -31,14 +31,14 @@ def filter_lines_with_n(dyad_fasta: Path, dyad_bed: Path):
          open(dyad_fasta.with_stem(f'{dyad_fasta.stem}_filtered'), 'w') as new_fa, \
          open(dyad_bed.with_stem(f'{dyad_bed.stem}_filtered'), 'w') as new_bed:
         for fa_line, bed_line in zip(fa, bed):
-            if 'N' not in fa_line:
+            if 'N' not in fa_line.upper():
                 new_fa.write(fa_line)
                 new_bed.write(bed_line)
 
 def check_and_sort(input_file: Path):
     # PLACE CHECK CODE HERE WITH -c METHOD
     sorted_name = input_file.with_stem(f'{input_file.stem}_sorted')
-    command = f'sort -k1,1 -k2,2 -k3,3 -k6,6 {input_file} > {sorted_name}'
+    command = f'sort -k1,1 -k2,2n -k3,3n -k6,6 {input_file} > {sorted_name}'
     with subprocess.Popen(args=command, stdout=subprocess.PIPE, shell=True) as p:
         return p, sorted_name
     
