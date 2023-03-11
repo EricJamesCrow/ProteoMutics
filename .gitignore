@@ -1,2 +1,2 @@
-python/__pycache__
-node_modules/*
+backend/python/__pycache__
+frontend/node_modules/*
