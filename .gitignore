@@ -1,1 +1,2 @@
-src/models/__pycache__
+python/__pycache__
+node_modules/*
