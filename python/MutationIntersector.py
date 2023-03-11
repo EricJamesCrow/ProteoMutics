@@ -77,6 +77,7 @@ class MutationIntersector:
     def run(self) -> None:
         with mp.Pool(mp.cpu_count()) as pool:
             with open(self.dyad_file, 'r') as dyad_file, open(self.mutation_file, 'r') as mut_file:           
+                # please speed me up
                 dyad_chroms = [0]
                 current_chrom = dyad_file.readline().strip().split('\t')[0]
                 while current_chrom != '':
@@ -101,6 +102,8 @@ class MutationIntersector:
                 mut_file.seek(0,2)
                 mut_chroms[-1] = mut_file.tell()
                 self.mutations_chrom_names.append(current_chrom)
+                # stop here
+                
                 results = []
                 if self.mutations_chrom_names != self.dyad_chrom_names:
                     print('NOT THE SAME')

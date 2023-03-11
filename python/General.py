@@ -1,8 +1,6 @@
 from pathlib import Path
-import pandas as pd
 import subprocess
 import BedtoolsCommands
-import Tools
 
 def adjust_dyad_positions(dyad_file: Path):
     """Takes a dyad file with single nucleotide positions and creates a new bed file with -500 and +500 positions
@@ -42,7 +40,7 @@ def check_and_sort(input_file: Path):
     with subprocess.Popen(args=command, stdout=subprocess.PIPE, shell=True) as p:
         return p, sorted_name
     
-def filter_acceptable_chromosomes(input_file: Path, genome: str):
+def filter_acceptable_chromosomes(input_file: Path, genome = 'human'):
     human = ['1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','20','21','22','X']
     output_file = input_file.with_stem(input_file.stem+'_filtered')
     if genome == 'human':
