@@ -193,3 +193,29 @@ def fit_curve(x, y):
             pass
 
     return best_params, best_plt_obj
+
+def interpolate_missing_data(x, y, x_min, x_max, method='linear'):
+    # Create an array with all integers between x_min and x_max
+    x_all = np.arange(x_min, x_max+1)
+    
+    # Find the indices of the available data points in the x array
+    idx = np.where((x >= x_min) & (x <= x_max))[0]
+    
+    # Use the specified method to interpolate the missing data points
+    if method == 'linear':
+        y_interp = np.interp(x_all, x[idx], y[idx])
+    elif method == 'quadratic':
+        y_interp = np.interp(x_all, x[idx], y[idx], left=y[idx[0]], right=y[idx[-1]], period=None)
+        y_interp = np.interp(x_all, x_all[~np.isnan(y_interp)], y_interp[~np.isnan(y_interp)], left=np.nan, right=np.nan, period=None)
+        y_interp = np.interp(x_all, x_all[~np.isnan(y_interp)], y_interp[~np.isnan(y_interp)], left=np.nan, right=np.nan, period=None)
+    elif method == 'cubic':
+        y_interp = np.interp(x_all, x[idx], y[idx], left=y[idx[0]], right=y[idx[-1]], period=None)
+        y_interp = np.interp(x_all, x_all[~np.isnan(y_interp)], y_interp[~np.isnan(y_interp)], left=np.nan, right=np.nan, period=None)
+        y_interp = np.interp(x_all, x_all[~np.isnan(y_interp)], y_interp[~np.isnan(y_interp)], left=np.nan, right=np.nan, period=None)
+        y_interp = np.interp(x_all, x_all[~np.isnan(y_interp)], y_interp[~np.isnan(y_interp)], left=np.nan, right=np.nan, period=None)
+    elif method == 'nearest':
+        y_interp = np.interp(x_all, x[idx], y[idx], left=y[idx[0]], right=y[idx[-1]], period=None)
+        y_interp = np.round(y_interp).astype(int)
+    
+    # Return the new x and y arrays
+    return x_all, y_interp
