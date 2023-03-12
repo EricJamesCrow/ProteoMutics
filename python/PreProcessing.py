@@ -50,8 +50,8 @@ def filter_acceptable_chromosomes(input_file: Path, genome = 'human'):
                 if chrom in human:
                     o.write(line)
 
-def vcf_snp_to_intermediate_bed(vcf_file: Path):
-    intermediate_bed = vcf_file.with_suffix('.tmp')
+def vcf_snp_to_intermediate_bed(vcf_file: Path, output_dir):
+    intermediate_bed = output_dir / vcf_file.with_suffix('.tmp').name
     with open(vcf_file) as f, open(intermediate_bed, 'w') as o:
         for line in f:
             if line[0] == '#': continue
@@ -69,9 +69,10 @@ def vcf_snp_to_intermediate_bed(vcf_file: Path):
             mutation_type = f'{tsv[3]}>{tsv[4]}'
             new_line = '\t'.join([chrom, base_0, base_1, name, score, strand, mutation_type])
             o.write(new_line+'\n')
+    return intermediate_bed
 
-def expand_context_custom_bed(intermediate_bed: Path, fasta_file: Path):
-    bed_file = intermediate_bed.with_suffix('.bed')
+def expand_context_custom_bed(intermediate_bed: Path, fasta_file: Path, output_dir):
+    bed_file = output_dir / intermediate_bed.with_suffix('.bed').name
     _, getfasta_output = BedtoolsCommands.bedtools_getfasta(intermediate_bed, fasta_file)
     with open(getfasta_output) as f, open(intermediate_bed) as i, open(bed_file, 'w') as o:
         for fasta_line, bed_line in zip(f, i):
@@ -79,5 +80,5 @@ def expand_context_custom_bed(intermediate_bed: Path, fasta_file: Path):
             bed_info = bed_line.strip().split('\t')
             new_line = '\t'.join([bed_info[0], str(int(bed_info[1])+1), str(int(bed_info[2])-1), bed_info[3], bed_info[4], bed_info[5], fasta_context.upper(), bed_info[6]])
             o.write(new_line+'\n')
-
+    return bed_file
 

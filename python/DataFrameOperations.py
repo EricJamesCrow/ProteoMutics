@@ -4,7 +4,7 @@ from scipy import stats
 from pathlib import Path
 import Tools
 
-def format_dataframe(mutation_counts: Path, dyad_counts: 'Path | None' = None, iupac = 'NNN', count_complements = False, normalize_to_median = True, z_score_filter: None | int = None) -> pd.DataFrame:
+def format_dataframe(mutation_counts: Path, dyad_counts: 'Path | None' = None, iupac = 'NNN', count_complements = False, normalize_to_median = True, z_score_filter: None | float = None) -> pd.DataFrame:
     """Takes a `Path` object to a saved DataFrame and counts across rows to get 2-D x and y data points to graph.
     Takes a `Path` object to a saved DataFrame with dyad position counts to normalize to if desired, as well as filters out certian contexts mutations occur in to stratify
     the data. It can count reverse complements of the IUPAC notation. Lastly it will normalize to a median value for each column
@@ -49,7 +49,6 @@ def format_dataframe(mutation_counts: Path, dyad_counts: 'Path | None' = None, i
     if dyad_counts:
         dyads_df = pd.read_csv(dyad_counts, sep= '\t', index_col=0, header=0)
         new_dyad_df = dyads_df.loc[:,all_contexts]
-    if dyad_counts:
         for mut_index, mut_row in new_mut_df.iterrows():
             results_dict[i] = [(sum(mut_row.tolist())/sum(new_dyad_df.loc[mut_index].tolist()))]
             i += 1
