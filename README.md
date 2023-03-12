@@ -5,3 +5,4 @@ a bioinformatics program that plots patterns between mutations and nucleosomes
 1. install node
 2. cd ./frontend
 3. npm install
+4. npm run start
