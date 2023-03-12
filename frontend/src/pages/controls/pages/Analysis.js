@@ -11,8 +11,8 @@ export default function Analysis() {
     <div className="analysis-container">
       <div className="analysis-btns-container">
         <AnalysisBtnContainer name="Genome File" allowedFileTypes={['fa']}/>
-        <AnalysisBtnContainer name="Mutation File" allowedFileTypes={['vcf']}/>
-        <AnalysisBtnContainer name="Nucleosome Map" allowedFileTypes={['bed']}/>
+        <AnalysisBtnContainer name="Mutation File" allowedFileTypes={['vcf', 'mut']}/>
+        <AnalysisBtnContainer name="Nucleosome Map" allowedFileTypes={['bed', 'nuc']}/>
       </div>
       <button>Run Analysis</button>
     </div>

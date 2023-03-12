@@ -27,6 +27,9 @@ export default function AnalysisBtn( { name, allowedFileTypes } ) {
       console.log(response)
     }
 
+    const checkIfPreprocessed = async () => {
+    }
+
   return (
     <Popover
     returnFocusOnClose={false}
