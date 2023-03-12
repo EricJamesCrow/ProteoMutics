@@ -1,9 +1,14 @@
 import React, { useState } from 'react'
 
+// styles
 import './ControlsContainer.css'
 
+// components
+import Analysis from './pages/Analysis'
+import GraphOptions from './pages/GraphOptions';
+
 export default function ControlsContainer() {
-  const [selectedTab, setSelectedTab] = useState('General');
+  const [selectedTab, setSelectedTab] = useState('Analysis');
   
   const handleTabClick = (tab) => {
     console.log(tab)
@@ -14,19 +19,21 @@ export default function ControlsContainer() {
     <div className="container-for-controls-container">
     <div className="controls-tabs-container">
     <button
-        className={selectedTab === 'General' ? 'selected' : ''}
-        onClick={() => handleTabClick('General')}
+        className={selectedTab === 'Analysis' ? 'selected' : ''}
+        onClick={() => handleTabClick('Analysis')}
       >
-        General
+        Analysis
       </button>
       <button
-        className={selectedTab === 'Settings' ? 'selected' : ''}
-        onClick={() => handleTabClick('Settings')}
+        className={selectedTab === 'GraphOptions' ? 'selected' : ''}
+        onClick={() => handleTabClick('GraphOptions')}
       >
-        Settings
+        Graph Options
       </button>
     </div>
     <div className="controls-container">
+      {selectedTab === 'Analysis' && <Analysis/>}
+      {selectedTab === 'GraphOptions' && <GraphOptions/>}
     </div>
     </div>
   )

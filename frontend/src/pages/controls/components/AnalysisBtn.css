@@ -1,0 +1,14 @@
+.analysis-btn {
+    background: #367F94;
+    border-radius: 5px;
+    height: 42px;
+    width: 216px;
+    color: white;
+    font-size: 18px;
+    font-weight: 400;
+}
+
+.analysis-btn-container div {
+    font-size: 16px;
+    color: black;
+}
