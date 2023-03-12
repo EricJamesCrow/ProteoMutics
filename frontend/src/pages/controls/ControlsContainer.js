@@ -11,7 +11,6 @@ export default function ControlsContainer() {
   const [selectedTab, setSelectedTab] = useState('Analysis');
   
   const handleTabClick = (tab) => {
-    console.log(tab)
     setSelectedTab(tab);
   };
 

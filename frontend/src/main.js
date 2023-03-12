@@ -1,5 +1,6 @@
 const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
+const { dialog } = require('electron');
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require('electron-squirrel-startup')) {
@@ -70,5 +71,20 @@ ipcMain.handle('maximize-window', () => {
   } else {
     mainWindow.maximize();
   }
+});
+
+ipcMain.handle('show-file-dialog', async (event, allowedFileTypes) => {
+  console.log(event)
+  console.log(allowedFileTypes)
+  const result = await dialog.showOpenDialog(mainWindow, {
+    properties: ['openFile'],
+    filters: [
+      {
+        name: 'Allowed Files',
+        extensions: allowedFileTypes,
+      },
+    ],
+  });
+  return result.filePaths[0];
 });
 

@@ -33,18 +33,6 @@
     padding: 1rem 0;
 }
 
-.analysis-btn-container > svg, .analysis-btn-container > div {
-    margin-left: 2.5rem;
-}
-
-.analysis-btn-container > div {
-    color: #3182CE;
-}
-
-.analysis-btn-container > svg {
-    color: #4CAF50;
-}
-
 .analysis-btn-container > button:hover {
     background: #3E9EB3;
 }

@@ -19,8 +19,13 @@ import {
   } from '@chakra-ui/react'
 
 
-export default function AnalysisBtn( { name } ) {
+export default function AnalysisBtn( { name, allowedFileTypes } ) {
     const { isOpen, onToggle, onClose } = useDisclosure()
+
+    const handleClick = async () => {
+      const response = await myApp.showFileDialog(allowedFileTypes);
+      console.log(response)
+    }
 
   return (
     <Popover
@@ -31,7 +36,7 @@ export default function AnalysisBtn( { name } ) {
     closeOnBlur={false}
   >
     <PopoverTrigger>
-        <button className="analysis-btn" onClick={onToggle}>{name}</button>
+        <button className="analysis-btn" onClick={handleClick}>{name}</button>
     </PopoverTrigger>
     <PopoverContent>
       <PopoverArrow />
