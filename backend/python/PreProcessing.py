@@ -33,22 +33,23 @@ def filter_lines_with_n(dyad_fasta: Path, dyad_bed: Path):
                 new_fa.write(fa_line)
                 new_bed.write(bed_line)
 
-def check_and_sort(input_file: Path):
+def check_and_sort(input_file: Path, output_dir: Path, suffix):
     # PLACE CHECK CODE HERE WITH -c METHOD
-    sorted_name = input_file.with_stem(f'{input_file.stem}_sorted')
+    sorted_name = output_dir / input_file.with_suffix(suffix).name
     command = f'sort -k1,1 -k2,2n -k3,3n -k6,6 {input_file} > {sorted_name}'
     with subprocess.Popen(args=command, stdout=subprocess.PIPE, shell=True) as p:
         return p, sorted_name
     
-def filter_acceptable_chromosomes(input_file: Path, genome = 'human'):
+def filter_acceptable_chromosomes(input_file: Path, output_dir: Path, genome = 'human'):
     human = ['1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','20','21','22','X']
-    output_file = input_file.with_stem(input_file.stem+'_filtered')
+    output_file = output_dir / input_file.with_stem(input_file.stem+'_filtered').name
     if genome == 'human':
         with open(input_file, 'r') as f, open(output_file, 'w') as o:
             for line in f:
                 chrom = line.strip().split('\t')[0][3:]
                 if chrom in human:
                     o.write(line)
+    return output_file
 
 def vcf_snp_to_intermediate_bed(vcf_file: Path, output_dir):
     intermediate_bed = output_dir / vcf_file.with_suffix('.tmp').name
@@ -72,7 +73,7 @@ def vcf_snp_to_intermediate_bed(vcf_file: Path, output_dir):
     return intermediate_bed
 
 def expand_context_custom_bed(intermediate_bed: Path, fasta_file: Path, output_dir):
-    bed_file = output_dir / intermediate_bed.with_suffix('.bed').name
+    bed_file = output_dir / intermediate_bed.with_suffix('.tmp2').name
     _, getfasta_output = BedtoolsCommands.bedtools_getfasta(intermediate_bed, fasta_file)
     with open(getfasta_output) as f, open(intermediate_bed) as i, open(bed_file, 'w') as o:
         for fasta_line, bed_line in zip(f, i):
