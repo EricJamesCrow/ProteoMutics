@@ -1,0 +1,36 @@
+.drop-down-menu-container {
+    width: 150px;
+    background: #ACACAC;
+}
+
+.dropdown-menu-container.show {
+    opacity: 1;
+    transition: opacity 0.2s ease-in-out;
+    pointer-events: auto;
+  }
+  
+.dropdown-menu-container.hide {
+    opacity: 0;
+    transition: opacity 0.2s ease-in-out;
+    pointer-events: none;
+  }
+
+.drop-down-menu-container {
+    display: flex;
+    flex-direction: column;
+    color: white;
+    font-family: 'Segoe UI';
+    font-size: 16px;
+    box-shadow: 0px 44px 44px rgba(0, 0, 0, 0.08);
+}
+
+.drop-down-menu-container > button {
+    width: 100%;
+    padding: 5px;
+    text-align: left;
+    padding-left: 12px;
+}
+
+.drop-down-menu-container > button:hover {
+    background: #D8D8D8;
+}

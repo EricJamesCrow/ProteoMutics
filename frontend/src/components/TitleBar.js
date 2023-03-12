@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 
 // styles
 import './TitleBar.css'
@@ -8,10 +8,13 @@ import { HamburgerIcon, MinusIcon, CloseIcon } from '@chakra-ui/icons'
 
 // images
 import Maximize from '../images/maximize_icon.svg'
-import Restore from '../images/restore_icon.svg'
 
+// components
+import DropDownMenu from './DropDownMenu'
 
 export default function TitleBar() {
+  const [showMenu, setShowMenu] = useState(false);
+
   async function minimize () {
     await myApp.minimizeWindow();
   }
@@ -21,9 +24,14 @@ export default function TitleBar() {
   async function close () {
     await myApp.closeWindow();
   }
+
+  const toggleMenu = () => {
+    setShowMenu(!showMenu)
+  }
   return (
+    <>
     <div className="title-bar-container drag">
-      <div className="hamburger-menu no-drag">
+      <div className="hamburger-menu no-drag" onClick={toggleMenu}>
       <HamburgerIcon w={6} h={6} color='white'/>
       </div>
       <div className="window-controls-container no-drag">
@@ -38,5 +46,9 @@ export default function TitleBar() {
         </div>
       </div>
     </div>
+    <div className={`dropdown-menu-container ${showMenu ? 'show' : 'hide'}`}>
+      <DropDownMenu/>
+    </div>
+    </>
   )
 }
