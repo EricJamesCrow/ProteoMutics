@@ -2,6 +2,7 @@
     height: calc(100vh - 32px); /* Subtract the height of the title bar */
     overflow-y: hidden; /* Prevent scrolling */
     position: absolute;
+    width: 100%;
     z-index: 9999;
 }
 
