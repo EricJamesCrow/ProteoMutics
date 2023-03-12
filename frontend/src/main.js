@@ -6,11 +6,15 @@ if (require('electron-squirrel-startup')) {
   app.quit();
 }
 
+let mainWindow;
+
 const createWindow = () => {
   // Create the browser window.
-  const mainWindow = new BrowserWindow({
-    width: 1280,
-    height: 720,
+  mainWindow = new BrowserWindow({
+    width: 1440,
+    height: 810,
+    frame: false,
+    autoHideMenuBar: true,
     webPreferences: {
       preload: path.resolve(__dirname, '../../src/preload.js'),
       nodeIntegration: false, // is default value after Electron v5
@@ -50,8 +54,18 @@ app.on('activate', () => {
 
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and import them here.
+ipcMain.handle('minimize-window', () => {
+  mainWindow.minimize();
+});
 
-ipcMain.handle("say-hello", async (event, arg) => {
-  console.log(arg);
-  return "hello from the main process. The app version is: " + app.getVersion();
+ipcMain.handle('close-window', () => {
+  mainWindow.close();
+});
+
+ipcMain.handle('maximize-window', () => {
+  if (mainWindow.isMaximized()) {
+    mainWindow.restore();
+  } else {
+    mainWindow.maximize();
+  }
 });
