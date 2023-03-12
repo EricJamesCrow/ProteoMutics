@@ -42,14 +42,14 @@ def check_and_sort(input_file: Path, output_dir: Path, suffix):
     
 def filter_acceptable_chromosomes(input_file: Path, output_dir: Path, genome = 'human'):
     human = ['1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','20','21','22','X']
-    output_file = output_dir / input_file.with_stem(input_file.stem+'_filtered').name
+    filtered_name = output_dir / input_file.with_suffix('.tmp3').name
     if genome == 'human':
-        with open(input_file, 'r') as f, open(output_file, 'w') as o:
+        with open(input_file, 'r') as f, open(filtered_name, 'w') as o:
             for line in f:
                 chrom = line.strip().split('\t')[0][3:]
                 if chrom in human:
                     o.write(line)
-    return output_file
+    return filtered_name
 
 def vcf_snp_to_intermediate_bed(vcf_file: Path, output_dir):
     intermediate_bed = output_dir / vcf_file.with_suffix('.tmp').name

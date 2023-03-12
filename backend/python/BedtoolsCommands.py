@@ -9,7 +9,7 @@ def bedtools_getfasta(bed_file: Path, fasta_file: Path):
         fasta_file (Path): .fa file that is the genome fasta file associated with the dyad positions (ex: hg19.fa).
     """
     # Create a name for the new file with a .fa ending
-    output_fasta_file = bed_file.with_suffix('.fa').with_stem(f'{bed_file.stem}_{fasta_file.stem}_fasta')
+    output_fasta_file = bed_file.with_name(f'{bed_file.stem}_{fasta_file.stem}_fasta.fa')
 
     # Run the bedtools getfasta tool given the input files
     command = f'bedtools getfasta -fi {fasta_file} -bed {bed_file} -fo {output_fasta_file} -tab'
