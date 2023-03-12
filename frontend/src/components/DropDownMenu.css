@@ -1,6 +1,8 @@
 .container-for-drop-down-menu-container {
     height: calc(100vh - 32px); /* Subtract the height of the title bar */
     overflow-y: hidden; /* Prevent scrolling */
+    position: absolute;
+    z-index: 9999;
 }
 
 .drop-down-menu-container {
@@ -25,7 +27,7 @@
     color: white;
     font-family: 'Segoe UI';
     font-size: 16px;
-    box-shadow: 0px 44px 44px rgba(0, 0, 0, 0.08);
+    box-shadow: 0px 3px 5px rgba(0, 0, 0, 0.2);
 }
 
 .drop-down-menu-container > button {

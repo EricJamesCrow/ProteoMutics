@@ -15,7 +15,9 @@ import Resize from './images/resize_icon.svg'
 export default function App() {
   return (
     <>
+    <div className="container-for-title-bar-component">
     <TitleBar/>
+    </div>
     <Home/>
     <Resize className="footer"/>
     </>

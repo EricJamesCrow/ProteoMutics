@@ -1,0 +1,24 @@
+.controls-container {
+    background: #F9F9F9;
+    border: 1px solid #EAEAEA;
+    height: 70vh;
+    margin-top: -0.0215rem;
+}
+
+.controls-tabs-container {
+    display: flex;
+    flex-direction: row;
+}
+
+.controls-tabs-container button {
+    font-size: 15px;
+    width: 120px;
+    height: 32px;
+    border-width: 1px 1px 0px 1px;
+    border-style: solid;
+    border-color: #EAEAEA;
+}
+
+.selected {
+    background: #F9F9F9;
+}
