@@ -1,0 +1,37 @@
+.display-graphs-container {
+    border: 1px solid #EBEBEB;
+    border-radius: 5px;
+    height: 80%;
+}
+
+.visualization-btns-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    margin-top: 2.5rem;
+}
+
+.visualization-btns-container button {
+    font-family: Roboto;
+    font-size: 18px;
+    color: white;
+    height: 40px;
+    border-radius: 5px;
+    width: 47%;
+}
+
+.preview-graph-btn {
+    background: #C81E1E;
+}
+
+.preview-graph-btn:hover {
+    background: #FF5C5C;
+}
+
+.save-graph-btn {
+    background: #367F94;
+}
+
+.save-graph-btn:hover {
+    background: #77C3EC;
+}

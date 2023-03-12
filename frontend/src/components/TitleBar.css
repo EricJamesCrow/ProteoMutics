@@ -1,0 +1,58 @@
+.title-bar-container {
+    background: #ACACAC;
+    height: 32px;
+    display: flex;
+    justify-content: space-between;
+}
+
+.title-bar-container > div:first-child {
+    padding: 0 5px;
+    height: 100%;
+    display: flex;
+    align-items: center;
+}
+
+.title-bar-container > div:first-child:hover {
+    cursor: pointer;
+    background: #D8D8D8;
+}
+
+.hambuger-menu {
+    z-index: 3;
+}
+
+.hamburger-menu > svg {
+    text-align: center;
+}
+
+.window-controls-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 100%;
+}
+
+.window-controls-container > div {
+    width: 35px;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.window-controls-container > div > svg {
+    width: 24px;
+}
+
+.window-controls-container > div:nth-child(2) > svg {
+    height: 16px;
+}
+
+.window-controls-container > div:hover {
+    cursor: pointer;
+    background: #D8D8D8;
+}
+
+.window-controls-container > div:last-child:hover {
+    background: #E53E3E;
+}
