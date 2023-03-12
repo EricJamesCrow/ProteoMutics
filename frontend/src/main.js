@@ -13,6 +13,8 @@ const createWindow = () => {
   mainWindow = new BrowserWindow({
     width: 1440,
     height: 810,
+    minWidth: 940,
+    minHeight: 640,
     frame: false,
     autoHideMenuBar: true,
     webPreferences: {
@@ -69,3 +71,4 @@ ipcMain.handle('maximize-window', () => {
     mainWindow.maximize();
   }
 });
+

@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState } from 'react';
 
 // styles
 import './TitleBar.css'
@@ -28,6 +28,7 @@ export default function TitleBar() {
   const toggleMenu = () => {
     setShowMenu(!showMenu)
   }
+
   return (
     <>
     <div className="title-bar-container drag">
@@ -46,7 +47,7 @@ export default function TitleBar() {
         </div>
       </div>
     </div>
-    <div className={`dropdown-menu-container ${showMenu ? 'show' : 'hide'}`}>
+    <div className={`dropdown-menu-container ${showMenu ? 'show' : 'hide'}`} onClick={toggleMenu}>
       <DropDownMenu/>
     </div>
     </>

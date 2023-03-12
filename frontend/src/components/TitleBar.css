@@ -18,6 +18,10 @@
     background: #D8D8D8;
 }
 
+.hambuger-menu {
+    z-index: 3;
+}
+
 .hamburger-menu > svg {
     text-align: center;
 }
@@ -51,5 +55,5 @@
 }
 
 .window-controls-container > div:last-child:hover {
-    background: #FF4757;
+    background: #E53E3E;
 }

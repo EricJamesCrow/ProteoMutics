@@ -1,6 +1,10 @@
+.container-for-drop-down-menu-container {
+    height: calc(100vh - 32px); /* Subtract the height of the title bar */
+    overflow-y: hidden; /* Prevent scrolling */
+}
+
 .drop-down-menu-container {
     width: 150px;
-    background: #ACACAC;
 }
 
 .dropdown-menu-container.show {
@@ -29,6 +33,7 @@
     padding: 5px;
     text-align: left;
     padding-left: 12px;
+    background: #ACACAC;
 }
 
 .drop-down-menu-container > button:hover {
