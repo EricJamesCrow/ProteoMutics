@@ -5,7 +5,7 @@ import json
 
 def check_preprocessed_files(request):
     if request.method == 'POST':
-        data = json.loads(request.body) # Parse JSON data
+        data = json.loads(request.body) # Parse stringified JSON data
         file_path = data.get('file_path')
         file_path = Path(file_path)
         file_type = data.get('type')

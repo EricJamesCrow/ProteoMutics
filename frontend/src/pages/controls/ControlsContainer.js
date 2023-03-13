@@ -31,8 +31,12 @@ export default function ControlsContainer() {
       </button>
     </div>
     <div className="controls-container">
-      {selectedTab === 'Analysis' && <Analysis/>}
-      {selectedTab === 'GraphOptions' && <GraphOptions/>}
+      <div className={selectedTab === 'Analysis' ? '' : 'no-display'}>
+        <Analysis/>
+      </div>
+      <div className={selectedTab === 'GraphOptions' ? '' : 'no-display'}>
+        <GraphOptions/>
+      </div>
     </div>
     </div>
   )

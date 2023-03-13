@@ -23,3 +23,7 @@
 .selected {
     background: #F9F9F9;
 }
+
+.no-display {
+    display: none;
+}
