@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 
 // chakra ui
 import { Input, Select, Switch } from '@chakra-ui/react'
@@ -6,7 +6,13 @@ import { Input, Select, Switch } from '@chakra-ui/react'
 // styles
 import './DataSmoothing.css'
 
-export default function DataSmoothing() {
+export default function DataSmoothing( { state, dispatch }) {
+    const [method, setMethod] = useState('');
+
+    const handleMethodChange = (event) => {
+      setMethod(event.target.value);
+    };
+
   return (
     <div className="data-formatting-container">
         <div className="data-formatting-with-switch">
@@ -15,7 +21,7 @@ export default function DataSmoothing() {
         </div>
         <div className="data-formatting-with-switch">
             <div>Method</div>
-            <Select placeholder='Select option' size='sm'>
+            <Select placeholder='Select option' size='sm' value={method} onChange={handleMethodChange}>
                 <option value='moving-average'>Moving Average</option>
                 <option value='savgol-filter'>Savgol Filter</option>
                 <option value='loess'>Loess</option>
@@ -24,14 +30,18 @@ export default function DataSmoothing() {
                 <option value='exponential-smoothing'>Exponential Smoothing</option>
             </Select>
         </div>
-        <div className="data-formatting-with-switch">
+        {method === 'savgol-filter' && (
+        <>
+          <div className="data-formatting-with-switch">
             <div>Window Size</div>
             <Input placeholder='5' size='sm'/>
-        </div>
-        <div className="data-formatting-with-switch">
+          </div>
+          <div className="data-formatting-with-switch">
             <div>Poly Order</div>
             <Input placeholder='5' size='sm'/>
-        </div>
+          </div>
+        </>
+      )}
   </div>
   )
 }

@@ -3,7 +3,7 @@ import React from 'react'
 // chakra ui
 import { Select, Switch } from '@chakra-ui/react'
 
-export default function InterpolateMissingData() {
+export default function InterpolateMissingData( { state, dispatch }) {
   return (
     <div className="data-formatting-container">
     <div className="data-formatting-with-switch">
