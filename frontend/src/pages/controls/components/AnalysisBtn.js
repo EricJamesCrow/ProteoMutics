@@ -10,7 +10,6 @@ import {
     Popover,
     PopoverTrigger,
     PopoverContent,
-    PopoverHeader,
     PopoverBody,
     PopoverFooter,
     PopoverArrow,
@@ -19,15 +18,25 @@ import {
   } from '@chakra-ui/react'
 
 
-export default function AnalysisBtn( { name, allowedFileTypes } ) {
+export default function AnalysisBtn( { name, allowedFileTypes, type } ) {
     const { isOpen, onToggle, onClose } = useDisclosure()
 
     const handleClick = async () => {
       const response = await myApp.showFileDialog(allowedFileTypes);
-      console.log(response)
+      const result = await checkIfPreprocessed(response, type)
+      if(!result) {
+        return onToggle()
+      }
     }
 
-    const checkIfPreprocessed = async () => {
+    const checkIfPreprocessed = async (file_path, file_type) => {
+      const response = await fetch('http://127.0.0.1:8000/api/check', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({file_path, file_type})
+      });
+      const data = await response.json();
+      return data.is_preprocessed;
     }
 
   return (

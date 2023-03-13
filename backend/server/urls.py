@@ -15,9 +15,9 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-import views
+from . import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('drinks/', views.drink_list, name='drink_list')
+    path('api/check', views.check_preprocessed_files)
 ]

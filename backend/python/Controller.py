@@ -1,6 +1,6 @@
 from pathlib import Path
 import shutil
-import PreProcessing as PreProcessing
+from . import PreProcessing
 
 def check_if_pre_processed(file_path: Path, typ: str):
     directory = file_path.parent
