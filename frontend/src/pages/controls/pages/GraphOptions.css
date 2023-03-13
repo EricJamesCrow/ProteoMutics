@@ -1,0 +1,27 @@
+.graph-data-btn-container {
+    margin-left: 2.5rem;
+}
+
+.graph-data-btn-container > button {
+    background: #367F94;
+    border-radius: 5px;
+    font-size: 20px;
+    color: #fff;
+    height: 42px;
+    width: 216px;
+}
+
+.graph-data-btn-container > button:hover {
+    background: #3E9EB3;
+}
+
+.data-formatting-container {
+    background: #FFFFFF;
+    border-radius: 5px;
+    margin: 2rem;
+}
+
+.data-formatting-container h1 {
+    font-size: 40px;
+    margin-left: 2rem;
+}
