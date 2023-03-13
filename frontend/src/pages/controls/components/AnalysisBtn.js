@@ -30,9 +30,11 @@ export default function AnalysisBtn( { name, allowedFileTypes, type } ) {
     }
 
     const checkIfPreprocessed = async (file_path, file_type) => {
-      const response = await fetch('http://127.0.0.1:8000/api/check', {
+      const response = await fetch('http://localhost:8000/api/check', {
         method: 'POST',
-        headers: {'Content-Type': 'application/json'},
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({file_path: file_path, type: file_type})
       });
       const data = await response.json();
