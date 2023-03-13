@@ -10,10 +10,18 @@ import AnalysisBtn from './AnalysisBtn'
 export default function AnalysisBtnContainer( { name, allowedFileTypes, type } ) {
     const [isLoading, setIsLoading] = useState(false)
     const [isPreProcessed, setIsPreProcessed] = useState(false)
+    
+    const showLoading = (loading) => {
+        setIsLoading(loading)
+    }
+
+    const showPreProcessed = (preProcessed) => {
+        setIsPreProcessed(preProcessed)
+    }
 
   return (
     <div className="analysis-btn-container">
-        <AnalysisBtn name={name} allowedFileTypes={allowedFileTypes} type={type}/>
+        <AnalysisBtn name={name} allowedFileTypes={allowedFileTypes} type={type} showLoading={showLoading} showPreProcessed={showPreProcessed}/>
         {isLoading ? <Spinner w={6} h={6} className="spinner"/> : null}
         {isPreProcessed ? <CheckIcon w={6} h={6}/> : null}
   </div>

@@ -18,15 +18,21 @@ import {
   } from '@chakra-ui/react'
 
 
-export default function AnalysisBtn( { name, allowedFileTypes, type } ) {
+export default function AnalysisBtn( { name, allowedFileTypes, type, showLoading, showPreProcessed } ) {
     const { isOpen, onToggle, onClose } = useDisclosure()
 
     const handleClick = async () => {
       const response = await myApp.showFileDialog(allowedFileTypes);
+      if(!response) return;
+      showPreProcessed(false)
+      showLoading(true)
       const result = await checkIfPreprocessed(response, type)
+      showLoading(false)
       if(!result) {
+        showPreProcessed(true)
         return onToggle()
       }
+      return showPreProcessed(true)
     }
 
     const checkIfPreprocessed = async (file_path, file_type) => {
