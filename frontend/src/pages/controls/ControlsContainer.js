@@ -8,7 +8,7 @@ import Analysis from './pages/Analysis'
 import GraphOptions from './pages/GraphOptions';
 
 export default function ControlsContainer() {
-  const [selectedTab, setSelectedTab] = useState('Analysis');
+  const [selectedTab, setSelectedTab] = useState('GraphOptions');
   
   const handleTabClick = (tab) => {
     setSelectedTab(tab);

@@ -1,7 +1,7 @@
 .controls-container {
     background: #F9F9F9;
     border: 1px solid #EAEAEA;
-    height: 75vh;
+    min-height: 77vh;
     border-radius: 5px;
     margin-top: -0.0215rem;
 }
