@@ -52,7 +52,7 @@ def make_graph(mutation_data: pd.DataFrame, interpolate_method: None | bool = Fa
 
     # add gridlines
     ax.grid(True)
-    mpld3.show()
+    return fig
 
 def save_figure(graph_object: tuple, dpi: int, fig_output_name: str):
     # finish me pls
@@ -60,4 +60,4 @@ def save_figure(graph_object: tuple, dpi: int, fig_output_name: str):
 
 def display_figure(graph_object):
     html_obj = mpld3.fig_to_html(graph_object)
-    mpld3.show(html_obj)
+    return html_obj

@@ -20,5 +20,5 @@ from . import views
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/check', views.check_preprocessed_files),
-    path('api/graph_data', views.plot_graph_data)
+    path('api/generate_graph', views.plot_graph_data, name='generate_graph')
 ]

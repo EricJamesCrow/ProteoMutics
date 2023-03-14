@@ -2,6 +2,7 @@ import React from 'react'
 
 // redux
 import { useSelector, useDispatch } from 'react-redux';
+import { setGraphHtml } from '../../../redux/slices/graphHtmlSlice'
 
 // styles
 import './GraphOptions.css'
@@ -12,7 +13,7 @@ import DataSmoothing from '../components/DataSmoothing'
 import InterpolateMissingData from '../components/InterpolateMissingData'
 
 export default function GraphOptions() {
-  const dispatch = useDispatch( )
+  const dispatch = useDispatch()
   const graphOptions = useSelector(state => state.graphOptions);
 
   const handleClick = async () => {
@@ -23,14 +24,16 @@ export default function GraphOptions() {
   }
 
   const graphData = async (filePath) => {
-    const response = await fetch('http://localhost:8000/api/graph_data', {
+    const response = await fetch('http://localhost:8000/api/generate_graph', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({mutation_file_path: filePath})
     });
-    await response.json();
+    const data = await response.json();
+    const graphHtml = data.graph_html;
+    dispatch(setGraphHtml(graphHtml));
   }
 
   return (
