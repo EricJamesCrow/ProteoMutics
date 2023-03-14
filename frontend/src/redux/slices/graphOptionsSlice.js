@@ -12,7 +12,16 @@ const graphOptionsSlice = createSlice({
                                     value: ""
                                     }
                     },
-    dataSmoothing: { method: "moving-average",
+    dataSmoothing: { enabled: true,
+                     method: 'moving-average', 
+                     methods: {
+                                "movingAverage": { enabled: true, value: "" },
+                                "savgol": { enabled: true, value: "" },
+                                "loess": { enabled: true, value: "" },
+                                "median": { enabled: true, value: "" },
+                                "gaussian": { enabled: true, value: "" },
+                                "exponential": { enabled: true, value: "" },
+                     },
                     },
     interpolateMissingData: { enabled: true, value: "linear" },
     mutationFile: { file: null, preprocessed: false },
@@ -22,12 +31,15 @@ const graphOptionsSlice = createSlice({
     updateDataFormatting: (state, action) => {
       state.dataFormatting = { ...state.dataFormatting, ...action.payload };
     },
+    updateDataSmoothing: (state, action) => {
+        state.dataSmoothing = { ...state.dataSmoothing, ...action.payload };
+      },
     updateInterpolateMissingData: (state, action) => {
         state.interpolateMissingData = { ...state.interpolateMissingData, ...action.payload };
     }
   },
 });
 
-export const { updateDataFormatting, updateInterpolateMissingData } = graphOptionsSlice.actions;
+export const { updateDataFormatting, updateDataSmoothing, updateInterpolateMissingData } = graphOptionsSlice.actions;
 
 export default graphOptionsSlice.reducer;

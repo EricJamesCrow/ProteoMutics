@@ -1,3 +1,7 @@
+.data-formatting-container.smoothing {
+    height: 210px;
+}
+
 .data-formatting-with-switch {
     display: flex;
     align-items: center;
