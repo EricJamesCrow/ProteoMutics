@@ -14,9 +14,6 @@ import InterpolateMissingData from '../components/InterpolateMissingData'
 export default function GraphOptions() {
   const dispatch = useDispatch( )
   const graphOptions = useSelector(state => state.graphOptions);
-  // const dataFormatting = graphOptions.dataFormatting;
-  const dataSmoothing = graphOptions.dataSmoothing;
-  const interpolateMissingData = graphOptions.interpolateMissingData;
 
   return (
     <div className="graph-options-container">
@@ -24,8 +21,8 @@ export default function GraphOptions() {
         <button>Graph Data</button>
       </div>
       <DataFormatting state={graphOptions} dispatch={dispatch}/>
-      <DataSmoothing state={dataSmoothing} dispatch={dispatch}/>
-      <InterpolateMissingData state={interpolateMissingData} dispatch={dispatch}/>
+      <DataSmoothing state={graphOptions} dispatch={dispatch}/>
+      <InterpolateMissingData state={graphOptions} dispatch={dispatch}/>
     </div>
   )
 }

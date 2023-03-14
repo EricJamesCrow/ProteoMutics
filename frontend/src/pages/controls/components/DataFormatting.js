@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react'
+import React from 'react'
 
 // chakra ui
 import { Input, Switch } from '@chakra-ui/react'
 
+// redux
 import { updateDataFormatting } from '../../../redux/slices/graphOptionsSlice'
 
 // styles

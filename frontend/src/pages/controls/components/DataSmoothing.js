@@ -7,6 +7,7 @@ import { Input, Select, Switch } from '@chakra-ui/react'
 import './DataSmoothing.css'
 
 export default function DataSmoothing( { state, dispatch }) {
+    const dataSmoothing = state.dataSmoothing;
     const [method, setMethod] = useState('');
 
     const handleMethodChange = (event) => {
