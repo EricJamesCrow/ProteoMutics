@@ -1,12 +1,9 @@
 import DataFrameOperations
 import Tools
 from pathlib import Path
-import multiprocessing as mp
 import pandas as pd
-from plotnine import *
-import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt, mpld3
 import numpy as np
-from scipy import stats
 
 ###################################################33 plotnine graph code ##################################33
 
@@ -25,7 +22,7 @@ df = DataFrameOperations.format_dataframe(
 #     iupac='NCN'
 #     )
 
-df = df[(np.abs(stats.zscore(df)) < 3).all(axis=1)]
+# df = df[(np.abs(stats.zscore(df)) < 3).all(axis=1)]
 
 indexes = df.index.tolist()
 graph_values = []
@@ -75,4 +72,5 @@ ax.ticklabel_format(axis='x', style='plain')
 # add gridlines
 ax.grid(True)
 
-plt.show()
+mpld3.show()
+# plt.show()

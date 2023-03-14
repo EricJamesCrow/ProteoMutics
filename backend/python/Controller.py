@@ -38,8 +38,14 @@ def pre_process_mutation_file(file_path: Path, fasta_file: Path):
     shutil.rmtree(temp_folder)
     return step_4
 
-def pre_process_nuc_map():
-    pass
+def pre_process_nuc_map(file_path: Path, fasta_file: Path):
+    directory = file_path.parent
+    nucleomutics_folder = directory.joinpath(file_path.with_name(file_path.stem+'_nucleomutics').stem)
+    temp_folder = directory.joinpath('.intermediate_files')
+    if nucleomutics_folder.exists():
+        shutil.rmtree(nucleomutics_folder)
+    if temp_folder.exists():
+        shutil.rmtree(temp_folder)
 
 def pre_process_fasta():
     str = 'samtools faidx'
