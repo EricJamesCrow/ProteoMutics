@@ -24,6 +24,7 @@ export default function GraphOptions() {
   }
 
   const graphData = async (filePath) => {
+    dispatch(setGraphHtmlLoading(null));
     dispatch(setGraphHtmlLoading(true));
     const response = await fetch('http://localhost:8000/api/generate_graph', {
       method: 'POST',

@@ -22,7 +22,10 @@ export default function GraphComponent() {
           if (mpld3Script) {
             eval(mpld3Script.innerHTML);
           }
-        }
+          console.log(graphHtml)
+        } else if (loading && graphContainer.current) {
+          graphContainer.current.innerHTML = "";
+        };
       }, [graphHtml]);
     
 

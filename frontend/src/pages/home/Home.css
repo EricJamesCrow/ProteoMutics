@@ -16,12 +16,12 @@
 }
 
 .ui-container > .visualization-container {
-    width: 45%;
+    width: 700px;
     margin: 0 1rem;
 }
 
 .ui-container > .container-for-controls-container {
-    width: 55%;
+    width: 50%;
     margin: 1rem;
     margin-left: 2.5rem;
 }

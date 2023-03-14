@@ -17,8 +17,11 @@ def make_graph(mutation_data: pd.DataFrame, interpolate_method: None | bool = Fa
     # if interpolating missing data, apply method and adjust values
     if interpolate_method:
         x, y = Tools.interpolate_missing_data(x, y, -1000, 1000, interpolate_method)
+    # set width and height
+    width_in_inches = 7  # adjust this value according to your needs
+    height_in_inches = 3.5  # adjust this value according to your needs
     # setting up matplotlib object
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(figsize=(width_in_inches, height_in_inches))
     ax.scatter(x, y, marker='.', s=1, linewidths=1)
     # Define the x-domain of interest for the nucleosome
     xmin = -73
