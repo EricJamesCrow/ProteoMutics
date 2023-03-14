@@ -16,7 +16,7 @@ export default function App() {
   return (
     <>
     <div className="container-for-title-bar-component">
-    <TitleBar/>
+      <TitleBar/>
     </div>
     <Home/>
     <Resize className="footer"/>

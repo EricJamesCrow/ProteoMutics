@@ -13,15 +13,10 @@ import AnalysisBtn from './AnalysisBtn'
 
 export default function AnalysisBtnContainer( { name, file, allowedFileTypes, type } ) {
     const [isLoading, setIsLoading] = useState(false)
-    const [isPreProcessed, setIsPreProcessed] = useState(false)
     const dispatch = useDispatch()
     
     const showLoading = (loading) => {
         setIsLoading(loading)
-    }
-
-    const showPreProcessed = (preProcessed) => {
-        setIsPreProcessed(preProcessed)
     }
 
     const handleFileSelect = (selectedFile, preProcessed) => {
@@ -45,7 +40,7 @@ export default function AnalysisBtnContainer( { name, file, allowedFileTypes, ty
 
   return (
     <div className="analysis-btn-container">
-        <AnalysisBtn name={name} handleFileSelect={handleFileSelect} allowedFileTypes={allowedFileTypes} type={type} showLoading={showLoading} showPreProcessed={showPreProcessed}/>
+        <AnalysisBtn name={name} handleFileSelect={handleFileSelect} allowedFileTypes={allowedFileTypes} type={type} showLoading={showLoading}/>
         {isLoading ? <Spinner w={6} h={6} className="spinner"/> : null}
         {file.preProcessed ? <CheckIcon w={6} h={6} color='#4CAF50'/> : file.file && <WarningTwoIcon w={6} h={6} color='red.500' />}
   </div>
