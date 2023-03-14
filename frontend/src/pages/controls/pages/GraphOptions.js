@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React from 'react'
 
 // redux
 import { useSelector, useDispatch } from 'react-redux';
@@ -15,10 +15,21 @@ export default function GraphOptions() {
   const dispatch = useDispatch( )
   const graphOptions = useSelector(state => state.graphOptions);
 
+  const handleClick = async () => {
+    const allowedFileTypes = ['data']
+    const response = await myApp.showFileDialog(allowedFileTypes);
+    if(!response) return;
+    await graphData(response);
+  }
+
+  const graphData = async (filePath) => {
+    console.log(filePath)
+  }
+
   return (
     <div className="graph-options-container">
       <div className="graph-data-btn-container">
-        <button>Graph Data</button>
+        <button onClick={handleClick}>Graph Data</button>
       </div>
       <DataFormatting state={graphOptions} dispatch={dispatch}/>
       <DataSmoothing state={graphOptions} dispatch={dispatch}/>

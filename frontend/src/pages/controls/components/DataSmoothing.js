@@ -29,7 +29,6 @@ export default function DataSmoothing( { state, dispatch }) {
     };
 
     const handleInputChange = (event, fieldName) => {
-      console.log("triggered")
       const updatedDataSmoothing = {
         ...state.dataSmoothing,
         [dataSmoothing.method]: {

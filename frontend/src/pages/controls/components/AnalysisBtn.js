@@ -31,7 +31,6 @@ export default function AnalysisBtn( { name, handleFileSelect, allowedFileTypes,
       if(!result) {
         return onToggle()
       }
-      return showPreProcessed(true)
     }
 
     const checkIfPreprocessed = async (file_path, file_type) => {
