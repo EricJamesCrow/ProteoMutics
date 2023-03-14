@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 
 // redux
 import { useSelector } from 'react-redux';
@@ -11,9 +11,15 @@ import AnalysisBtnContainer from '../components/AnalysisBtnContainer'
 
 export default function Analysis() {
   const files = useSelector(state => state.files);
+  const graphOptions = useSelector(state => state.graphOptions);
   const genomeFile = files.genomeFile;
   const mutationFile = files.mutationFile;
   const nucleosomeMap = files.nucleosomeMap;
+
+  useEffect(() => {
+    console.log('files', files)
+    console.log('graphOptions', graphOptions)
+  }, [graphOptions])
 
   return (
     <div className="analysis-container">
