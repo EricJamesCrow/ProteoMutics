@@ -1,7 +1,13 @@
 .display-graphs-container {
     border: 1px solid #EBEBEB;
     border-radius: 5px;
-    height: 80%;
+    height: 75%;
+}
+
+.display-graphs-container.loading {
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 .visualization-btns-container {

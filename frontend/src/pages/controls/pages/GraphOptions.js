@@ -2,7 +2,7 @@ import React from 'react'
 
 // redux
 import { useSelector, useDispatch } from 'react-redux';
-import { setGraphHtml } from '../../../redux/slices/graphHtmlSlice'
+import { setGraphHtml, setGraphHtmlLoading } from '../../../redux/slices/graphHtmlSlice'
 
 // styles
 import './GraphOptions.css'
@@ -24,6 +24,7 @@ export default function GraphOptions() {
   }
 
   const graphData = async (filePath) => {
+    dispatch(setGraphHtmlLoading(true));
     const response = await fetch('http://localhost:8000/api/generate_graph', {
       method: 'POST',
       headers: {
