@@ -74,8 +74,6 @@ ipcMain.handle('maximize-window', () => {
 });
 
 ipcMain.handle('show-file-dialog', async (event, allowedFileTypes) => {
-  console.log(event)
-  console.log(allowedFileTypes)
   const result = await dialog.showOpenDialog(mainWindow, {
     properties: ['openFile'],
     filters: [
