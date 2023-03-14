@@ -1,7 +1,7 @@
 .display-graphs-container {
     border: 1px solid #EBEBEB;
     border-radius: 5px;
-    height: 75%;
+    height: 480px;
 }
 
 .display-graphs-container.loading {
