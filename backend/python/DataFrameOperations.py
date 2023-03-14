@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 from scipy import stats
 from pathlib import Path
-import Tools
+from . import Tools
 
 def format_dataframe(mutation_counts: Path, dyad_counts: 'Path | None' = None, iupac = 'NNN', count_complements = False, normalize_to_median = True, z_score_filter: None | float = None) -> pd.DataFrame:
     """Takes a `Path` object to a saved DataFrame and counts across rows to get 2-D x and y data points to graph.

@@ -5,7 +5,7 @@ from scipy.ndimage import gaussian_filter1d
 from statsmodels.nonparametric.smoothers_lowess import lowess
 import matplotlib.pyplot as plt
 from scipy.optimize import curve_fit
-from sklearn.metrics import r2_score
+# from sklearn.metrics import r2_score
 from astropy.timeseries import LombScargle
 
 def contexts_in_iupac(iupac_val: str):

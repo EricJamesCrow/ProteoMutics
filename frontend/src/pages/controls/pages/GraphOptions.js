@@ -23,7 +23,14 @@ export default function GraphOptions() {
   }
 
   const graphData = async (filePath) => {
-    console.log(filePath)
+    const response = await fetch('http://localhost:8000/api/graph_data', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({mutation_file_path: filePath})
+    });
+    await response.json();
   }
 
   return (

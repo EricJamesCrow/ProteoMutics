@@ -52,13 +52,12 @@ def make_graph(mutation_data: pd.DataFrame, interpolate_method: None | bool = Fa
 
     # add gridlines
     ax.grid(True)
-
-    return fig, ax
+    mpld3.show()
 
 def save_figure(graph_object: tuple, dpi: int, fig_output_name: str):
     # finish me pls
     plt.savefig(graph_object, dpi = dpi, )
 
-def display_figure(graph_object: tuple):
+def display_figure(graph_object):
     html_obj = mpld3.fig_to_html(graph_object)
     mpld3.show(html_obj)
