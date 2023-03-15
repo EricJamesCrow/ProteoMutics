@@ -15,8 +15,8 @@ export default function GraphComponent() {
     const loading = useSelector((state) => state.graphHtml.loading);
 
     useEffect(() => {
-        dispatch(setGraphHtmlLoading(false));
         if (graphHtml && graphContainer.current) {
+          dispatch(setGraphHtmlLoading(false));
           graphContainer.current.innerHTML = graphHtml;
     
           const graphScript = graphContainer.current.querySelector('script');
