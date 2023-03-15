@@ -40,7 +40,7 @@ export default function DataFormatting( { state, dispatch } ) {
     <div className="data-formatting-inputs-container">
       <div className="data-formatting-input-container">
         <div>Contexts</div>
-        <Input value={dataFormatting.contexts.value} onChange={(e) => handleInputChange(e, 'contexts')} placeholder='NNN' size='xs' style={{ width: "50px" }}/>
+        <Input value={dataFormatting.contexts.value} onChange={(e) => handleInputChange(e, 'contexts')} placeholder='NNN' size='xs' style={{ width: "45px" }}/>
       </div>
       <div className="data-formatting-input-container">
         <Switch isChecked={dataFormatting.countComplements.enabled} onChange={(e) => handleSwitchChange(e, 'countComplements')} size='sm'/>
@@ -58,7 +58,7 @@ export default function DataFormatting( { state, dispatch } ) {
     <div className="remove-outliers-container">
         <Switch isChecked={dataFormatting.removeOutliers.enabled} onChange={(e) => handleSwitchChange(e, 'removeOutliers')} size='sm'  />
         <div>Remove Outliers</div>
-        <Input value={dataFormatting.removeOutliers.value} onChange={(e) => handleInputChange(e, 'removeOutliers')} placeholder='2.5' size='xs' style={{ width: "50px" }}/>
+        <Input value={dataFormatting.removeOutliers.value} onChange={(e) => handleInputChange(e, 'removeOutliers')} placeholder='2.5' size='xs' style={{ width: "40px" }}/>
     </div>
   </div>
   )
