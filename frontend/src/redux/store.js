@@ -9,6 +9,7 @@ import graphHtmlReducer from './slices/graphHtmlSlice';
 const persistConfig = {
   key: 'root',
   storage,
+  whitelist: ['graphOptions'],
 };
 
 const rootReducer = combineReducers({
