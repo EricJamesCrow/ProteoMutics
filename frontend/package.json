@@ -1,9 +1,9 @@
 {
-  "name": "my-app",
-  "productName": "my-app",
+  "name": "Nucleomutics",
+  "productName": "Nucleomutics",
   "version": "1.0.0",
   "proxy": "http://localhost:8000",
-  "description": "My Electron application description",
+  "description": "A bioinformatics program that plots patterns between mutations and nucleosomes",
   "main": ".webpack/main",
   "scripts": {
     "start": "electron-forge start",
@@ -42,6 +42,7 @@
     "electron-squirrel-startup": "^1.0.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-redux": "^8.0.5"
+    "react-redux": "^8.0.5",
+    "redux-persist": "^6.0.0"
   }
 }
