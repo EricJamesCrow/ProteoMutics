@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react'
 
+
 // chakra ui
 import { Spinner } from '@chakra-ui/react';
 
@@ -18,11 +19,10 @@ export default function GraphComponent() {
         if (graphHtml && graphContainer.current) {
           graphContainer.current.innerHTML = graphHtml;
     
-          const mpld3Script = graphContainer.current.querySelector('script');
-          if (mpld3Script) {
-            eval(mpld3Script.innerHTML);
+          const graphScript = graphContainer.current.querySelector('script');
+          if (graphScript) {
+            eval(graphScript.innerHTML);
           }
-          console.log(graphHtml)
         } else if (loading && graphContainer.current) {
           graphContainer.current.innerHTML = "";
         };
