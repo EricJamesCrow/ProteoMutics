@@ -14,7 +14,6 @@ const createSplashWindow = () => { // Added createSplashWindow function
     width: 350,
     height: 400,
     frame: false,
-    alwaysOnTop: true,
     resizable: false,
   });
 

@@ -26,13 +26,13 @@ def make_graph(mutation_data: pd.DataFrame, interpolate_method: None | bool = Fa
     mask = (x >= xmin) & (x <= xmax)
 
     # Create the scatter plot
-    scatter_trace = go.Scatter(x=x, y=y, mode='markers', marker=dict(size=2, color='black'), name='Mutation Counts')
+    scatter_trace = go.Scattergl(x=x, y=y, mode='markers', marker=dict(size=2, color='black'), name='Mutation Counts')
 
     # Create the line segments for the domain and outer domain
     line_traces = []
     for i in range(len(x) - 1):
         color = 'red' if mask[i] and mask[i + 1] else 'blue'
-        line_traces.append(go.Scatter(x=x[i:i + 2], y=y[i:i + 2], mode='lines', line=dict(color=color, width=2)))
+        line_traces.append(go.Scattergl(x=x[i:i + 2], y=y[i:i + 2], mode='lines', line=dict(color=color, width=2)))
 
     # Combine all the traces
     traces = [scatter_trace] + line_traces
