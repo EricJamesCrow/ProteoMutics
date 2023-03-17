@@ -40,7 +40,7 @@ def pre_process_mutation_file(file_path: Path, fasta_file: Path):
     shutil.rmtree(temp_folder)
     return new_mut
 
-def pre_process_nuc_map(file_path: Path, fasta_file: Path):
+def pre_process_nucleosome_map(file_path: Path, fasta_file: Path):
     directory = file_path.parent
     nucleomutics_folder = directory.joinpath(file_path.with_name(file_path.stem+'_nucleomutics').stem)
     temp_folder = directory.joinpath('.intermediate_files')

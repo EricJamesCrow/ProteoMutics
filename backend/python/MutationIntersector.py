@@ -14,6 +14,7 @@ class MutationIntersector:
         self.context_list = Tools.contexts_in_iupac('NNN')
         self.counts = {i: {key: 0 for key in self.context_list} for i in range(-1000,1001)}
         self.results = []
+        self.output_file = mutation_file.with_name(f'{mutation_file.stem}_{dyad_file.stem}_intersected_mutations_counts.txt')
         self.dyad_chrom_names = []
         self.mutations_chrom_names = []
         self.run()
@@ -22,8 +23,7 @@ class MutationIntersector:
         print(f"Error in process {task_id}: {error}")
         traceback.print_tb(error.__traceback__)
 
-    def results_to_file(self, context_list: list, counts: dict, mutation_file: Path, dyad_file: Path) -> None:
-        output_file = mutation_file.with_name(f'{mutation_file.stem}_{dyad_file.stem}_intersected_mutations_counts.txt')
+    def results_to_file(self, context_list: list, counts: dict, output_file: Path) -> None:
         df = pd.DataFrame.from_dict(counts, orient='index')
         df.columns = context_list
         df.index.name = 'Position'
@@ -132,3 +132,5 @@ class MutationIntersector:
         
         # Write the results to a file
         self.results_to_file(self.context_list, self.counts, self.mutation_file, self.dyad_file)
+
+        return self.output_file
