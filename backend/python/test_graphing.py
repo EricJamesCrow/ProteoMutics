@@ -2,7 +2,7 @@ import DataFrameOperations
 import Tools
 from pathlib import Path
 import pandas as pd
-import matplotlib.pyplot as plt, mpld3
+import matplotlib.pyplot as plt
 import numpy as np
 
 ###################################################33 plotnine graph code ##################################33
@@ -72,5 +72,5 @@ ax.ticklabel_format(axis='x', style='plain')
 # add gridlines
 ax.grid(True)
 
-mpld3.show()
-# plt.show()
+# mpld3.show()
+plt.show()
