@@ -24,7 +24,10 @@ def plot_graph_data(request):
         # nucleosome_file_path = data.get('nucleosome_file_path')
         # nucleosome_file_path = Path(nucleosome_file_path)
         df = DataFrameOperations.format_dataframe(mutation_counts=mutation_file_path, iupac='NNN', count_complements=False, normalize_to_median=True, z_score_filter=None)
-        graph_html = Graphing.display_figure(Graphing.make_graph(df))
-        return JsonResponse({"graph_html": graph_html})
+        graph_object, period, confidence, signal_to_noise = Graphing.display_figure(Graphing.make_graph(df))
+        return JsonResponse({"graph_html": graph_object,
+                             "period": period,
+                             "confidence": confidence,
+                             "signal_to_noise": signal_to_noise})
     else:
         return JsonResponse({'error': 'Invalid request method'})

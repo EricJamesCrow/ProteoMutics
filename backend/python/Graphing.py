@@ -1,4 +1,4 @@
-import Tools
+from . import Tools
 from pathlib import Path
 import numpy as np
 import pandas as pd
@@ -56,6 +56,7 @@ def make_graph(mutation_data: pd.DataFrame, interpolate_method: None | bool = Fa
 def save_figure(graph_object: go.Figure, dpi: int, fig_output_name: str):
     graph_object.write_image(fig_output_name, scale=dpi/72)
 
-def display_figure(graph_object: go.Figure, period, confidence, signal_to_noise):
+def display_figure(graphing_data_tuple: tuple):
+    graph_object, period, confidence, signal_to_noise = graphing_data_tuple
     graph_object = pyo.plot(graph_object, include_plotlyjs=False, output_type='div')
     return (graph_object, period, confidence, signal_to_noise)
