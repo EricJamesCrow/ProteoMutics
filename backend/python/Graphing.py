@@ -56,7 +56,7 @@ def make_graph(mutation_data: pd.DataFrame, interpolate_method: None | bool = Fa
 def save_figure(graph_object: go.Figure, dpi: int, fig_output_name: str):
     graph_object.write_image(fig_output_name, scale=dpi/72)
 
-def display_figure(graphing_data_tuple: tuple, decimal_places):
+def display_figure(graphing_data_tuple: tuple):
     graph_object, period, confidence, signal_to_noise = graphing_data_tuple
     graph_object = pyo.plot(graph_object, include_plotlyjs=False, output_type='div')
     period, confidence, signal_to_noise = ["{:.3f}".format(num) for num in [period, confidence, signal_to_noise]]

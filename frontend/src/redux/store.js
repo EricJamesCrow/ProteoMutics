@@ -5,6 +5,7 @@ import storage from 'redux-persist/lib/storage';
 import filesReducer from './slices/filesSlice';
 import graphOptionsReducer from './slices/graphOptionsSlice';
 import graphHtmlReducer from './slices/graphHtmlSlice';
+import statisticsReducer from './slices/statisticsSlice';
 
 const persistConfig = {
   key: 'root',
@@ -16,6 +17,7 @@ const rootReducer = combineReducers({
   files: filesReducer,
   graphOptions: graphOptionsReducer,
   graphHtml: graphHtmlReducer,
+  statistics: statisticsReducer,
 });
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

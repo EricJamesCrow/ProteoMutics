@@ -3,6 +3,7 @@ import React from 'react'
 // redux
 import { useSelector, useDispatch } from 'react-redux';
 import { setGraphHtml, setGraphHtmlLoading } from '../../../redux/slices/graphHtmlSlice'
+import { setPeriodicity, setSignalToNoiseRatio, setConfidence } from '../../../redux/slices/statisticsSlice';
 
 // styles
 import './GraphOptions.css'
@@ -35,7 +36,13 @@ export default function GraphOptions() {
     });
     const data = await response.json();
     const graphHtml = data.graph_html;
+    const period = data.period;
+    const confidence = data.confidence;
+    const signalToNoise = data.signal_to_noise;
     dispatch(setGraphHtml(graphHtml));
+    dispatch(setPeriodicity(period));
+    dispatch(setSignalToNoiseRatio(signalToNoise));
+    dispatch(setConfidence(confidence));
   }
 
   return (
