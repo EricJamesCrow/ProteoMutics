@@ -54,10 +54,10 @@ def pre_process_nuc_map(file_path: Path, fasta_file: Path):
     step_2 = BedtoolsCommands.bedtools_getfasta(step_1, fasta_file)
     step_3, fasta = PreProcessing.filter_lines_with_n(step_2, file_path, temp_folder)
     step_4 = PreProcessing.filter_acceptable_chromosomes(step_3, temp_folder)
-    step_5 = PreProcessing.check_and_sort(step_4, nucleomutics_folder, '.nuc')
-    step_6 = DyadContextCounter(fasta, nucleomutics_folder)
+    new_dyad = PreProcessing.check_and_sort(step_4, nucleomutics_folder, '.nuc')
+    counts = DyadContextCounter(fasta, nucleomutics_folder)
     shutil.rmtree(temp_folder)
-    return step_5, step_6
+    return new_dyad, counts
 
 
 def pre_process_fasta():
