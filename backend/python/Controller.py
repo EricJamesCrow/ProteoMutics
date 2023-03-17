@@ -51,7 +51,7 @@ def pre_process_nuc_map(file_path: Path, fasta_file: Path):
     temp_folder.mkdir()
     step_1 = PreProcessing.adjust_dyad_positions(file_path, temp_folder)
     step_2 = BedtoolsCommands.bedtools_getfasta(step_1, fasta_file)
-    # step_3 = 
+    step_3 = 
 
 def pre_process_fasta():
     str = 'samtools faidx'

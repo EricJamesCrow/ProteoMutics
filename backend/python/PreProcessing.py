@@ -27,6 +27,7 @@ def adjust_dyad_positions(dyad_file: Path, output_dir):
 def filter_lines_with_n(dyad_fasta: Path, dyad_bed: Path, output_dir):
     # Filter lines and write to new files
     filtered_fasta = dyad_fasta.with_name(f'{dyad_fasta.stem}_filtered.fa')
+    filtered_bed = dyad_bed.with_stem(f'{dyad_bed.stem}_filtered.bed')
     
     
     with open(dyad_fasta, 'r') as fa, open(dyad_bed, 'r') as bed, \
