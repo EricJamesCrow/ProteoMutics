@@ -1,4 +1,5 @@
 from pathlib import Path
+import BedtoolsCommands
 import shutil
 from . import PreProcessing
 
@@ -46,6 +47,11 @@ def pre_process_nuc_map(file_path: Path, fasta_file: Path):
         shutil.rmtree(nucleomutics_folder)
     if temp_folder.exists():
         shutil.rmtree(temp_folder)
+    nucleomutics_folder.mkdir()
+    temp_folder.mkdir()
+    step_1 = PreProcessing.adjust_dyad_positions(file_path, temp_folder)
+    step_2 = BedtoolsCommands.bedtools_getfasta(step_1, fasta_file)
+    step_3 = 
 
 def pre_process_fasta():
     str = 'samtools faidx'

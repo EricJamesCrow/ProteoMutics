@@ -2,7 +2,7 @@ from pathlib import Path
 import subprocess
 from . import BedtoolsCommands
 
-def adjust_dyad_positions(dyad_file: Path):
+def adjust_dyad_positions(dyad_file: Path, output_dir):
     """Takes a dyad file with single nucleotide positions and creates a new bed file with -500 and +500 positions
 
     Args:
@@ -10,10 +10,10 @@ def adjust_dyad_positions(dyad_file: Path):
     """
     
     # Create the new filename
-    output_file = dyad_file.with_stem(dyad_file.stem + '_plus-minus_1000')
+    intermediate_bed = output_dir / dyad_file.with_suffix('.tmp').name
 
     # Use a with statement to read and write to the files
-    with open(dyad_file, 'r') as f, open(output_file, 'w') as o:
+    with open(dyad_file, 'r') as f, open(intermediate_bed, 'w') as o:
         
         # Loop through the lines in the input file and expand the positions by 500 on either side
         for line in f:
@@ -22,11 +22,15 @@ def adjust_dyad_positions(dyad_file: Path):
             new_end = str(int(tsv[2]) + 1001)
             new_line_values = [tsv[0], new_start, new_end] + tsv[3:]
             o.write('\t'.join(new_line_values) + '\n')
+    return intermediate_bed
 
-def filter_lines_with_n(dyad_fasta: Path, dyad_bed: Path):
+def filter_lines_with_n(dyad_fasta: Path, dyad_bed: Path, output_dir):
     # Filter lines and write to new files
+    filtered_fasta = dyad_fasta.with_name(f'{dyad_fasta.stem}_filtered.fa')
+    
+    
     with open(dyad_fasta, 'r') as fa, open(dyad_bed, 'r') as bed, \
-         open(dyad_fasta.with_stem(f'{dyad_fasta.stem}_filtered'), 'w') as new_fa, \
+         open(dyad_fasta.with_name(f'{dyad_fasta.stem}_filtered.fa'), 'w') as new_fa, \
          open(dyad_bed.with_stem(f'{dyad_bed.stem}_filtered'), 'w') as new_bed:
         for fa_line, bed_line in zip(fa, bed):
             if 'N' not in fa_line.upper():
@@ -34,7 +38,6 @@ def filter_lines_with_n(dyad_fasta: Path, dyad_bed: Path):
                 new_bed.write(bed_line)
 
 def check_and_sort(input_file: Path, output_dir: Path, suffix):
-    # PLACE CHECK CODE HERE WITH -c METHOD
     sorted_name = output_dir / input_file.with_suffix(suffix).name
     command = f'sort -k1,1 -k2,2n -k3,3n -k6,6 {input_file} > {sorted_name}'
     with subprocess.Popen(args=command, stdout=subprocess.PIPE, shell=True) as p:
