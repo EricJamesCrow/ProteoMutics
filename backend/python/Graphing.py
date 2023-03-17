@@ -12,6 +12,7 @@ def make_graph(mutation_data: pd.DataFrame, interpolate_method: None | bool = Fa
         graph_values.append(sum(mutation_data.loc[item]))
     x = np.array(indexes)
     y = np.array(graph_values)
+    period, confidence, signal_to_noise = Tools.find_periodicity(x, y, 10.2)
     # if smoothing data, apply smoothing method
     if smoothing_method:
         x, y = Tools.smooth_data(x, y, method=smoothing_method)
@@ -50,10 +51,11 @@ def make_graph(mutation_data: pd.DataFrame, interpolate_method: None | bool = Fa
     # Create the Figure object
     fig = go.Figure(data=traces, layout=layout)
 
-    return fig
+    return fig, period, confidence, signal_to_noise
 
 def save_figure(graph_object: go.Figure, dpi: int, fig_output_name: str):
     graph_object.write_image(fig_output_name, scale=dpi/72)
 
-def display_figure(graph_object: go.Figure):
-    return pyo.plot(graph_object, include_plotlyjs=False, output_type='div')
+def display_figure(graph_object: go.Figure, period, confidence, signal_to_noise):
+    graph_object = pyo.plot(graph_object, include_plotlyjs=False, output_type='div')
+    return (graph_object, period, confidence, signal_to_noise)

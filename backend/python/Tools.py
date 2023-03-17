@@ -125,7 +125,7 @@ def find_periodicity(x, y, avg_period):
     noise = np.std(y)
     snr = signal / noise
 
-    return {'period': period, 'confidence': confidence, 'snr': snr}
+    return period, confidence, snr
 
 def exponential_smoothing(y, alpha):
     """
