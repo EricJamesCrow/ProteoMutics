@@ -7,13 +7,14 @@ from typing import Tuple, List
 
 
 class DyadFastaCounter:
-    def __init__(self, file: Path) -> None:
+    def __init__(self, file: Path, output_dir: Path) -> None:
         """Creates and runs a class that counts trinucleotide contexts at every position relative to a pool of dyads.
 
         Args:
             file (Path): ex: pathlib.Path('path/to/file.txt') format file input. Path object path to dyad file
         """
         self.path = file
+        self.output_dir = output_dir
         self.context_list = Tools.contexts_in_iupac('NNN')
         self.counts = {i: {key: 0 for key in self.context_list} for i in range(-1000,1001)}
         self.results = []
@@ -24,8 +25,8 @@ class DyadFastaCounter:
         print(f"Error in process {task_id}: {error}")
         traceback.print_tb(error.__traceback__)
 
-    def results_to_file(self, context_list: list, counts: dict, path: Path) -> None:
-        output_file = path.with_name(f'{path.stem}_counts.txt')
+    def results_to_file(self, context_list: list, counts: dict, path: Path, output_dir) -> None:
+        output_file = output_dir / path.with_name(f'{path.stem}.counts').name
         df = pd.DataFrame.from_dict(counts, orient='index')
         df.columns = context_list
         df.index.name = 'Position'
@@ -112,4 +113,4 @@ class DyadFastaCounter:
                         self.counts[i][context] += result[i][context]
 
         # Write the results to a file
-        self.results_to_file(self.context_list, self.counts, self.path)
+        self.results_to_file(self.context_list, self.counts, self.path, self.output_dir)

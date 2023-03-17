@@ -26,17 +26,17 @@ def adjust_dyad_positions(dyad_file: Path, output_dir):
 
 def filter_lines_with_n(dyad_fasta: Path, dyad_bed: Path, output_dir):
     # Filter lines and write to new files
-    filtered_fasta = dyad_fasta.with_name(f'{dyad_fasta.stem}_filtered.fa')
-    filtered_bed = dyad_bed.with_stem(f'{dyad_bed.stem}_filtered.bed')
-    
-    
+    filtered_fasta = output_dir / dyad_fasta.with_name(f'{dyad_fasta.stem}_filtered.fa').name
+    filtered_bed = output_dir / dyad_bed.with_stem(f'{dyad_bed.stem}_filtered.bed').name
+    # open all the files
     with open(dyad_fasta, 'r') as fa, open(dyad_bed, 'r') as bed, \
-         open(dyad_fasta.with_name(f'{dyad_fasta.stem}_filtered.fa'), 'w') as new_fa, \
-         open(dyad_bed.with_stem(f'{dyad_bed.stem}_filtered'), 'w') as new_bed:
+         open(filtered_fasta, 'w') as new_fa, \
+         open(filtered_bed, 'w') as new_bed:
         for fa_line, bed_line in zip(fa, bed):
             if 'N' not in fa_line.upper():
                 new_fa.write(fa_line)
                 new_bed.write(bed_line)
+    return filtered_bed, filtered_fasta
 
 def check_and_sort(input_file: Path, output_dir: Path, suffix):
     sorted_name = output_dir / input_file.with_suffix(suffix).name
