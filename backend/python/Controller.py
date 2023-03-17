@@ -36,9 +36,9 @@ def pre_process_mutation_file(file_path: Path, fasta_file: Path):
     step_1 = PreProcessing.vcf_snp_to_intermediate_bed(file_path, temp_folder)
     step_2 = PreProcessing.expand_context_custom_bed(step_1, fasta_file, temp_folder)
     step_3 = PreProcessing.filter_acceptable_chromosomes(step_2, temp_folder)
-    _, step_4 = PreProcessing.check_and_sort(step_3, nucleomutics_folder, '.mut')
+    _, new_mut = PreProcessing.check_and_sort(step_3, nucleomutics_folder, '.mut')
     shutil.rmtree(temp_folder)
-    return step_4
+    return new_mut
 
 def pre_process_nuc_map(file_path: Path, fasta_file: Path):
     directory = file_path.parent
