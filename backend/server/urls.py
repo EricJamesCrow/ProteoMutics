@@ -20,5 +20,6 @@ from . import views
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/check', views.check_preprocessed_files),
-    path('api/generate_graph', views.plot_graph_data, name='generate_graph')
+    path('api/generate_graph', views.plot_graph_data, name='generate_graph'),
+    path('api/run_analysis', views.run_analysis, name='run_analysis')
 ]
