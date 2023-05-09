@@ -3,6 +3,7 @@ from . import BedtoolsCommands
 import shutil
 from . import PreProcessing
 from . import DyadContextCounter
+import subprocess
 
 def check_if_pre_processed(file_path: Path, typ: str):
     directory = file_path.parent
@@ -60,8 +61,10 @@ def pre_process_nucleosome_map(file_path: Path, fasta_file: Path):
     return new_dyad, counts
 
 
-def pre_process_fasta():
-    str = 'samtools faidx'
+def pre_process_fasta(fasta_file: Path):
+    command = f'samtools faidx {fasta_file}'
+    with subprocess.Popen(args=command, stdout=subprocess.PIPE, shell=True) as p:
+        result = p.communicate()
     pass
 
 def check_for_results():
