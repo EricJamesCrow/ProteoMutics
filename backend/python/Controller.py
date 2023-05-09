@@ -11,7 +11,6 @@ def check_if_pre_processed(file_path: Path, typ: str):
     print(nucleomutics_folder)
     if typ == 'mutation': 
         check = nucleomutics_folder.joinpath(file_path.with_suffix('.mut').name)
-        print(check)
         if check.exists():
             return True
     elif typ == 'nucleosome':
@@ -53,7 +52,7 @@ def pre_process_nucleosome_map(file_path: Path, fasta_file: Path):
     temp_folder.mkdir()
     step_1 = PreProcessing.adjust_dyad_positions(file_path, temp_folder)
     step_2 = BedtoolsCommands.bedtools_getfasta(step_1, fasta_file)
-    step_3, fasta = PreProcessing.filter_lines_with_n(step_2, file_path, temp_folder)
+    step_3, fasta = PreProcessing.filter_lines_with_n(Path(step_2), file_path, temp_folder)
     step_4 = PreProcessing.filter_acceptable_chromosomes(step_3, temp_folder)
     new_dyad = PreProcessing.check_and_sort(step_4, nucleomutics_folder, '.nuc')
     counts = DyadContextCounter(fasta, nucleomutics_folder)
