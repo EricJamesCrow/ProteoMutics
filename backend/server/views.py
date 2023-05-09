@@ -19,7 +19,7 @@ def check_preprocessed_files(request):
     
 def run_analysis(request):
     if request.method == 'POST':
-        data = json.loads(request.body) # Parse stringified JSON data
+        data = json.loads(request.body.decode('utf-8')) # Parse stringified JSON data
         mutation_file_path = data.get('mutation_file_path')
         mutation_file_path = Path(mutation_file_path)
         nucleosome_file_path = data.get('nucleosome_file_path')
@@ -34,6 +34,7 @@ def run_analysis(request):
             fasta_file_path = Controller.pre_process_fasta(file_path=fasta_file_path)
         results_file = MutationIntersector(mutation_file_path=mutation_file_path, nucleosome_file_path=nucleosome_file_path)
         return results_file
+
     
 def plot_graph_data(request):
     if request.method == 'POST':
