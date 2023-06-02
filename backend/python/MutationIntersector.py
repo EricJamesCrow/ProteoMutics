@@ -1,50 +1,56 @@
-import multiprocessing as mp
-import pandas as pd
-from pathlib import Path
-from . import Tools
-import traceback
-from typing import Tuple, List
+import multiprocessing as mp  # Importing multiprocessing for parallel computing.
+import pandas as pd  # Importing pandas for data manipulation and analysis.
+from pathlib import Path  # Importing Path from pathlib for object-oriented filesystem paths.
+from . import Tools  # Importing Tools from the current directory.
+import traceback  # Importing traceback to print stack traces.
+from typing import Tuple, List  # Importing Tuple and List from typing for type hinting.
 
 
 class MutationIntersector:
     
     def __init__(self, mutation_file: Path, dyad_file: Path) -> None:
-        self.mutation_file = mutation_file
-        self.dyad_file = dyad_file
-        self.context_list = Tools.contexts_in_iupac('NNN')
+        self.mutation_file = mutation_file  # Initializing mutation_file attribute.
+        self.dyad_file = dyad_file  # Initializing dyad_file attribute.
+        self.context_list = Tools.contexts_in_iupac('NNN')  # Calling contexts_in_iupac method from Tools and passing 'NNN' as argument.
+        # Initializing counts attribute as a dictionary with keys from -1000 to 1000, each having a nested dictionary derived from context_list.
         self.counts = {i: {key: 0 for key in self.context_list} for i in range(-1000,1001)}
-        self.results = []
+        self.results = []  # Initializing results attribute as an empty list.
+        # Constructing output_file attribute using mutation_file's name and dyad_file's stem and appending '_intersected_mutations_counts.txt' to it.
         self.output_file = mutation_file.with_name(f'{mutation_file.stem}_{dyad_file.stem}_intersected_mutations_counts.txt')
-        self.dyad_chrom_names = []
-        self.mutations_chrom_names = []
-        self.run()
+        self.dyad_chrom_names = []  # Initializing dyad_chrom_names attribute as an empty list.
+        self.mutations_chrom_names = []  # Initializing mutations_chrom_names attribute as an empty list.
+        self.run()  # Calling run method.
 
-    def handle_error(self, error: Exception, task_id: int) -> None:
-        print(f"Error in process {task_id}: {error}")
-        traceback.print_tb(error.__traceback__)
+    def handle_error(self, error: Exception, task_id: int) -> None:  # Defining handle_error method to handle errors.
+        print(f"Error in process {task_id}: {error}")  # Printing error message.
+        traceback.print_tb(error.__traceback__)  # Printing stack trace of the error.
 
-    def results_to_file(self, context_list: list, counts: dict, output_file: Path) -> None:
-        df = pd.DataFrame.from_dict(counts, orient='index')
-        df.columns = context_list
-        df.index.name = 'Position'
-        df.to_csv(output_file, sep='\t')
+    def results_to_file(self, context_list: list, counts: dict, output_file: Path) -> None:  # Defining results_to_file method to write results into a file.
+        df = pd.DataFrame.from_dict(counts, orient='index')  # Creating a DataFrame from counts dictionary.
+        df.columns = context_list  # Setting DataFrame columns using context_list.
+        df.index.name = 'Position'  # Naming DataFrame index as 'Position'.
+        df.to_csv(output_file, sep='\t')  # Writing DataFrame to output_file in tab-separated format.
 
     def process_block(self, dyad_start_position: int, dyad_end_position: int, mut_start_position: int, mut_end_position: int, context_list: list[str], mutation_file_path: Path, dyad_file_path: Path, process_id: int) -> List[Tuple[int, dict]]:
+        # Initializing a dictionary similar to the one in __init__ to store counts.
         counts = {i: {key: 0 for key in context_list} for i in range(-1000,1001)}
-        with open(dyad_file_path) as dyad_file, open(mutation_file_path) as mut_file:
-            dyad_file.seek(dyad_start_position)
-            mut_file.seek(mut_start_position)
-            jump_back_position = mut_start_position
-            mut_data = mut_file.readline().strip().split('\t')
-            mut_start = int(mut_data[1])
-            context = mut_data[6]
+        with open(dyad_file_path) as dyad_file, open(mutation_file_path) as mut_file:  # Opening both dyad and mutation files.
+            dyad_file.seek(dyad_start_position)  # Moving dyad_file's read/write pointer to dyad_start_position.
+            mut_file.seek(mut_start_position)  # Moving mut_file's read/write pointer to mut_start_position.
+            jump_back_position = mut_start_position  # Storing mut_start_position in jump_back_position.
+            mut_data = mut_file.readline().strip().split('\t')  # Reading a line from mut_file, stripping whitespaces, splitting it by tabs, and storing in mut_data.
+            mut_start = int(mut_data[1])  # Converting second item of mut_data to integer and storing in mut_start.
+            context = mut_data[6]  # Storing sixth item of mut_data in context.
             while True:
+                # The dyad_data line reads from a file, removes leading and trailing spaces, and separates by tab.
                 dyad_data = dyad_file.readline().strip().split('\t')                
                 if dyad_file.tell() > dyad_end_position:
                     break
                 if dyad_data == ['']:
                     break
                 dyad_start = int(dyad_data[1])
+
+                # This loop checks the distance between the start positions of mutations and dyads. If it's less than -1000, it moves forward in the mutations file.
                 while mut_start-dyad_start < -1000:
                     jump_back_position = mut_file.tell()
                     mut_data = mut_file.readline().strip().split('\t')
@@ -54,6 +60,8 @@ class MutationIntersector:
                         break
                     mut_start = int(mut_data[1])
                     context = mut_data[6]
+
+                # This loop checks if the mutation start position is within a 1000 base pairs range from the dyad start position. If it is, it increments the count for the context of that mutation.
                 while -1000 <= mut_start-dyad_start <= 1000:
                     counts[mut_start-dyad_start][context] += 1
                     mut_data = mut_file.readline().strip().split('\t')
@@ -63,6 +71,8 @@ class MutationIntersector:
                         break
                     mut_start = int(mut_data[1])
                     context = mut_data[6]
+
+                # Here, it sets the pointer of the mutation file back to the start of the previous dyad.
                 mut_file.seek(jump_back_position)
                 mut_data = mut_file.readline().strip().split('\t')
                 if mut_file.tell() > mut_end_position:

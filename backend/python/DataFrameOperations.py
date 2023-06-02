@@ -1,9 +1,10 @@
-import numpy as np
-import pandas as pd
-from scipy import stats
-from pathlib import Path
-from . import Tools
+import numpy as np  # Importing numpy for handling numerical computations
+import pandas as pd  # Importing pandas for handling structured data
+from scipy import stats  # Importing stats module from scipy for statistical functions
+from pathlib import Path  # Importing Path from pathlib for dealing with paths
+from . import Tools  # Importing Tools module from the current package
 
+# Defining the function format_dataframe
 def format_dataframe(mutation_counts: Path, dyad_counts: 'Path | None' = None, iupac = 'NNN', count_complements = False, normalize_to_median = True, z_score_filter: None | float = None) -> pd.DataFrame:
     """Takes a `Path` object to a saved DataFrame and counts across rows to get 2-D x and y data points to graph.
     Takes a `Path` object to a saved DataFrame with dyad position counts to normalize to if desired, as well as filters out certian contexts mutations occur in to stratify
@@ -23,43 +24,56 @@ def format_dataframe(mutation_counts: Path, dyad_counts: 'Path | None' = None, i
     --------
         pd.DataFrame: pandas DataFrame in 2-D structure that can be graphed.
     """
-
-    # creates a list of trinucleotide contexts that the IUPAC notation covers
+    # Creating a list of trinucleotide contexts according to the IUPAC notation
     contexts = Tools.contexts_in_iupac(iupac)
 
-    # if counting reverse complements, adds the reverse complements and combines them into one large sorted list to match contexts
+    # Checking if the count_complements flag is set
     if count_complements:
-        
-        # gets the contexts in the reverse complement of the IUPAC notation
+        # Getting the reverse complements of the IUPAC notation contexts
         reverse_complement_contexts = Tools.contexts_in_iupac(Tools.reverse_complement(iupac))
-        # merges the sets together so it keeps unique contexts
+        # Merging both sets of contexts into one while keeping unique contexts
         all_contexts = set(reverse_complement_contexts).union(set(contexts))
-        # puts them into a sorted list to match the format of contexts (not necessary)
+        # Converting the set of all_contexts into a sorted list
         all_contexts = sorted(list(all_contexts))
-    
-    # otherwise keeps just assigns all_contexts the contexts list 
     else:
-        all_contexts = contexts    
+        # If the count_complements flag is not set, assign the original contexts to all_contexts
+        all_contexts = contexts   
 
-    # 
+    # Initializing an empty dictionary to store results
     results_dict = {}
     i = -1000
+    # Reading a dataframe from the mutation_counts file
     mutations_df = pd.read_csv(mutation_counts, sep= '\t', index_col=0, header=0)
+    # Selecting columns from the dataframe that match the all_contexts list
     new_mut_df = mutations_df.loc[:,all_contexts]
+    # Checking if a dyad_counts file was provided
     if dyad_counts:
+        # Reading a dataframe from the dyad_counts file
         dyads_df = pd.read_csv(dyad_counts, sep= '\t', index_col=0, header=0)
+        # Selecting columns from the dyad dataframe that match the all_contexts list
         new_dyad_df = dyads_df.loc[:,all_contexts]
+        # Looping over each row in the mutations dataframe
         for mut_index, mut_row in new_mut_df.iterrows():
+            # Computing the sum of the row divided by the sum of the corresponding dyad row
+            # Storing the result in the results dictionary with a unique key
             results_dict[i] = [(sum(mut_row.tolist())/sum(new_dyad_df.loc[mut_index].tolist()))]
             i += 1
     else:
+        # If a dyad_counts file was not provided, loop over each row in the mutations dataframe
         for _, mut_row in new_mut_df.iterrows():
+            # Computing the sum of the row
+            # Storing the result in the results dictionary with a unique key
             results_dict[i] = [(sum(mut_row.tolist()))]
             i += 1
+    # Creating a new dataframe from the results dictionary
     result_df = pd.DataFrame.from_dict(results_dict, orient='index', columns=['Counts'])
+    # Checking if a z_score_filter value was provided
     if z_score_filter:
+        # Filtering the dataframe to only include rows with a z-score less than the z_score_filter
         result_df = result_df[(np.abs(stats.zscore(result_df)) < z_score_filter).all(axis=1)]
+    # Checking if the normalize_to_median flag is set
     if normalize_to_median:
+        # Normalizing the dataframe by dividing each value by the median
         result_df_normalized = result_df.divide(result_df.median())
         return result_df_normalized
     else:
