@@ -3,24 +3,7 @@ import React from 'react'
 // styles
 import './AnalysisBtn.css'
 
-// chakra ui
-import {
-    Button,
-    ButtonGroup,
-    Popover,
-    PopoverTrigger,
-    PopoverContent,
-    PopoverBody,
-    PopoverFooter,
-    PopoverArrow,
-    PopoverCloseButton,
-    useDisclosure
-  } from '@chakra-ui/react'
-
-
 export default function AnalysisBtn( { name, handleFileSelect, allowedFileTypes, type, showLoading } ) {
-    const { isOpen, onToggle, onClose } = useDisclosure()
-
     const handleClick = async () => {
       const response = await myApp.showFileDialog(allowedFileTypes);
       if(!response) return;
@@ -28,9 +11,6 @@ export default function AnalysisBtn( { name, handleFileSelect, allowedFileTypes,
       const result = await checkIfPreprocessed(response, type)
       handleFileSelect(response, result)
       showLoading(false)
-      if(!result) {
-        return onToggle()
-      }
     }
 
     const checkIfPreprocessed = async (file_path, file_type) => {
@@ -46,29 +26,7 @@ export default function AnalysisBtn( { name, handleFileSelect, allowedFileTypes,
     }
 
   return (
-    <Popover
-    returnFocusOnClose={false}
-    isOpen={isOpen}
-    onClose={onClose}
-    placement='right'
-    closeOnBlur={false}
-  >
-    <PopoverTrigger>
-        <button className="analysis-btn" onClick={handleClick}>{name}</button>
-    </PopoverTrigger>
-    <PopoverContent>
-      <PopoverArrow />
-      <PopoverCloseButton />
-      <PopoverBody>
-        File needs to be preprocessed before analysis. Do you want to begin now?
-      </PopoverBody>
-      <PopoverFooter display='flex' justifyContent='flex-end'>
-        <ButtonGroup size='sm'>
-          <Button variant='outline'>No</Button>
-          <Button colorScheme='blue'>Yes</Button>
-        </ButtonGroup>
-      </PopoverFooter>
-    </PopoverContent>
-  </Popover>
+    <button className="analysis-btn" onClick={handleClick}>{name}</button>
+
   )
 }
