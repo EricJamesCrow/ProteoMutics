@@ -34,7 +34,7 @@ class MutationIntersector:
         df.index.name = 'Position'  # Naming DataFrame index as 'Position'.
         df.to_csv(output_file, sep='\t')  # Writing DataFrame to output_file in tab-separated format.
 
-    def process_block(self, dyad_start_position: int, dyad_end_position: int, mut_start_position: int, mut_end_position: int, context_list: list[str], mutation_file_path: Path, dyad_file_path: Path, process_id: int) -> List[Tuple[int, dict]]:
+    def process_block(self, dyad_start_position: int, dyad_end_position: int, mut_start_position: int, mut_end_position: int, context_list: list, mutation_file_path: Path, dyad_file_path: Path, process_id: int) -> List[Tuple[int, dict]]:
         # Initializing a dictionary similar to the one in __init__ to store counts.
         counts = {i: {key: 0 for key in context_list} for i in range(-1000,1001)}
         with open(dyad_file_path) as dyad_file, open(mutation_file_path) as mut_file:  # Opening both dyad and mutation files.
