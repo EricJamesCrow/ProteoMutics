@@ -16,7 +16,10 @@ class MutationIntersector:
         self.counts = {i: {key: 0 for key in self.context_list} for i in range(-1000,1001)}
         self.results = []  # Initializing results attribute as an empty list.
         # Constructing output_file attribute using mutation_file's name and dyad_file's stem and appending '_intersected_mutations_counts.txt' to it.
-        self.output_file = mutation_file.with_name(f'{mutation_file.stem}_{dyad_file.stem}_intersected_mutations_counts.txt')
+        try:
+            self.output_file = mutation_file.with_name(f'{mutation_file.stem}_{dyad_file.stem}_intersected_mutations_counts.txt')
+        except:
+            print(mutation_file)
         self.dyad_chrom_names = []  # Initializing dyad_chrom_names attribute as an empty list.
         self.mutations_chrom_names = []  # Initializing mutations_chrom_names attribute as an empty list.
         self.run()  # Calling run method.

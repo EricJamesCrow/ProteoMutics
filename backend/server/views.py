@@ -31,8 +31,8 @@ def run_analysis(request):
         if not Controller.check_if_pre_processed(file_path=nucleosome_file_path, typ='nucleosome'):
             nucleosome_file_path = Controller.pre_process_nucleosome_map(file_path=nucleosome_file_path, fasta_file=fasta_file_path)
         if not Controller.check_if_pre_processed(file_path=fasta_file_path, typ='fasta'):
-            fasta_file_path = Controller.pre_process_fasta(file_path=fasta_file_path)
-        results_file = MutationIntersector.MutationIntersector(mutation_file_path=mutation_file_path, nucleosome_file_path=nucleosome_file_path)
+            fasta_file_path = Controller.pre_process_fasta(fasta_file=fasta_file_path)
+        results_file = MutationIntersector.MutationIntersector(mutation_file=mutation_file_path, dyad_file=nucleosome_file_path)
         return results_file
 
     

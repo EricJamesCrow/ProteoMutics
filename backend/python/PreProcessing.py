@@ -1,5 +1,6 @@
 from pathlib import Path
 import subprocess
+import os
 from . import BedtoolsCommands
 
 def adjust_dyad_positions(dyad_file: Path, output_dir):
@@ -27,7 +28,7 @@ def adjust_dyad_positions(dyad_file: Path, output_dir):
 def filter_lines_with_n(dyad_fasta: Path, dyad_bed: Path, output_dir):
     # Filter lines and write to new files
     filtered_fasta = output_dir / dyad_fasta.with_name(f'{dyad_fasta.stem}_filtered.fa').name
-    filtered_bed = output_dir / dyad_bed.with_stem(f'{dyad_bed.stem}_filtered.bed').name
+    filtered_bed = output_dir / dyad_bed.with_name(f'{dyad_bed.stem}_filtered.bed').name
     # open all the files
     with open(dyad_fasta, 'r') as fa, open(dyad_bed, 'r') as bed, \
          open(filtered_fasta, 'w') as new_fa, \
@@ -43,6 +44,9 @@ def check_and_sort(input_file: Path, output_dir: Path, suffix):
     command = f'sort -k1,1 -k2,2n -k3,3n -k6,6 {input_file} > {sorted_name}'
     with subprocess.Popen(args=command, stdout=subprocess.PIPE, shell=True) as p:
         return p, sorted_name
+    
+def final_nuc_rename(input_file: Path, output_file: Path):
+    os.rename(input_file, input_file.with_name(output_file))
     
 def filter_acceptable_chromosomes(input_file: Path, output_dir: Path, genome = 'human'):
     human = ['1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','20','21','22','X']
