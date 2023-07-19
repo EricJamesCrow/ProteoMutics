@@ -1,7 +1,7 @@
 import multiprocessing as mp  # import multiprocessing module to handle parallel computation
 import pandas as pd  # import pandas for handling data in DataFrame format
 from pathlib import Path  # import Path from pathlib for handling paths
-from . import Tools  # import Tools module from the current package
+import Tools  # import Tools module from the current package
 import traceback  # import traceback for printing stack trace of an exception
 from typing import Tuple, List  # import Tuple and List from typing for annotating function signatures
 

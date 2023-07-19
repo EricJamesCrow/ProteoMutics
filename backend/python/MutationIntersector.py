@@ -1,14 +1,15 @@
 import multiprocessing as mp  # Importing multiprocessing for parallel computing.
 import pandas as pd  # Importing pandas for data manipulation and analysis.
 from pathlib import Path  # Importing Path from pathlib for object-oriented filesystem paths.
-from . import Tools  # Importing Tools from the current directory.
+import Tools  # Importing Tools from the current directory.
 import traceback  # Importing traceback to print stack traces.
 from typing import Tuple, List  # Importing Tuple and List from typing for type hinting.
 
 
 class MutationIntersector:
     
-    def __init__(self, mutation_file: Path, dyad_file: Path) -> None:
+    def __init__(self, mutation_file: Path, dyad_file: Path, output_file: Path) -> None:
+        self.output_file = output_file
         self.mutation_file = mutation_file  # Initializing mutation_file attribute.
         self.dyad_file = dyad_file  # Initializing dyad_file attribute.
         self.context_list = Tools.contexts_in_iupac('NNN')  # Calling contexts_in_iupac method from Tools and passing 'NNN' as argument.
@@ -144,6 +145,6 @@ class MutationIntersector:
                         self.counts[i][context] += result[i][context]
         
         # Write the results to a file
-        self.results_to_file(self.context_list, self.counts, self.mutation_file, self.dyad_file)
+        self.results_to_file(self.context_list, self.counts, self.output_file)
 
         return self.output_file
