@@ -1,14 +1,14 @@
 from pathlib import Path
-import BedtoolsCommands
+from . import BedtoolsCommands
 import shutil
-import PreProcessing
-import DyadContextCounter
+from . import PreProcessing
+from . import DyadContextCounter
 import subprocess
 
 def check_if_pre_processed(file_path: Path, typ: str):
     directory = file_path.parent
     nucleomutics_folder = directory.joinpath(file_path.with_name(file_path.stem+'_nucleomutics').stem)
-    print(nucleomutics_folder)
+    # print(nucleomutics_folder)
     if typ == 'mutation': 
         check = nucleomutics_folder.joinpath(file_path.with_suffix('.mut').name)
         if check.exists():
@@ -40,6 +40,7 @@ def pre_process_mutation_file(file_path: Path, fasta_file: Path):
     shutil.rmtree(temp_folder)
     return new_mut
 
+# change to save to program folder not input file directory
 def pre_process_nucleosome_map(file_path: Path, fasta_file: Path):
     directory = file_path.parent
     nucleomutics_folder = directory.joinpath(file_path.with_name(file_path.stem+'_nucleomutics').stem)

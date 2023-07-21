@@ -5,7 +5,7 @@ from pathlib import Path  # Importing Path from pathlib for dealing with paths
 from . import Tools  # Importing Tools module from the current package
 
 # Defining the function format_dataframe
-def format_dataframe(mutation_counts: Path, dyad_counts: 'Path | None' = None, iupac = 'NNN', count_complements = False, normalize_to_median = True, z_score_filter: None | float = None) -> pd.DataFrame:
+def format_dataframe(mutation_counts: Path, dyad_counts: 'Path | None' = None, iupac = 'NNN', count_complements = False, normalize_to_median = True, z_score_filter: float = None) -> pd.DataFrame:
     """Takes a `Path` object to a saved DataFrame and counts across rows to get 2-D x and y data points to graph.
     Takes a `Path` object to a saved DataFrame with dyad position counts to normalize to if desired, as well as filters out certian contexts mutations occur in to stratify
     the data. It can count reverse complements of the IUPAC notation. Lastly it will normalize to a median value for each column

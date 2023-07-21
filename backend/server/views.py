@@ -26,6 +26,7 @@ def run_analysis(request):
         nucleosome_file_path = Path(nucleosome_file_path)
         fasta_file_path = data.get('fasta_file_path')
         fasta_file_path = Path(fasta_file_path)
+
         if not Controller.check_if_pre_processed(file_path=mutation_file_path, typ='mutation'):
             mutation_file_path = Controller.pre_process_mutation_file(file_path=mutation_file_path, fasta_file=fasta_file_path)
         if not Controller.check_if_pre_processed(file_path=nucleosome_file_path, typ='nucleosome'):

@@ -1,11 +1,10 @@
 from . import Tools
-from pathlib import Path
 import numpy as np
 import pandas as pd
 import plotly.graph_objs as go
 import plotly.offline as pyo
 
-def make_graph(mutation_data: pd.DataFrame, interpolate_method: None | bool = False, smoothing_method: str | None = None):
+def make_graph(mutation_data: pd.DataFrame, interpolate_method: bool = False, smoothing_method: None = None):
     indexes = mutation_data.index.tolist()
     graph_values = []
     for item in indexes:
