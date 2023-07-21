@@ -6,6 +6,7 @@ from . import DyadContextCounter
 import subprocess
 
 def check_if_pre_processed(file_path: Path, typ: str):
+    print('check_if_pre_processed '+str(typ))
     directory = file_path.parent
     nucleomutics_folder = directory.joinpath(file_path.with_name(file_path.stem+'_nucleomutics').stem)
     # print(nucleomutics_folder)
@@ -42,6 +43,7 @@ def pre_process_mutation_file(file_path: Path, fasta_file: Path):
 
 # change to save to program folder not input file directory
 def pre_process_nucleosome_map(file_path: Path, fasta_file: Path):
+    print('pre_process_nucleosome_map')
     directory = file_path.parent
     nucleomutics_folder = directory.joinpath(file_path.with_name(file_path.stem+'_nucleomutics').stem)
     temp_folder = directory.joinpath('.intermediate_files')
@@ -51,14 +53,19 @@ def pre_process_nucleosome_map(file_path: Path, fasta_file: Path):
         shutil.rmtree(temp_folder)
     nucleomutics_folder.mkdir()
     temp_folder.mkdir()
+    print('step 1')
     step_1 = PreProcessing.adjust_dyad_positions(file_path, temp_folder)
+    print('step 2')
     step_2 = BedtoolsCommands.bedtools_getfasta(step_1, fasta_file)
+    print('step 3')
     step_3, fasta = PreProcessing.filter_lines_with_n(Path(step_2[1]), file_path, temp_folder)
+    print('step 4')
     step_4 = PreProcessing.filter_acceptable_chromosomes(step_3, temp_folder)
     new_dyad = PreProcessing.check_and_sort(step_4, nucleomutics_folder, '.nuc')
     PreProcessing.final_nuc_rename(new_dyad[1], file_path.with_suffix('.nuc').name)
     counts = DyadContextCounter.DyadFastaCounter(fasta, nucleomutics_folder)
     shutil.rmtree(temp_folder)
+    print('done')
     return new_dyad, counts
 
 
