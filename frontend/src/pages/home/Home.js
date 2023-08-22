@@ -10,7 +10,7 @@ import VisualizationContainer from '../visualization/VisualizationContainer'
 export default function Home() {
   return (
     <div className="home-container">
-        <h1>Nucleomutics</h1>
+        <h1>ProteoMutics</h1>
         <div className="ui-container">
         <ControlsContainer/>
         <VisualizationContainer/>
