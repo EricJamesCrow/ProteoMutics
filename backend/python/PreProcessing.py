@@ -45,7 +45,7 @@ def check_and_sort(input_file: Path, output_dir: Path, suffix):
     with subprocess.Popen(args=command, stdout=subprocess.PIPE, shell=True) as p:
         return p, sorted_name
     
-def final_nuc_rename(input_file: Path, output_file: Path):
+def final_nuc_rename(input_file: Path, output_file: str):
     os.rename(input_file, input_file.with_name(output_file))
     
 def filter_acceptable_chromosomes(input_file: Path, output_dir: Path, genome = 'human'):
