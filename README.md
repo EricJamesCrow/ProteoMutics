@@ -1,4 +1,4 @@
-# Nucleomutics
+# ProteoMutics
 a bioinformatics program that plots patterns between mutations and nucleosomes
 
 ### START FRONTEND ###
