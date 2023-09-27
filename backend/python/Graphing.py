@@ -12,7 +12,10 @@ def make_graph(mutation_data: pd.DataFrame, interpolate_method: bool = False, sm
         graph_values.append(sum(mutation_data.loc[item]))
     x = np.array(indexes)
     y = np.array(graph_values)
+    # within a nucleosome
     period, confidence, signal_to_noise = Tools.find_periodicity(x, y, 10.2)
+    # between nucleosomes
+    overall_period, overall_confidence, overall_signal_to_noise = Tools.find_periodicity(x, y, 300)
     # if smoothing data, apply smoothing method
     if smoothing_method:
         x, y = Tools.smooth_data(x, y, method=smoothing_method)
@@ -34,6 +37,9 @@ def make_graph(mutation_data: pd.DataFrame, interpolate_method: bool = False, sm
     for i in range(len(x) - 1):
         color = 'red' if mask[i] and mask[i + 1] else 'blue'
         line_traces.append(go.Scattergl(x=x[i:i + 2], y=y[i:i + 2], mode='lines', line=dict(color=color, width=2)))
+
+    lom_scargl_period = 300
+    ranges = {-74:74, 226:374,}
 
     # Combine all the traces
     traces = [scatter_trace] + line_traces

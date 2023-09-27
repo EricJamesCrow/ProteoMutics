@@ -12,3 +12,10 @@ Traceback (most recent call last):
 AttributeError: 'NoneType' object has no attribute 'stem'
 [15/Nov/2021 16:39:00] "POST /api/run_analysis HTTP/1.1" 500 105954
 ```
+
+
+period = 207
+first peak = 0
+0-74 bp per half of a nucleosome
+133-207 bp per first half of a nucleosome
+207 -281 bp per second half of a nucleosome
