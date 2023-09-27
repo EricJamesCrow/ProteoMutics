@@ -14,11 +14,11 @@ mutation_file = Path('/media/cam/Working/8-oxodG/8-oxodG_Final_Analysis/vcf_file
 intersected_file = Path('/media/cam/Working/8-oxodG/8-oxodG_Final_Analysis/vcf_files/genotype_split/HMCES_KBr_nucleomutics/HMCES_KBr_dyads_intersected_mutations_counts.txt')
 dyad_counts = Path('/media/cam/Working/8-oxodG/8-oxodG_Final_Analysis/nucleosome/dyads_nucleomutics/dyads_hg19_fasta_filtered.counts')
 uv_file = Path('/media/cam/Working/8-oxodG/8-oxodG_Final_Analysis/vcf_files/genotype_split/UV_nucleomutics/MELA-AU_trinuc_context_mutations_filtered_sorted.mut')
+hg19_counts = Path('/home/cam/Documents/genome_files/hg19/hg19_3mer.counts')
 
-
-# intersector = MutationIntersector.MutationIntersector(mutation_file = uv_file, dyad_file = dyad_file, output_file= mutation_file.with_suffix('.intersect'), mutation_type='C>T', mut_context='YCY')
-# intersected_file = intersector.output_file
-intersected_file=Path('/media/cam/Working/8-oxodG/8-oxodG_Final_Analysis/vcf_files/genotype_split/UV_nucleomutics/MELA-AU_trinuc_context_mutations_filtered_sorted_dyads_intersected_mutations_counts.txt')
+intersector = MutationIntersector.MutationIntersector(mutation_file = uv_file, dyad_file = dyad_file, output_file= mutation_file.with_suffix('.intersect')) # mutation_type='C>T', mut_context='YCY')
+intersected_file = intersector.output_file
+# intersected_file=Path('/media/cam/Working/8-oxodG/8-oxodG_Final_Analysis/vcf_files/genotype_split/UV_nucleomutics/MELA-AU_trinuc_context_mutations_filtered_sorted_dyads_intersected_mutations_counts.txt')
 
 df = DataFrameOperations.format_dataframe(intersected_file, dyad_counts=dyad_counts, iupac='NNN', context_normalize=True, count_complements=False, normalize_to_median=True, z_score_filter=None)
 df.to_csv(intersected_file.with_name('data_df.txt'), sep='\t', index=True, header=True)
@@ -30,9 +30,6 @@ df.to_csv(intersected_file.with_name('data_df.txt'), sep='\t', index=True, heade
 # Assuming you've already defined or imported the Tools class/methods elsewhere in your script.
 
 def make_graph_matplotlib(mutation_data: pd.DataFrame, interpolate_method: bool = False, smoothing_method: None = None):
-    
-    # Remove cut bias from the data
-    # mutation_data = Tools.remove_cut_bias(mutation_data, index_range=[68,78], method='nearest')
     
     indexes = mutation_data.index.tolist()
     graph_values = []
