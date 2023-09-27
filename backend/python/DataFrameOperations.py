@@ -6,7 +6,7 @@ from pathlib import Path  # Importing Path from pathlib for dealing with paths
 import Tools
 
 # Defining the function format_dataframe
-def format_dataframe(mutation_counts: Path, dyad_counts: 'Path | None' = None, iupac = 'NNN', count_complements = False, normalize_to_median = True, z_score_filter: float = None) -> pd.DataFrame:
+def format_dataframe(mutation_counts: Path, dyad_counts: 'Path | None' = None, iupac = 'NNN', normalize_to_tri = False, count_complements = False, normalize_to_median = True, z_score_filter: float = None) -> pd.DataFrame:
     """Takes a `Path` object to a saved DataFrame and counts across rows to get 2-D x and y data points to graph.
     Takes a `Path` object to a saved DataFrame with dyad position counts to normalize to if desired, as well as filters out certian contexts mutations occur in to stratify
     the data. It can count reverse complements of the IUPAC notation. Lastly it will normalize to a median value for each column
@@ -48,16 +48,35 @@ def format_dataframe(mutation_counts: Path, dyad_counts: 'Path | None' = None, i
     # Selecting columns from the dataframe that match the all_contexts list
     new_mut_df = mutations_df.loc[:,all_contexts]
     # Checking if a dyad_counts file was provided
-    if dyad_counts:
+    if dyad_counts and not normalize_to_tri:
         # Reading a dataframe from the dyad_counts file
         dyads_df = pd.read_csv(dyad_counts, sep= '\t', index_col=0, header=0)
         # Selecting columns from the dyad dataframe that match the all_contexts list
         new_dyad_df = dyads_df.loc[:,all_contexts]
         # Looping over each row in the mutations dataframe
-        for mut_index, mut_row in new_mut_df.iterrows():
-            # Computing the sum of the row divided by the sum of the corresponding dyad row
-            # Storing the result in the results dictionary with a unique key
-            results_dict[i] = [(sum(mut_row.tolist())/sum(new_dyad_df.loc[mut_index].tolist()))]
+        for mut_position, mut_row in new_mut_df.iterrows():
+            expected_values = []
+            # Computing the sum of the row divided by the sum to get a percentage
+            mut_row_sum = mut_row.sum()
+            mut_row_percentages = [entry/mut_row_sum for entry in mut_row]
+            # print(mut_row_percentages)
+            # Computing the sum of the corresponding dyad row and divide by that to get a percentage
+            dyad_row_sum = new_dyad_df.loc[mut_position].sum()
+            dyad_percentage_list = [entry/dyad_row_sum for entry in new_dyad_df.loc[mut_position]]
+            # print(dyad_percentage_list)
+            # Multiply the percentages from mut_row and the dyad row, then multiply by mut_row_sum
+            for mut_percentage, dyad_percentage in zip(mut_row_percentages, dyad_percentage_list):
+                expected_value = mut_percentage * dyad_percentage * mut_row_sum
+                expected_values.append(expected_value)
+            results_dict[i] = mut_row_sum/sum(expected_values)
+            i += 1
+    elif dyad_counts and normalize_to_tri:
+        # Reading a dataframe from the dyad_counts file
+        dyads_df = pd.read_csv(dyad_counts, sep= '\t', index_col=0, header=0)
+        # Selecting columns from the dyad dataframe that match the all_contexts list
+        new_dyad_df = dyads_df.loc[:,all_contexts]
+        for mut_position, mut_row in new_mut_df.iterrows():
+            results_dict[i] = [(sum(mut_row.tolist())/sum(new_dyad_df.loc[mut_position].tolist()))]
             i += 1
     else:
         # If a dyad_counts file was not provided, loop over each row in the mutations dataframe

@@ -57,7 +57,7 @@ def make_graph(mutation_data: pd.DataFrame, interpolate_method: bool = False, sm
     return fig, period, confidence, signal_to_noise
 
 def save_figure(graph_object: go.Figure, dpi: int, fig_output_name: str):
-    graph_object.write_image(fig_output_name, scale=dpi/72)
+    graph_object.write_image(fig_output_name, scale=dpi/72, format='svg')
 
 def display_figure(graphing_data_tuple: tuple):
     graph_object, period, confidence, signal_to_noise = graphing_data_tuple
