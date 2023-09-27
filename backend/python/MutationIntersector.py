@@ -9,7 +9,7 @@ from typing import Tuple, List  # Importing Tuple and List from typing for type 
 
 class MutationIntersector:
     
-    def __init__(self, mutation_file: Path, dyad_file: Path, output_file: Path) -> None:
+    def __init__(self, mutation_file: Path, dyad_file: Path, output_file: Path, mut_context = 'NNN', mutation_type = 'N>N') -> None:
         self.output_file = output_file
         self.mutation_file = mutation_file  # Initializing mutation_file attribute.
         self.dyad_file = dyad_file  # Initializing dyad_file attribute.
@@ -17,6 +17,11 @@ class MutationIntersector:
         # Initializing counts attribute as a dictionary with keys from -1000 to 1000, each having a nested dictionary derived from context_list.
         self.counts = {i: {key: 0 for key in self.context_list} for i in range(-1000,1001)}
         self.results = []  # Initializing results attribute as an empty list.
+        self.mut_context = mut_context
+        self.mut_context = Tools.contexts_in_iupac(self.mut_context)
+        self.mutation_type = mutation_type
+        self.mutation_type = Tools.mutation_combinations(self.mutation_type)
+        
         # Constructing output_file attribute using mutation_file's name and dyad_file's stem and appending '_intersected_mutations_counts.txt' to it.
         try:
             self.output_file = mutation_file.with_name(f'{mutation_file.stem}_{dyad_file.stem}_intersected_mutations_counts.txt')
@@ -44,6 +49,8 @@ class MutationIntersector:
             mut_file.seek(mut_start_position)  # Moving mut_file's read/write pointer to mut_start_position.
             jump_back_position = mut_start_position  # Storing mut_start_position in jump_back_position.
             mut_data = mut_file.readline().strip().split('\t')  # Reading a line from mut_file, stripping whitespaces, splitting it by tabs, and storing in mut_data.
+            while mut_data[6] not in self.mut_context and mut_data[7] not in self.mutation_type:
+                mut_data = mut_file.readline().strip().split('\t')
             mut_start = int(mut_data[1])  # Converting second item of mut_data to integer and storing in mut_start.
             context = mut_data[6]  # Storing sixth item of mut_data in context.
             while True:

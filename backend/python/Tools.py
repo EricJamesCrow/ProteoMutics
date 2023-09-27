@@ -2,11 +2,13 @@ import itertools
 import numpy as np
 from scipy.signal import savgol_filter, medfilt
 from scipy.ndimage import gaussian_filter1d
+from scipy.interpolate import interp1d
 from statsmodels.nonparametric.smoothers_lowess import lowess
 import matplotlib.pyplot as plt
 from scipy.optimize import curve_fit
 from sklearn.metrics import r2_score
 from astropy.timeseries import LombScargle
+import pandas as pd
 
 def contexts_in_iupac(iupac_val: str):
     """Takes a string that has IUPAC characters and returns all of the possible nucleotide sequences that fit that 
@@ -24,6 +26,33 @@ def contexts_in_iupac(iupac_val: str):
     ranges = [iupac_trans[base] for base in iupac_val]
     possible_combinations = [''.join(comb) for comb in itertools.product(*ranges)]
     return possible_combinations
+
+def mutation_combinations(mut_type: str):
+    """Takes a mutation type in the format N>N and returns a list of all possible nucleotide mutations.
+
+    Args:
+        mut_type (str): the mutation type in the format N>N
+
+    Returns:
+        possible_mutations (list): a list of all possible nucleotide mutations
+    """
+    iupac_trans = {
+        "R": "AG", "Y": "CT", "S": "GC", "W": "AT", "K": "GT",
+        "M": "AC", "B": "CGT", "D": "AGT", "H": "ACT", "V": "ACG",
+        "N": "ACGT", 'A': 'A', 'T': 'T', 'C': 'C', 'G': 'G'
+    }
+    
+    # Split the mutation type at the '>' character
+    from_nuc, to_nuc = mut_type.split('>')
+    
+    # Get the possible nucleotides for each side of the '>'
+    from_nucs = iupac_trans[from_nuc]
+    to_nucs = iupac_trans[to_nuc]
+    
+    # Generate all possible combinations
+    possible_mutations = [f"{f}>{t}" for f in from_nucs for t in to_nucs]
+    
+    return possible_mutations
 
 def reverse_complement(seq: str):
     """returns the reverse complement of nucleotide sequences in standard or IUPAC notation
@@ -57,7 +86,7 @@ def reverse_complement(seq: str):
     complement_seq = "".join(complement_table.get(base, base) for base in seq_rev)
     return complement_seq
 
-def smooth_data(x, y, method='moving_average', window_size=5, poly_order=2, alpha=0.5, sigma=1.0, mode='reflect'):
+def smooth_data(x, y, method='moving_average', window_size=10, poly_order=2, alpha=0.5, sigma=1.0, mode='reflect'):
     """
     Smooths the data using a specified method.
 
@@ -77,8 +106,12 @@ def smooth_data(x, y, method='moving_average', window_size=5, poly_order=2, alph
     if method == 'moving_average':
         weights = np.repeat(1.0, window_size) / window_size
         smoothed_y = np.convolve(y, weights, 'valid')
-        shift = (window_size - 1) // 2
-        smoothed_x = x[shift:len(x) - shift]
+        
+        # Calculate the difference in lengths
+        diff = len(x) - len(smoothed_y)
+        
+        # Adjust x values based on the difference
+        smoothed_x = x[diff // 2: -diff // 2]
     elif method == 'savgol_filter':
         smoothed_y = savgol_filter(y, window_size, poly_order)
         smoothed_x = x
@@ -99,33 +132,34 @@ def smooth_data(x, y, method='moving_average', window_size=5, poly_order=2, alph
 
     return smoothed_x, smoothed_y
 
-def find_periodicity(x, y, avg_period):
+def find_periodicity(x, y, min_period=10):
     # Calculate power spectrum using Lomb-Scargle periodogram
     freq, power = LombScargle(x, y).autopower()
     period = 1 / freq
 
-    # Find frequency window around average period
-    period_diff = np.abs(period - avg_period)
-    period_window = period[period_diff < 2]
-    freq_window = freq[period_diff < 2]
-    power_window = power[period_diff < 2]
+    # Filter out periods below the minimum threshold
+    valid_indices = np.where(period >= min_period)
+    period = period[valid_indices]
+    power = power[valid_indices]
 
-    # Check if no suitable period found
-    if len(period_window) == 0:
-        return None
+    # If no valid periods remain after filtering, return None
+    if len(period) == 0:
+        return None, None, None
 
-    # Calculate confidence as sum of power in frequency window
-    confidence = np.sum(power_window)
-
-    # Find dominant period in window
-    period = 1 / freq_window[np.argmax(power_window)]
-
-    # Calculate signal-to-noise ratio
+    # Calculate signal-to-noise ratio for the entire dataset
     signal = np.max(y) - np.min(y)
     noise = np.std(y)
     snr = signal / noise
 
-    return period, confidence, snr
+    # Combine power and SNR to get a combined score for each period
+    combined_score = power * snr
+
+    # Find the period with the maximum combined score
+    best_period_index = np.argmax(combined_score)
+    best_period = period[best_period_index]
+    best_confidence = power[best_period_index]
+
+    return best_period, best_confidence, snr
 
 def exponential_smoothing(y, alpha):
     """
@@ -201,21 +235,50 @@ def interpolate_missing_data(x, y, x_min, x_max, method='linear'):
     # Find the indices of the available data points in the x array
     idx = np.where((x >= x_min) & (x <= x_max))[0]
     
-    # Use the specified method to interpolate the missing data points
-    if method == 'linear':
-        y_interp = np.interp(x_all, x[idx], y[idx])
-    elif method == 'quadratic':
-        y_interp = np.interp(x_all, x[idx], y[idx], left=y[idx[0]], right=y[idx[-1]], period=None)
-        y_interp = np.interp(x_all, x_all[~np.isnan(y_interp)], y_interp[~np.isnan(y_interp)], left=np.nan, right=np.nan, period=None)
-        y_interp = np.interp(x_all, x_all[~np.isnan(y_interp)], y_interp[~np.isnan(y_interp)], left=np.nan, right=np.nan, period=None)
-    elif method == 'cubic':
-        y_interp = np.interp(x_all, x[idx], y[idx], left=y[idx[0]], right=y[idx[-1]], period=None)
-        y_interp = np.interp(x_all, x_all[~np.isnan(y_interp)], y_interp[~np.isnan(y_interp)], left=np.nan, right=np.nan, period=None)
-        y_interp = np.interp(x_all, x_all[~np.isnan(y_interp)], y_interp[~np.isnan(y_interp)], left=np.nan, right=np.nan, period=None)
-        y_interp = np.interp(x_all, x_all[~np.isnan(y_interp)], y_interp[~np.isnan(y_interp)], left=np.nan, right=np.nan, period=None)
-    elif method == 'nearest':
-        y_interp = np.interp(x_all, x[idx], y[idx], left=y[idx[0]], right=y[idx[-1]], period=None)
-        y_interp = np.round(y_interp).astype(int)
+    # Extract the available data points
+    x_data = x[idx]
+    y_data = y[idx]
     
-    # Return the new x and y arrays
+    # Interpolate based on the specified method
+    if method == 'linear':
+        y_interp = np.interp(x_all, x_data, y_data)
+    elif method in ['quadratic', 'cubic', 'nearest']:
+        f = interp1d(x_data, y_data, kind=method, bounds_error=False, fill_value=np.nan)
+        y_interp = f(x_all)
+    else:
+        raise ValueError(f"Unsupported interpolation method: {method}")
+
+    # Remove NaN values at the edges
+    valid_mask = ~np.isnan(y_interp)
+    x_all = x_all[valid_mask]
+    y_interp = y_interp[valid_mask]
+
     return x_all, y_interp
+
+
+def remove_cut_bias(df: pd.DataFrame, index_range: list[int], method: str = 'cubic') -> pd.DataFrame:
+    """Removes data points for indices within a given range and its negative counterpart and interpolates them.
+
+    Args:
+        df (pd.DataFrame): The input dataframe.
+        index_range (list[int]): List with two integers denoting the start and end of the index range.
+        method (str, optional): Interpolation method. Defaults to 'cubic'.
+
+    Returns:
+        pd.DataFrame: The dataframe after removing and interpolating the specified indices.
+    """
+    # Check if the provided range has exactly two values
+    if len(index_range) != 2:
+        raise ValueError("index_range should contain exactly two integers denoting the start and end of the range.")
+    
+    # Create the list of indices to be removed
+    remove_indices = list(range(index_range[0], index_range[1] + 1))
+    remove_indices += [-i for i in remove_indices]
+    
+    # Drop the rows corresponding to the specified indices
+    df = df.drop(remove_indices, errors='ignore')
+    
+    # Interpolate the missing values
+    df = df.sort_index().interpolate(method=method)
+    
+    return df
