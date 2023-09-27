@@ -2,7 +2,8 @@ import numpy as np  # Importing numpy for handling numerical computations
 import pandas as pd  # Importing pandas for handling structured data
 from scipy import stats  # Importing stats module from scipy for statistical functions
 from pathlib import Path  # Importing Path from pathlib for dealing with paths
-from . import Tools  # Importing Tools module from the current package
+# from . import Tools  # Importing Tools module from the current package
+import Tools
 
 # Defining the function format_dataframe
 def format_dataframe(mutation_counts: Path, dyad_counts: 'Path | None' = None, iupac = 'NNN', count_complements = False, normalize_to_median = True, z_score_filter: float = None) -> pd.DataFrame:

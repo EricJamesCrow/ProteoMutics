@@ -1,8 +1,11 @@
 from pathlib import Path
-from . import BedtoolsCommands
+# from . import BedtoolsCommands
+import BedtoolsCommands
 import shutil
-from . import PreProcessing
-from . import DyadContextCounter
+# from . import PreProcessing
+import PreProcessing
+# from . import DyadContextCounter
+import DyadContextCounter
 import subprocess
 
 def check_if_pre_processed(file_path: Path, typ: str):

@@ -1,7 +1,8 @@
 from pathlib import Path
 import subprocess
 import os
-from . import BedtoolsCommands
+# from . import BedtoolsCommands
+import BedtoolsCommands
 
 def adjust_dyad_positions(dyad_file: Path, output_dir):
     """Takes a dyad file with single nucleotide positions and creates a new bed file with -500 and +500 positions
