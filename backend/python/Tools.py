@@ -9,6 +9,9 @@ from scipy.optimize import curve_fit
 from sklearn.metrics import r2_score
 from astropy.timeseries import LombScargle
 import pandas as pd
+import subprocess
+from pathlib import Path
+
 
 def contexts_in_iupac(iupac_val: str):
     """Takes a string that has IUPAC characters and returns all of the possible nucleotide sequences that fit that 
@@ -282,3 +285,19 @@ def remove_cut_bias(df: pd.DataFrame, index_range: list[int], method: str = 'cub
     df = df.sort_index().interpolate(method=method)
     
     return df
+
+def bedtools_getfasta(bed_file: Path, fasta_file: Path):
+    """Runs `bedtools getfasta` on the input dyad file and returns fasta file.
+
+    Args:
+        dyad_file (Path): .bed file with +/- 500 generated from General.adjust_dyad_positions().
+        fasta_file (Path): .fa file that is the genome fasta file associated with the dyad positions (ex: hg19.fa).
+    """
+    # Create a name for the new file with a .fa ending
+    output_fasta_file = bed_file.with_name(f'{bed_file.stem}_{fasta_file.stem}_fasta.fa')
+
+    # Run the bedtools getfasta tool given the input files
+    command = f'bedtools getfasta -fi {fasta_file} -bed {bed_file} -fo {output_fasta_file} -tab'
+    with subprocess.Popen(args=command, stdout=subprocess.PIPE, shell=True) as p:
+        return p, output_fasta_file
+

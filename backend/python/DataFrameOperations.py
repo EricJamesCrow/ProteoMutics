@@ -2,17 +2,24 @@ import numpy as np
 import pandas as pd
 from scipy import stats
 from pathlib import Path
-import Tools
+from . import Tools
 
 class DataFormatter:
     def __init__(self):
         pass
 
     @staticmethod
-    def read_dataframe(file_path: Path, columns: list = None) -> pd.DataFrame:
+    def read_dataframe(file_path: str | Path, columns: list = None) -> pd.DataFrame:
+        file_path = Path(file_path)
         df = pd.read_csv(file_path, sep='\t', index_col=0, header=0)
         if columns:
             df = df.loc[:, columns]
+        return df
+
+    @staticmethod
+    def read_genome_counts_df(file_path: str | Path) -> pd.DataFrame:
+        file_path = Path(file_path)
+        df = pd.read_csv(file_path, sep='\t', index_col=0, header=0)
         return df
 
     @staticmethod
@@ -38,7 +45,7 @@ class DataFormatter:
         return all_contexts
 
     @staticmethod
-    def process_without_context_normalization(mutations_df, dyads_df):
+    def genome_wide_normalization(mutations_df, dyads_df, genome_df):
         results_dict = {}
         mutation_df_sum = mutations_df.values.sum()
         for mut_position, mut_row in mutations_df.iterrows():
@@ -52,7 +59,7 @@ class DataFormatter:
         return results_dict
 
     @staticmethod
-    def process_with_context_normalization(mutations_df, dyads_df):
+    def context_normalization(mutations_df, dyads_df):
         results_dict = {}
         for mut_position, mut_row in mutations_df.iterrows():
             results_dict[mut_position] = sum(mut_row.tolist()) / sum(dyads_df.loc[mut_position].tolist())
@@ -66,19 +73,21 @@ class DataFormatter:
         return results_dict
 
     @staticmethod
-    def format_dataframe(mutation_counts: Path, dyad_counts: 'Path | None' = None, iupac = 'NNN', context_normalize = False, count_complements = False, normalize_to_median = True, z_score_filter: float = None) -> pd.DataFrame:
+    def format_dataframe(mutation_counts: str | Path, dyad_counts: 'Path | None' = None, iupac = 'NNN', context_normalize = False, count_complements = False, normalize_to_median = True, z_score_filter: float = None) -> pd.DataFrame:
+        mutation_counts = Path(mutation_counts)
+        dyad_counts = Path(dyad_counts) if dyad_counts else None
         contexts = Tools.contexts_in_iupac(iupac)
         all_contexts = DataFormatter.get_all_contexts(contexts, iupac, count_complements)
 
         if dyad_counts and not context_normalize:
             mutations_df = DataFormatter.read_dataframe(mutation_counts, all_contexts)
             dyads_df = DataFormatter.read_dataframe(dyad_counts, all_contexts)
-            results_dict = DataFormatter.process_without_context_normalization(mutations_df, dyads_df)
+            results_dict = DataFormatter.genome_wide_normalization(mutations_df, dyads_df)
 
         elif dyad_counts and context_normalize:
             mutations_df = DataFormatter.read_dataframe(mutation_counts, all_contexts)
             dyads_df = DataFormatter.read_dataframe(dyad_counts, all_contexts)
-            results_dict = DataFormatter.process_with_context_normalization(mutations_df, dyads_df)
+            results_dict = DataFormatter.context_normalization(mutations_df, dyads_df)
 
         else:
             mutations_df = DataFormatter.read_dataframe(mutation_counts, all_contexts)

@@ -1,16 +1,16 @@
 import multiprocessing as mp
 import pandas as pd
 from pathlib import Path
-import Tools
+from . import Tools
 import traceback
 
 
 class MutationIntersector:
     
-    def __init__(self, mutation_file: Path, dyad_file: Path, output_file: Path, mut_context='NNN', mutation_type='N>N') -> None:
-        self.mutation_file = mutation_file
-        self.dyad_file = dyad_file
-        self.output_file = output_file
+    def __init__(self, mutation_file: Path | str, dyad_file: Path | str, mut_context='NNN', mutation_type='N>N') -> None:
+        self.mutation_file = Path(mutation_file)
+        self.dyad_file = Path(dyad_file)
+        self.output_file = mutation_file.with_name(f'{mutation_file.stem}_{dyad_file.stem}.intersect')
         self.mut_context = Tools.contexts_in_iupac(mut_context)
         self.mutation_type = Tools.mutation_combinations(mutation_type)
         self.context_list = Tools.contexts_in_iupac('NNN')

@@ -1,11 +1,8 @@
 from pathlib import Path
-# from . import BedtoolsCommands
-import BedtoolsCommands
+from . import BedtoolsCommands
 import shutil
-# from . import PreProcessing
-import PreProcessing
-# from . import DyadContextCounter
-import DyadContextCounter
+from . import PreProcessing
+from . import DyadContextCounter
 import subprocess
 
 def check_if_pre_processed(file_path: Path, typ: str):
@@ -74,7 +71,7 @@ def pre_process_nucleosome_map(file_path: Path, fasta_file: Path):
     _, new_dyad = PreProcessing.check_and_sort(step_4, nucleomutics_folder, '.nuc')
     new_dyad = PreProcessing.final_nuc_rename(new_dyad, file_path.with_suffix('.nuc').name)
     print('[Nucleosome]Counting dyad contexts')
-    counts = DyadContextCounter.DyadFastaCounter(fasta, nucleomutics_folder)
+    counts = DyadContextCounter.DyadFastaCounter(fasta).run()
     shutil.rmtree(temp_folder)
     print('[Nucleosome]Finished file')
     return new_dyad, counts

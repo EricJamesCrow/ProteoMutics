@@ -2,7 +2,7 @@ import multiprocessing as mp
 from pathlib import Path
 
 class GenomeFastaCounter:
-    def __init__(self, fasta_file: str, context_length: int):
+    def __init__(self, fasta_file: str | Path, context_length: int):
         self.fasta_file = Path(fasta_file)
         self.context_length = context_length
         self.output_file = self.fasta_file.with_name(f'{self.fasta_file.stem}_{self.context_length}mer.counts')
@@ -69,6 +69,3 @@ class GenomeFastaCounter:
             # Sort genome_counts by keys (contexts) before writing to the file
             for k, v in sorted(genome_counts.items()):
                 o.write(f'{k}\t{v}\n')
-
-
-counter = GenomeFastaCounter('/home/cam/Documents/genome_files/hg19/hg19.fa', 3)

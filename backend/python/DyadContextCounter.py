@@ -1,13 +1,13 @@
 import multiprocessing as mp
 import pandas as pd
 from pathlib import Path
-import Tools
+from . import Tools
 import traceback
 
 class DyadFastaCounter:
-    def __init__(self, file: Path, output_dir: Path) -> None:
-        self.path = file
-        self.output_dir = output_dir
+    def __init__(self, file: str | Path) -> None:
+        self.path = Path(file)
+        self.output_dir = self.path.parent
         self.context_list = Tools.contexts_in_iupac('NNN')
         self.counts = self.initialize_counts(self.context_list)
         self.results = []
