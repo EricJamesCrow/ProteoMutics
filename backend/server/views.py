@@ -24,19 +24,25 @@ def run_analysis(request):
         nucleosome_file_path = data.get('nucleosome_file_path')
         fasta_file_path = data.get('fasta_file_path')
         print('[Mutation]Checking if pre-processing is needed')
-        if Controller.check_if_pre_processed(file_path=mutation_file_path, typ='mutation'):
-            directory = mutation_file_path.parent
-            nucleomutics_folder = directory.joinpath(mutation_file_path.with_name(mutation_file_path.stem+'_nucleomutics').stem)
-            mutation_file_path = nucleomutics_folder.joinpath(mutation_file_path.with_suffix('.mut').name)
-        if not Controller.check_if_pre_processed(file_path=mutation_file_path, typ='mutation'):
-            mutation_file_path = Controller.pre_process_mutation_file(file_path=mutation_file_path, fasta_file=fasta_file_path)
+        if mutation_file_path.endswith('.mut'):
+            pass
+        else:
+            if Controller.check_if_pre_processed(file_path=mutation_file_path, typ='mutation'):
+                directory = mutation_file_path.parent
+                nucleomutics_folder = directory.joinpath(mutation_file_path.with_name(mutation_file_path.stem+'_nucleomutics').stem)
+                mutation_file_path = nucleomutics_folder.joinpath(mutation_file_path.with_suffix('.mut').name)
+            if not Controller.check_if_pre_processed(file_path=mutation_file_path, typ='mutation'):
+                mutation_file_path = Controller.pre_process_mutation_file(file_path=mutation_file_path, fasta_file=fasta_file_path)
         print('[Nucleosome]Checking if pre-processing is needed')
-        if Controller.check_if_pre_processed(file_path=nucleosome_file_path, typ='nucleosome'):
-            directory = nucleosome_file_path.parent
-            nucleomutics_folder = directory.joinpath(nucleosome_file_path.with_name(nucleosome_file_path.stem+'_nucleomutics').stem)
-            nucleosome_file_path = nucleomutics_folder.joinpath(nucleosome_file_path.with_suffix('.nuc').name)
-        if not Controller.check_if_pre_processed(file_path=nucleosome_file_path, typ='nucleosome'):
-            nucleosome_file_path = Controller.pre_process_nucleosome_map(file_path=nucleosome_file_path, fasta_file=fasta_file_path)[0]
+        if nucleosome_file_path.endswith('.nuc'):
+            pass
+        else:
+            if Controller.check_if_pre_processed(file_path=nucleosome_file_path, typ='nucleosome'):
+                directory = nucleosome_file_path.parent
+                nucleomutics_folder = directory.joinpath(nucleosome_file_path.with_name(nucleosome_file_path.stem+'_nucleomutics').stem)
+                nucleosome_file_path = nucleomutics_folder.joinpath(nucleosome_file_path.with_suffix('.nuc').name)
+            if not Controller.check_if_pre_processed(file_path=nucleosome_file_path, typ='nucleosome'):
+                nucleosome_file_path = Controller.pre_process_nucleosome_map(file_path=nucleosome_file_path, fasta_file=fasta_file_path)[0]
         print('[Fasta]Checking if pre-processing is needed')
         if not Controller.check_if_pre_processed(file_path=fasta_file_path, typ='fasta'):
             fasta_file_path = Controller.pre_process_fasta(fasta_file=fasta_file_path)
