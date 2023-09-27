@@ -11,6 +11,7 @@ class DyadFastaCounter:
         self.context_list = Tools.contexts_in_iupac('NNN')
         self.counts = self.initialize_counts(self.context_list)
         self.results = []
+        self.output_file = None
 
     @staticmethod
     def initialize_counts(context_list: list) -> dict:
@@ -21,13 +22,13 @@ class DyadFastaCounter:
         print(f"Error in process {task_id}: {error}")
         traceback.print_tb(error.__traceback__)
 
-    @staticmethod
-    def results_to_file(context_list: list, counts: dict, path: Path, output_dir: Path) -> None:
+    def results_to_file(self, context_list: list, counts: dict, path: Path, output_dir: Path) -> None:
         output_file = output_dir / path.with_name(f'{path.stem}.counts').name
         df = pd.DataFrame.from_dict(counts, orient='index')
         df.columns = context_list
         df.index.name = 'Position'
         df.to_csv(output_file, sep='\t')
+        self.output_file = output_file
 
     def process_block(self, start_pos: int, end_pos: int) -> dict:
         counts = self.initialize_counts(self.context_list)
@@ -64,6 +65,7 @@ class DyadFastaCounter:
 
             self.aggregate_results(results)
             self.results_to_file(self.context_list, self.counts, self.path, self.output_dir)
+        return self.output_file
 
     def get_file_end_position(self) -> int:
         with open(self.path) as f:

@@ -10,7 +10,6 @@ def check_preprocessed_files(request):
     if request.method == 'POST':
         data = json.loads(request.body) # Parse stringified JSON data
         file_path = data.get('file_path')
-        file_path = Path(file_path)
         file_type = data.get('type')
         is_preprocessed = Controller.check_if_pre_processed(file_path=file_path, typ=file_type)
         return JsonResponse({'is_preprocessed': is_preprocessed})
@@ -22,11 +21,8 @@ def run_analysis(request):
     if request.method == 'POST':
         data = json.loads(request.body.decode('utf-8')) # Parse stringified JSON data
         mutation_file_path = data.get('mutation_file_path')
-        mutation_file_path = Path(mutation_file_path)
         nucleosome_file_path = data.get('nucleosome_file_path')
-        nucleosome_file_path = Path(nucleosome_file_path)
         fasta_file_path = data.get('fasta_file_path')
-        fasta_file_path = Path(fasta_file_path)
         print('[Mutation]Checking if pre-processing is needed')
         if Controller.check_if_pre_processed(file_path=mutation_file_path, typ='mutation'):
             directory = mutation_file_path.parent
@@ -45,7 +41,7 @@ def run_analysis(request):
         if not Controller.check_if_pre_processed(file_path=fasta_file_path, typ='fasta'):
             fasta_file_path = Controller.pre_process_fasta(fasta_file=fasta_file_path)
         print('###################################################################\nRUNNING INTERSRCTOR\n###################################################################')
-        results_file = MutationIntersector.MutationIntersector(mutation_file=mutation_file_path, dyad_file=nucleosome_file_path, output_file=mutation_file_path.with_name(mutation_file_path.stem + '_' + nucleosome_file_path.stem + '.intersect'))
+        results_file = MutationIntersector.MutationIntersector(mutation_file=mutation_file_path, dyad_file=nucleosome_file_path)
         return results_file
 
     

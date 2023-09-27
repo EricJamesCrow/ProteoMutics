@@ -3,7 +3,7 @@ import subprocess
 import os
 from . import Tools
 
-def adjust_dyad_positions(dyad_file: Path, output_dir):
+def adjust_dyad_positions(dyad_file: str | Path, output_dir):
     """Takes a dyad file with single nucleotide positions and creates a new bed file with -500 and +500 positions
 
     Args:
@@ -11,6 +11,7 @@ def adjust_dyad_positions(dyad_file: Path, output_dir):
     """
     
     # Create the new filename
+    dyad_file = Path(dyad_file)
     intermediate_bed = output_dir / dyad_file.with_suffix('.tmp').name
 
     # Use a with statement to read and write to the files
@@ -25,8 +26,10 @@ def adjust_dyad_positions(dyad_file: Path, output_dir):
             o.write('\t'.join(new_line_values) + '\n')
     return intermediate_bed
 
-def filter_lines_with_n(dyad_fasta: Path, dyad_bed: Path, output_dir):
+def filter_lines_with_n(dyad_fasta: Path | str, dyad_bed: Path | str, output_dir):
     # Filter lines and write to new files
+    dyad_fasta = Path(dyad_fasta)
+    dyad_bed = Path(dyad_bed)
     filtered_fasta = output_dir / dyad_fasta.with_name(f'{dyad_fasta.stem}_filtered.fa').name
     filtered_bed = output_dir / dyad_bed.with_name(f'{dyad_bed.stem}_filtered.bed').name
     # open all the files
@@ -39,7 +42,8 @@ def filter_lines_with_n(dyad_fasta: Path, dyad_bed: Path, output_dir):
                 new_bed.write(bed_line)
     return filtered_bed, filtered_fasta
 
-def check_and_sort(input_file: Path, output_dir: Path, suffix):
+def check_and_sort(input_file: Path | str, output_dir: Path, suffix):
+    input_file = Path(input_file)
     sorted_name = output_dir / input_file.with_name(input_file.stem + suffix).name
     command = f'sort -k1,1 -k2,2n -k3,3n -k6,6 {input_file} > {sorted_name}'
     with subprocess.Popen(args=command, stdout=subprocess.PIPE, shell=True) as p:

@@ -1,11 +1,13 @@
 from pathlib import Path
-from . import BedtoolsCommands
+from . import Tools
 import shutil
 from . import PreProcessing
 from . import DyadContextCounter
+from . import FastaCounter
 import subprocess
 
-def check_if_pre_processed(file_path: Path, typ: str):
+def check_if_pre_processed(file_path: Path | str, typ: str):
+    file_path = Path(file_path)
     print('Running folder check step for '+str(typ)+ ' file')
     directory = file_path.parent
     nucleomutics_folder = directory.joinpath(file_path.with_name(file_path.stem+'_nucleomutics').stem)
@@ -20,12 +22,14 @@ def check_if_pre_processed(file_path: Path, typ: str):
         if check.exists():
             return True
     elif typ == 'fasta':
-        check = directory / file_path.with_suffix('.fai')
+        check = directory.joinpath(file_path.with_name(f'{file_path.stem}_3mer.counts'))
         if check.exists():
             return True
     return False
 
-def pre_process_mutation_file(file_path: Path, fasta_file: Path):
+def pre_process_mutation_file(file_path: Path | str, fasta_file: Path | str):
+    file_path = Path(file_path)
+    fasta_file = Path(fasta_file)
     print('[Mutation]Pre-processing file')
     directory = file_path.parent
     nucleomutics_folder = directory.joinpath(file_path.with_name(file_path.stem+'_nucleomutics').stem)
@@ -47,8 +51,9 @@ def pre_process_mutation_file(file_path: Path, fasta_file: Path):
     shutil.rmtree(temp_folder)
     return new_mut
 
-# change to save to program folder not input file directory
-def pre_process_nucleosome_map(file_path: Path, fasta_file: Path):
+def pre_process_nucleosome_map(file_path: Path | str, fasta_file: Path | str):
+    file_path = Path(file_path)
+    fasta_file = Path(fasta_file)   
     print('[Nucleosome]Pre-processing file')
     directory = file_path.parent
     nucleomutics_folder = directory.joinpath(file_path.with_name(file_path.stem+'_nucleomutics').stem)
@@ -62,7 +67,7 @@ def pre_process_nucleosome_map(file_path: Path, fasta_file: Path):
     print('[Nucleosome]Adjusting dyad positions')
     step_1 = PreProcessing.adjust_dyad_positions(file_path, temp_folder)
     print('[Nucleosome]Running bedtools getfasta')
-    step_2 = BedtoolsCommands.bedtools_getfasta(step_1, fasta_file)
+    step_2 = Tools.bedtools_getfasta(step_1, fasta_file)
     print('[Nucleosome]Filtering lines with N')
     step_3, fasta = PreProcessing.filter_lines_with_n(Path(step_2[1]), file_path, temp_folder)
     print('[Nucleosome]Filtering non-canonical chromosomes')
@@ -71,16 +76,18 @@ def pre_process_nucleosome_map(file_path: Path, fasta_file: Path):
     _, new_dyad = PreProcessing.check_and_sort(step_4, nucleomutics_folder, '.nuc')
     new_dyad = PreProcessing.final_nuc_rename(new_dyad, file_path.with_suffix('.nuc').name)
     print('[Nucleosome]Counting dyad contexts')
-    counts = DyadContextCounter.DyadFastaCounter(fasta).run()
+    counts_file = DyadContextCounter.DyadFastaCounter(fasta).run()
     shutil.rmtree(temp_folder)
     print('[Nucleosome]Finished file')
-    return new_dyad, counts
+    return new_dyad, counts_file
 
-
-def pre_process_fasta(fasta_file: Path):
+def pre_process_fasta(fasta_file: Path | str):
+    fasta_file = Path(fasta_file)
     command = f'samtools faidx {fasta_file}'
     with subprocess.Popen(args=command, stdout=subprocess.PIPE, shell=True) as p:
         result = p.communicate()
+    print('Counting genome contexts..')
+    FastaCounter.GenomeFastaCounter(fasta_file).run()
     pass
 
 def check_for_results():
