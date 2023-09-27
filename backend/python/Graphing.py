@@ -23,11 +23,23 @@ def make_graph(mutation_data: pd.DataFrame, interpolate_method: bool = False, sm
     if interpolate_method:
         x, y = Tools.interpolate_missing_data(x, y, -1000, 1000, interpolate_method)
 
-    # Define the x-domain of interest for the nucleosome
-    xmin = -73
-    xmax = 73
-    # Create a mask to select the x-values in the specified domain
-    mask = (x >= xmin) & (x <= xmax)
+    # Identify peaks based on overall_period
+    peaks = [0]  # first peak is at 0
+
+    # Handle right side of the graph
+    while peaks[-1] + overall_period < x[-1]:
+        peaks.append(peaks[-1] + overall_period)
+
+    # Handle left side of the graph
+    while peaks[0] - overall_period > x[0]:
+        peaks.insert(0, peaks[0] - overall_period)
+
+    # Define a function to check if a value is within a red region
+    def in_red_region(val):
+        for peak in peaks:
+            if peak - 73 <= val <= peak + 73:
+                return True
+        return False
 
     # Create the scatter plot
     scatter_trace = go.Scattergl(x=x, y=y, mode='markers', marker=dict(size=2, color='black'), name='Mutation Counts')
@@ -35,7 +47,7 @@ def make_graph(mutation_data: pd.DataFrame, interpolate_method: bool = False, sm
     # Create the line segments for the domain and outer domain
     line_traces = []
     for i in range(len(x) - 1):
-        color = 'red' if mask[i] and mask[i + 1] else 'blue'
+        color = 'red' if in_red_region(x[i]) or in_red_region(x[i + 1]) else 'blue'
         line_traces.append(go.Scattergl(x=x[i:i + 2], y=y[i:i + 2], mode='lines', line=dict(color=color, width=2)))
 
     # Combine all the traces
