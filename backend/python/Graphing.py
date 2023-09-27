@@ -38,9 +38,6 @@ def make_graph(mutation_data: pd.DataFrame, interpolate_method: bool = False, sm
         color = 'red' if mask[i] and mask[i + 1] else 'blue'
         line_traces.append(go.Scattergl(x=x[i:i + 2], y=y[i:i + 2], mode='lines', line=dict(color=color, width=2)))
 
-    lom_scargl_period = 300
-    ranges = {-74:74, 226:374,}
-
     # Combine all the traces
     traces = [scatter_trace] + line_traces
 
