@@ -43,7 +43,7 @@ def make_graph(mutation_data: pd.DataFrame, interpolate_method: bool = False, sm
 
     # Set the layout of the plot
     layout = go.Layout(
-        title='Nucleomutics!',
+        title='Proteomutics!',
         xaxis=dict(title='Nucleotide Position Relative to Nucleosome Dyad (bp)'),
         yaxis=dict(title='Mutation Counts Normalized to Context'),
         showlegend=False,
