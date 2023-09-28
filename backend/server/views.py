@@ -51,6 +51,7 @@ def run_analysis(request):
             fasta_file_path = Controller.pre_process_fasta(fasta_file=fasta_file_path)
         print('###################################################################\nRUNNING INTERSRCTOR\n###################################################################')
         results_file = MutationIntersector.MutationIntersector(mutation_file=mutation_file_path, dyad_file=nucleosome_file_path).run()
+        print('Done')
         return results_file
 
     
