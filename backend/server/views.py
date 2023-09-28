@@ -1,8 +1,8 @@
 from django.http import JsonResponse
-import python.Controller as Controller
-import python.DataFrameOperations as DataFrameOperations
-import python.Graphing as Graphing
-import python.MutationIntersector as MutationIntersector
+import data_handlers.Controller as Controller
+import utils.DataFrameOperations as DataFrameOperations
+import utils.Graphing as Graphing
+import logic.MutationIntersector as MutationIntersector
 from pathlib import Path
 import json
 

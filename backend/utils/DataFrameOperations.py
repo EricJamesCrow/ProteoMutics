@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 from scipy import stats
 from pathlib import Path
-from . import Tools
+from ..utils import Tools
 
 class DataFormatter:
     def __init__(self):
