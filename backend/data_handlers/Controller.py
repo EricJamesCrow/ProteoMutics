@@ -1,9 +1,9 @@
 from pathlib import Path
-from ..utils import Tools
+from utils import Tools
 import shutil
-from . import PreProcessing
-from ..logic import DyadContextCounter
-from ..logic import FastaCounter
+from data_handlers import PreProcessing
+from logic import DyadContextCounter
+from logic import FastaCounter
 import subprocess
 
 def check_if_pre_processed(file_path: Path | str, typ: str):
