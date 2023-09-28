@@ -1,14 +1,14 @@
-import MutationIntersector
-import Controller
-import Graphing
-import FastaCounter
-import DataFrameOperations
+import logic.MutationIntersector as MutationIntersector
+import data_handlers.Controller as Controller
+import utils.Graphing as Graphing
+import logic.FastaCounter as FastaCounter
+import utils.DataFrameOperations as DataFrameOperations
 from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import Tools
-import DyadContextCounter
+import logic.DyadContextCounter as DyadContextCounter
 
 print('Imported modules.')
 genome_file = Path('/home/cam/Documents/genome_files/hg19/hg19.fa')
