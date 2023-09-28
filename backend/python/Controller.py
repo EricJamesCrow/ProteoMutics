@@ -76,7 +76,8 @@ def pre_process_nucleosome_map(file_path: Path | str, fasta_file: Path | str):
     _, new_dyad = PreProcessing.check_and_sort(step_4, nucleomutics_folder, '.nuc')
     new_dyad = PreProcessing.final_nuc_rename(new_dyad, file_path.with_suffix('.nuc').name)
     print('[Nucleosome]Counting dyad contexts')
-    counts_file = DyadContextCounter.DyadFastaCounter(fasta).run()
+    counts_file = DyadContextCounter.DyadFastaCounter(fasta, nucleomutics_folder=nucleomutics_folder, filename=new_dyad).run()
+    print(counts_file)
     shutil.rmtree(temp_folder)
     print('[Nucleosome]Finished file')
     return new_dyad, counts_file

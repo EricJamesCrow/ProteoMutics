@@ -16,7 +16,7 @@ dyad_file = Path('/media/cam/Working/8-oxodG/8-oxodG_Final_Analysis/nucleosome/d
 mutation_file = Path('/media/cam/Working/8-oxodG/8-oxodG_Final_Analysis/vcf_files/genotype_split/HMCES_KBr.vcf')
 # intersected_file = Path('/media/cam/Working/8-oxodG/8-oxodG_Final_Analysis/vcf_files/genotype_split/HMCES_KBr_nucleomutics/HMCES_KBr_dyads_intersected_mutations_counts.txt')
 dyad_counts = Path('/media/cam/Working/8-oxodG/8-oxodG_Final_Analysis/nucleosome/dyads_nucleomutics/dyads_hg19_fasta_filtered.counts')
-uv_file = Path('/media/cam/Working/8-oxodG/8-oxodG_Final_Analysis/vcf_files/genotype_split/UV_nucleomutics/MELA-AU_trinuc_context_mutations_filtered_sorted.mut')
+uv_file = Path('/media/cam/Working/8-oxodG/8-oxodG_Final_Analysis/vcf_files/genotype_split/UV_nucleomutics/UV.mut')
 # hg19_counts = Path('/home/cam/Documents/genome_files/hg19/hg19_3mer.counts')
 
 # print('Pre-processing fasta file...')

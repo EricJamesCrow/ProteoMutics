@@ -5,13 +5,15 @@ from . import Tools
 import traceback
 
 class DyadFastaCounter:
-    def __init__(self, file: str | Path) -> None:
+    def __init__(self, file: str | Path, nucleomutics_folder, filename) -> None:
         self.path = Path(file)
-        self.output_dir = self.path.parent
+        filename = Path(filename)
+        nucleomutics_folder = Path(nucleomutics_folder)
+        self.output_dir = Path(nucleomutics_folder)
         self.context_list = Tools.contexts_in_iupac('NNN')
         self.counts = self.initialize_counts(self.context_list)
         self.results = []
-        self.output_file = None
+        self.output_file = nucleomutics_folder.joinpath(filename.with_suffix('.counts').name)
 
     @staticmethod
     def initialize_counts(context_list: list) -> dict:
@@ -22,13 +24,11 @@ class DyadFastaCounter:
         print(f"Error in process {task_id}: {error}")
         traceback.print_tb(error.__traceback__)
 
-    def results_to_file(self, context_list: list, counts: dict, path: Path, output_dir: Path) -> None:
-        output_file = output_dir / path.with_name(f'{path.stem}.counts').name
+    def results_to_file(self, context_list: list, counts: dict) -> None:
         df = pd.DataFrame.from_dict(counts, orient='index')
         df.columns = context_list
         df.index.name = 'Position'
-        df.to_csv(output_file, sep='\t')
-        self.output_file = output_file
+        df.to_csv(self.output_file, sep='\t')
 
     def process_block(self, start_pos: int, end_pos: int) -> dict:
         counts = self.initialize_counts(self.context_list)
@@ -64,7 +64,7 @@ class DyadFastaCounter:
                 results.append(result)
 
             self.aggregate_results(results)
-            self.results_to_file(self.context_list, self.counts, self.path, self.output_dir)
+            self.results_to_file(self.context_list, self.counts)
         return self.output_file
 
     def get_file_end_position(self) -> int:

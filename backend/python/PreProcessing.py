@@ -51,6 +51,7 @@ def check_and_sort(input_file: Path | str, output_dir: Path, suffix):
     
 def final_nuc_rename(input_file: Path, output_file: str):
     os.rename(input_file, input_file.with_name(output_file))
+    return input_file.with_name(output_file)
     
 def filter_acceptable_chromosomes(input_file: Path, output_dir: Path, genome = 'human'):
     human = ['1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','20','21','22','X']

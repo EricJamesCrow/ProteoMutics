@@ -21,33 +21,36 @@ def run_analysis(request):
     if request.method == 'POST':
         data = json.loads(request.body.decode('utf-8')) # Parse stringified JSON data
         mutation_file_path = data.get('mutation_file_path')
+        mutation_file_path = Path(mutation_file_path)
         nucleosome_file_path = data.get('nucleosome_file_path')
+        nucleosome_file_path = Path(nucleosome_file_path)
         fasta_file_path = data.get('fasta_file_path')
+        fasta_file_path = Path(fasta_file_path)
         print('[Mutation]Checking if pre-processing is needed')
-        if mutation_file_path.endswith('.mut'):
+        if mutation_file_path.suffix == '.mut':
             pass
         else:
             if Controller.check_if_pre_processed(file_path=mutation_file_path, typ='mutation'):
                 directory = mutation_file_path.parent
                 nucleomutics_folder = directory.joinpath(mutation_file_path.with_name(mutation_file_path.stem+'_nucleomutics').stem)
                 mutation_file_path = nucleomutics_folder.joinpath(mutation_file_path.with_suffix('.mut').name)
-            if not Controller.check_if_pre_processed(file_path=mutation_file_path, typ='mutation'):
+            else:
                 mutation_file_path = Controller.pre_process_mutation_file(file_path=mutation_file_path, fasta_file=fasta_file_path)
         print('[Nucleosome]Checking if pre-processing is needed')
-        if nucleosome_file_path.endswith('.nuc'):
+        if nucleosome_file_path.suffix == '.nuc' and nucleosome_file_path.with_suffix('.counts').exists():
             pass
         else:
             if Controller.check_if_pre_processed(file_path=nucleosome_file_path, typ='nucleosome'):
                 directory = nucleosome_file_path.parent
                 nucleomutics_folder = directory.joinpath(nucleosome_file_path.with_name(nucleosome_file_path.stem+'_nucleomutics').stem)
                 nucleosome_file_path = nucleomutics_folder.joinpath(nucleosome_file_path.with_suffix('.nuc').name)
-            if not Controller.check_if_pre_processed(file_path=nucleosome_file_path, typ='nucleosome'):
+            else:
                 nucleosome_file_path = Controller.pre_process_nucleosome_map(file_path=nucleosome_file_path, fasta_file=fasta_file_path)[0]
         print('[Fasta]Checking if pre-processing is needed')
         if not Controller.check_if_pre_processed(file_path=fasta_file_path, typ='fasta'):
             fasta_file_path = Controller.pre_process_fasta(fasta_file=fasta_file_path)
         print('###################################################################\nRUNNING INTERSRCTOR\n###################################################################')
-        results_file = MutationIntersector.MutationIntersector(mutation_file=mutation_file_path, dyad_file=nucleosome_file_path)
+        results_file = MutationIntersector.MutationIntersector(mutation_file=mutation_file_path, dyad_file=nucleosome_file_path).run()
         return results_file
 
     
