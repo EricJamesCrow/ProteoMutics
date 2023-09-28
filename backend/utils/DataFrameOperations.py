@@ -2,12 +2,9 @@ import numpy as np
 import pandas as pd
 from scipy import stats
 from pathlib import Path
-from ..utils import Tools
+from . import Tools
 
 class DataFormatter:
-    def __init__(self):
-        pass
-
     @staticmethod
     def read_dataframe(file_path: str | Path, columns: list = None) -> pd.DataFrame:
         file_path = Path(file_path)
