@@ -71,28 +71,28 @@ def test_df():
     plt.tight_layout()
     plt.show()
 
-test_df()
+# test_df()
 
 
 
-# def count_contexts_mut(file):
-#     file = Path(file)
-#     counts = defaultdict(int)
-#     total = 0
+def count_contexts_mut(file):
+    file = Path(file)
+    total = 0
+    keys = tools.contexts_in_iupac('NNN')
+    counts = {key: 0 for key in keys}
+    with open(file, 'r') as f:
+        for line in f:
+            total += 1
+            tsv = line.strip().split('\t')
+            context = tsv[6]
+            counts[context] += 1
     
-#     with open(file, 'r') as f:
-#         for line in f:
-#             total += 1
-#             tsv = line.strip().split('\t')
-#             context = tsv[6]
-#             counts[context] += 1
-    
-#     df = pd.DataFrame(list(counts.items()), columns=['CONTEXTS', 'COUNTS'])
+    df = pd.DataFrame(list(counts.items()), columns=['CONTEXTS', 'COUNTS'])
 
-#     df = df.sort_values(by='CONTEXTS')
+    df = df.sort_values(by='CONTEXTS')
     
-#     df.to_csv(file.with_suffix('.counts'), sep='\t', index=False)
-#     print(total)
-#     print(df['COUNTS'].sum())
+    df.to_csv(file.with_suffix('.counts'), sep='\t', index=False)
+    print(total)
+    print(df['COUNTS'].sum())
 
-# count_contexts_mut('/media/cam/Working/8-oxodG/8-oxodG_Final_Analysis/vcf_files/genotype_split/UV_nucleomutics/UV.mut')
+count_contexts_mut('/media/cam/Working/ProteoMuticsTest/UV_nucleomutics/UV.mut')

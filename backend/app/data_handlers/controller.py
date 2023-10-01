@@ -22,7 +22,7 @@ def check_if_pre_processed(file_path: Path | str, typ: str):
         if check.exists():
             return True
     elif typ == 'fasta':
-        check = directory.joinpath(file_path.with_name(f'{file_path.stem}_3mer.counts'))
+        check = directory.joinpath(file_path.with_name(f'{file_path.stem}.counts'))
         if check.exists():
             return True
     return False
@@ -88,11 +88,7 @@ def pre_process_fasta(fasta_file: Path | str):
     with subprocess.Popen(args=command, stdout=subprocess.PIPE, shell=True) as p:
         result = p.communicate()
     print('Counting genome contexts..')
-<<<<<<< HEAD:backend/data_handlers/Controller.py
-    FastaCounter.GenomeFastaCounter(fasta_file)
-=======
     fasta_counter.GenomeFastaCounter(fasta_file).run()
->>>>>>> 983731144b3d4ba6944ce45928cbac8055ccfc52:backend/app/data_handlers/controller.py
     pass
 
 def check_for_results():

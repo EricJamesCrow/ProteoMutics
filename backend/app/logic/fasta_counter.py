@@ -9,6 +9,8 @@ class GenomeFastaCounter:
         self.results = []
         self.genome_counts = {}
         self._pool = mp.Pool(mp.cpu_count())
+        
+    def run(self):
         self._count_fasta_contexts()
         self._pool.close()
         self._pool.join()
@@ -58,9 +60,13 @@ class GenomeFastaCounter:
                     self._pool.apply_async(func=self._count_chromosome, args=[i, self.fasta_file, fasta_position, self.context_length], callback=self._collect_result)
                 line = f.readline()
 
+    def _filter_N_keys(self, dictionary):
+        return {k: v for k, v in dictionary.items() if 'N' not in k}
+
     def _merge_results(self):
         for r in self.results:
             self._merge_dicts(self.genome_counts, r[1])
+        self.genome_counts = self._filter_N_keys(self.genome_counts)
 
     @staticmethod
     def _results_to_file(output_file: str, genome_counts: dict) -> None:

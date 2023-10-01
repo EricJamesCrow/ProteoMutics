@@ -9,7 +9,7 @@ from math import log2
 
 import sys
 sys.path.append('/home/cam/Documents/repos/ProteoMutics/backend')
-from utils import Tools
+from app.utils import tools
 
 class DataFormatter:
     @staticmethod
@@ -46,12 +46,14 @@ class DataFormatter:
     def genome_wide_normalization(mutations_df: pd.DataFrame, dyads_df: pd.DataFrame, genome_df: pd.DataFrame, observed_df: pd.DataFrame):
         expected = {}
         normalized = {}
-        contexts = Tools.contexts_in_iupac('NNN')
+        total_mutations = mutations_df.sum()
+        total_genome = genome_df.sum()
+        contexts = tools.contexts_in_iupac('NNN')
         for dyad_position, dyad_row in dyads_df.iterrows():
             expected_values = []
             for context in contexts:
                 try:    
-                    expected_value = mutations_df.loc[context, 'COUNTS']*(genome_df.loc[context, 'COUNTS']/genome_df.sum())*(dyad_row[context]/dyad_row.sum())
+                    expected_value = ((mutations_df.at[context, 'COUNTS']*genome_df.at[context, 'COUNTS'])/total_genome)*(dyad_row[context]/dyad_row.sum())
                     expected_values.append(expected_value)
                 except KeyError:
                     pass
@@ -64,14 +66,14 @@ class DataFormatter:
     def ben_genome_wide_normalization(mutations_df: pd.DataFrame, dyads_df: pd.DataFrame, genome_df: pd.DataFrame, observed_df: pd.DataFrame):
         expected = {}
         normalized = {}
-        total_mutations_dict = mutations_df.to_dict()
-        total_genomic_dict = genome_df.to_dict()
-        contexts = Tools.contexts_in_iupac('NNN')
+        total_mutations = mutations_df.sum()
+        total_genome = genome_df.sum()
+        contexts = tools.contexts_in_iupac('NNN')
         for dyad_position, dyad_row in dyads_df.iterrows():
             ben_values = []
             for context in contexts:
                 try:    
-                    ben_value = (total_mutations_dict['COUNTS'][context]/sum(total_mutations_dict['COUNTS'].values()))*(total_genomic_dict['COUNTS'][context]/sum(total_genomic_dict['COUNTS'].values()))*(dyad_row[context])
+                    ben_value = ((mutations_df.at[context, 'COUNTS']/total_mutations)*(genome_df.at[context, 'COUNTS'])/total_genome)*(dyad_row[context])
                     ben_values.append(ben_value)
                 except KeyError:
                     pass
