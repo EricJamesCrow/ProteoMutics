@@ -8,8 +8,16 @@ cd ./frontend
 npm install
 npm run start
 ```
-
-### START BACKEND ###
+### START BACKEND WITH DOCKER (DEVELOPMENT) ###
+```
+docker-compose up --build
+```
+### START BACKEND WITH DOCKER (PRODUCTION) ###
+```
+docker build -t proteomutics-api .
+docker run -d -p 8080:8000 proteomutics-api
+```
+### START BACKEND WITHOUT DOCKER ###
 ```
 cd ./backend
 pip3 install -r requirements.txt
