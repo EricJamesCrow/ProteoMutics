@@ -5,7 +5,7 @@ class GenomeFastaCounter:
     def __init__(self, fasta_file: str | Path, context_length = 3):
         self.fasta_file = Path(fasta_file)
         self.context_length = context_length
-        self.output_file = self.fasta_file.with_name(f'{self.fasta_file.stem}_{self.context_length}mer.counts')
+        self.output_file = self.fasta_file.with_name(f'{self.fasta_file.stem}.counts')
         self.results = []
         self.genome_counts = {}
         self._pool = mp.Pool(mp.cpu_count())

@@ -2,7 +2,12 @@ import numpy as np
 import pandas as pd
 from scipy import stats
 from pathlib import Path
-from . import Tools
+# from . import Tools
+from math import log2
+
+import sys
+sys.path.append('/home/cam/Documents/repos/ProteoMutics/backend')
+from utils import Tools
 
 class DataFormatter:
     @staticmethod
@@ -11,12 +16,6 @@ class DataFormatter:
         df = pd.read_csv(file_path, sep='\t', index_col=0, header=0)
         if columns:
             df = df.loc[:, columns]
-        return df
-
-    @staticmethod
-    def read_genome_counts_df(file_path: str | Path) -> pd.DataFrame:
-        file_path = Path(file_path)
-        df = pd.read_csv(file_path, sep='\t', index_col=0, header=0)
         return df
 
     @staticmethod
@@ -42,25 +41,49 @@ class DataFormatter:
         return all_contexts
 
     @staticmethod
-    def genome_wide_normalization(mutations_df, dyads_df, genome_df):
-        results_dict = {}
-        mutation_df_sum = mutations_df.values.sum()
-        for mut_position, mut_row in mutations_df.iterrows():
+    def genome_wide_normalization(mutations_df: pd.DataFrame, dyads_df: pd.DataFrame, genome_df: pd.DataFrame, observed_df: pd.DataFrame):
+        expected = {}
+        normalized = {}
+        contexts = Tools.contexts_in_iupac('NNN')
+        for dyad_position, dyad_row in dyads_df.iterrows():
             expected_values = []
-            mut_row_percentages = DataFormatter.calculate_percentages(mut_row)
-            dyad_row_percentages = DataFormatter.calculate_percentages(dyads_df.loc[mut_position])
-            for mut_percentage, dyad_percentage in zip(mut_row_percentages, dyad_row_percentages):
-                expected_value = mut_percentage * dyad_percentage * mutation_df_sum
-                expected_values.append(expected_value)
-            results_dict[mut_position] = mut_row.sum() / sum(expected_values)
-        return results_dict
+            for context in contexts:
+                try:    
+                    expected_value = mutations_df.loc[context, 'COUNTS']*(genome_df.loc[context, 'COUNTS']/genome_df.sum())*(dyad_row[context]/dyad_row.sum())
+                    expected_values.append(expected_value)
+                except KeyError:
+                    pass
+            expected[dyad_position] = sum(expected_values)
+        for observed_position, observed_row in observed_df.iterrows():
+            normalized[observed_position] = log2(observed_row.sum()/expected[observed_position])
+        return pd.DataFrame.from_dict(normalized, orient='index', columns=['fold_change'])
 
+    @staticmethod
+    def ben_genome_wide_normalization(mutations_df: pd.DataFrame, dyads_df: pd.DataFrame, genome_df: pd.DataFrame, observed_df: pd.DataFrame):
+        expected = {}
+        normalized = {}
+        total_mutations_dict = mutations_df.to_dict()
+        total_genomic_dict = genome_df.to_dict()
+        contexts = Tools.contexts_in_iupac('NNN')
+        for dyad_position, dyad_row in dyads_df.iterrows():
+            ben_values = []
+            for context in contexts:
+                try:    
+                    ben_value = (total_mutations_dict['COUNTS'][context]/sum(total_mutations_dict['COUNTS'].values()))*(total_genomic_dict['COUNTS'][context]/sum(total_genomic_dict['COUNTS'].values()))*(dyad_row[context])
+                    ben_values.append(ben_value)
+                except KeyError:
+                    pass
+            expected[dyad_position] = sum(ben_values)
+        for observed_position, observed_row in observed_df.iterrows():
+            normalized[observed_position] = observed_row.sum()/expected[observed_position]
+        return pd.DataFrame.from_dict(normalized, orient='index', columns=['Counts'])
+    
     @staticmethod
     def context_normalization(mutations_df, dyads_df):
         results_dict = {}
         for mut_position, mut_row in mutations_df.iterrows():
             results_dict[mut_position] = sum(mut_row.tolist()) / sum(dyads_df.loc[mut_position].tolist())
-        return results_dict
+        return pd.DataFrame.from_dict(results_dict, orient='index', columns=['Counts'])
 
     @staticmethod
     def process_without_dyad_counts(mutations_df):

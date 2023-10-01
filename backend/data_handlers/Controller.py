@@ -88,7 +88,7 @@ def pre_process_fasta(fasta_file: Path | str):
     with subprocess.Popen(args=command, stdout=subprocess.PIPE, shell=True) as p:
         result = p.communicate()
     print('Counting genome contexts..')
-    FastaCounter.GenomeFastaCounter(fasta_file).run()
+    FastaCounter.GenomeFastaCounter(fasta_file)
     pass
 
 def check_for_results():

@@ -1,100 +1,98 @@
-import logic.MutationIntersector as MutationIntersector
-import data_handlers.Controller as Controller
-import utils.Graphing as Graphing
-import logic.FastaCounter as FastaCounter
-import utils.DataFrameOperations as DataFrameOperations
+import pandas as pd
 from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
-import Tools
-import logic.DyadContextCounter as DyadContextCounter
+import sys
+sys.path.append('/home/cam/Documents/repos/ProteoMutics/backend')
+from utils import DataFrameOperations, Tools
 
-print('Imported modules.')
-genome_file = Path('/home/cam/Documents/genome_files/hg19/hg19.fa')
-dyad_file = Path('/media/cam/Working/8-oxodG/8-oxodG_Final_Analysis/nucleosome/dyads.bed')
-mutation_file = Path('/media/cam/Working/8-oxodG/8-oxodG_Final_Analysis/vcf_files/genotype_split/HMCES_KBr.vcf')
-# intersected_file = Path('/media/cam/Working/8-oxodG/8-oxodG_Final_Analysis/vcf_files/genotype_split/HMCES_KBr_nucleomutics/HMCES_KBr_dyads_intersected_mutations_counts.txt')
-dyad_counts = Path('/media/cam/Working/8-oxodG/8-oxodG_Final_Analysis/nucleosome/dyads_nucleomutics/dyads_hg19_fasta_filtered.counts')
-uv_file = Path('/media/cam/Working/8-oxodG/8-oxodG_Final_Analysis/vcf_files/genotype_split/UV_nucleomutics/UV.mut')
-# hg19_counts = Path('/home/cam/Documents/genome_files/hg19/hg19_3mer.counts')
+def test_df():
+    uv_total = DataFrameOperations.DataFormatter.read_dataframe('/media/cam/Working/ProteoMuticsTest/UV_nucleomutics/UV.counts')
+    uv_counts = DataFrameOperations.DataFormatter.read_dataframe('/media/cam/Working/ProteoMuticsTest/UV_nucleomutics/UV_dyads.intersect')
+    dyads_counts = DataFrameOperations.DataFormatter.read_dataframe('/media/cam/Working/ProteoMuticsTest/dyads_nucleomutics/dyads.counts')
+    genomic_counts = DataFrameOperations.DataFormatter.read_dataframe('/media/cam/Working/ProteoMuticsTest/hg19.counts')
+    ben_normalized = DataFrameOperations.DataFormatter.ben_genome_wide_normalization(uv_total, dyads_counts, genomic_counts, uv_counts)
+    context_normalized = DataFrameOperations.DataFormatter.context_normalization(uv_counts, dyads_counts)
+    steve_normalized = DataFrameOperations.DataFormatter.genome_wide_normalization(uv_total, dyads_counts, genomic_counts, uv_counts)
 
-# print('Pre-processing fasta file...')
-# FastaCounter.GenomeFastaCounter(genome_file, 3)
-# print('Pre-processing dyad file...')
-Controller.pre_process_nucleosome_map(dyad_file, genome_file)
-# print('Counting dyad contexts...')
-# counter = DyadContextCounter.DyadFastaCounter(dyad_file)
-# counter.run()
-print('Intersecting mutation file...')
-intersected_file = MutationIntersector.MutationIntersector(mutation_file = uv_file, dyad_file = dyad_file) # mutation_type='C>T', mut_context='YCY')
-intersected_file.run()
+    def make_graph_matplotlib(ax, mutation_data: pd.DataFrame, title:str, interpolate_method: bool = False, smoothing_method: None = None):
+        indexes = mutation_data.index.tolist()
+        graph_values = []
+        for item in indexes:
+            graph_values.append(sum(mutation_data.loc[item]))
+        
+        x = np.array(indexes)
+        y = np.array(graph_values)
 
-# print('Formatting dataframe...')
-# df = DataFrameOperations.DataFormatter(intersected_file, dyad_counts=dyad_counts, iupac='NNN', context_normalize=True, count_complements=False, normalize_to_median=True, z_score_filter=None)
-# print('Making graph...')
-# def make_graph_matplotlib(mutation_data: pd.DataFrame, interpolate_method: bool = False, smoothing_method: None = None):
+        # Your processing with Tools methods
+        overall_period, overall_confidence, overall_signal_to_noise = Tools.find_periodicity(x, y)
+
+        if smoothing_method:
+            x, y = Tools.smooth_data(x, y, method=smoothing_method)
+
+        if interpolate_method:
+            x, y = Tools.interpolate_missing_data(x, y, -1000, 1000, interpolate_method)
+
+        # Identify peaks based on overall_period
+        peaks = [0]
+        while peaks[-1] + overall_period < x[-1]:
+            peaks.append(peaks[-1] + overall_period)
+        while peaks[0] - overall_period > x[0]:
+            peaks.insert(0, peaks[0] - overall_period)
+
+        def in_red_region(val):
+            for peak in peaks:
+                if peak - 73 <= val <= peak + 73:
+                    return True
+            return False
+
+        # Plotting on the passed ax
+        ax.scatter(x, y, c='black', s=2)
+        for i in range(1, len(x)):
+            if in_red_region(x[i-1]) and in_red_region(x[i]):
+                ax.plot(x[i-1:i+1], y[i-1:i+1], color='red')
+            else:
+                ax.plot(x[i-1:i+1], y[i-1:i+1], color='blue')
+        ax.set_title(title)
+        ax.set_xlabel('Nucleotide Position Relative to Nucleosome Dyad (bp)')
+        ax.set_ylabel('Mutation Counts Normalized to Context')
+
+    fig, axs = plt.subplots(3, 2, figsize=(15, 18))
+    datasets = [
+        ("context_normalized", context_normalized),
+        ("ben_normalized", ben_normalized),
+        ("steve_normalized", steve_normalized)
+    ]
+
+    for i, (name, data) in enumerate(datasets):
+        make_graph_matplotlib(axs[i, 0], data, name + " No Smoothing", interpolate_method='linear')
+        make_graph_matplotlib(axs[i, 1], data, name + " With Smoothing", interpolate_method='linear', smoothing_method='moving_average')
+
+    plt.tight_layout()
+    plt.show()
+
+test_df()
+
+
+
+# def count_contexts_mut(file):
+#     file = Path(file)
+#     counts = defaultdict(int)
+#     total = 0
     
-#     indexes = mutation_data.index.tolist()
-#     graph_values = []
-#     for item in indexes:
-#         graph_values.append(sum(mutation_data.loc[item]))
+#     with open(file, 'r') as f:
+#         for line in f:
+#             total += 1
+#             tsv = line.strip().split('\t')
+#             context = tsv[6]
+#             counts[context] += 1
     
-#     x = np.array(indexes)
-#     y = np.array(graph_values)
+#     df = pd.DataFrame(list(counts.items()), columns=['CONTEXTS', 'COUNTS'])
 
-#     # Your processing with Tools methods (keep this unchanged)
-#     overall_period, overall_confidence, overall_signal_to_noise = Tools.find_periodicity(x, y)
+#     df = df.sort_values(by='CONTEXTS')
+    
+#     df.to_csv(file.with_suffix('.counts'), sep='\t', index=False)
+#     print(total)
+#     print(df['COUNTS'].sum())
 
-#     if smoothing_method:
-#         x, y = Tools.smooth_data(x, y, method=smoothing_method)
-
-#     if interpolate_method:
-#         x, y = Tools.interpolate_missing_data(x, y, -1000, 1000, interpolate_method)
-
-
-#     # Identify peaks based on overall_period
-#     peaks = [0]  # first peak is at 0
-
-#     # Handle right side of the graph
-#     while peaks[-1] + overall_period < x[-1]:
-#         peaks.append(peaks[-1] + overall_period)
-
-#     # Handle left side of the graph
-#     while peaks[0] - overall_period > x[0]:
-#         peaks.insert(0, peaks[0] - overall_period)
-
-#     # Define a function to check if a value is within a red region
-#     def in_red_region(val):
-#         for peak in peaks:
-#             if peak - 73 <= val <= peak + 73:
-#                 return True
-#         return False
-
-#     # Set up the Matplotlib figure and axis
-#     fig, ax = plt.subplots(figsize=(10,6))
-
-#     # Plot the scatter points in black
-#     ax.scatter(x, y, c='black', s=2)
-
-#     # Plot colored line segments
-#     for i in range(1, len(x)):
-#         if in_red_region(x[i-1]) and in_red_region(x[i]):
-#             ax.plot(x[i-1:i+1], y[i-1:i+1], color='red')
-#         else:
-#             ax.plot(x[i-1:i+1], y[i-1:i+1], color='blue')
-
-#     # Set the title and labels
-#     ax.set_title('Proteomutics!')
-#     ax.set_xlabel('Nucleotide Position Relative to Nucleosome Dyad (bp)')
-#     ax.set_ylabel('Mutation Counts Normalized to Context')
-
-#     # Display the plot
-#     plt.show()
-
-#     # Return your other values
-#     return overall_period, overall_confidence, overall_signal_to_noise
-
-# result = make_graph_matplotlib(df, interpolate_method='linear')
-# result = make_graph_matplotlib(df, interpolate_method='linear', smoothing_method='moving_average')
-# print(result)
+# count_contexts_mut('/media/cam/Working/8-oxodG/8-oxodG_Final_Analysis/vcf_files/genotype_split/UV_nucleomutics/UV.mut')
