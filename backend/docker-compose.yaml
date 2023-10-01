@@ -1,0 +1,9 @@
+services:
+  app:
+    build: .
+    container_name: proteomutics-api
+    command: python3.10 manage.py runserver 0.0.0.0:8000 --noreload --nothreading
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
