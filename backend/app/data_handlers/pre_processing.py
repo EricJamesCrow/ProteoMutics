@@ -1,7 +1,8 @@
+from app.utils import tools
+
 from pathlib import Path
 import subprocess
 import os
-from utils import Tools
 
 def adjust_dyad_positions(dyad_file: str | Path, output_dir):
     """Takes a dyad file with single nucleotide positions and creates a new bed file with -500 and +500 positions
@@ -87,7 +88,7 @@ def vcf_snp_to_intermediate_bed(vcf_file: Path, output_dir):
 
 def expand_context_custom_bed(intermediate_bed: Path, fasta_file: Path, output_dir):
     bed_file = output_dir / intermediate_bed.with_suffix('.tmp2').name
-    _, getfasta_output = Tools.bedtools_getfasta(intermediate_bed, fasta_file)
+    _, getfasta_output = tools.bedtools_getfasta(intermediate_bed, fasta_file)
     with open(getfasta_output) as f, open(intermediate_bed) as i, open(bed_file, 'w') as o:
         for fasta_line, bed_line in zip(f, i):
             fasta_context = fasta_line.strip().split('\t')[-1]

@@ -1,7 +1,8 @@
+from app.utils import tools
+
 import multiprocessing as mp
 import pandas as pd
 from pathlib import Path
-from utils import Tools
 import traceback
 
 class DyadFastaCounter:
@@ -10,7 +11,7 @@ class DyadFastaCounter:
         filename = Path(filename)
         nucleomutics_folder = Path(nucleomutics_folder)
         self.output_dir = Path(nucleomutics_folder)
-        self.context_list = Tools.contexts_in_iupac('NNN')
+        self.context_list = tools.contexts_in_iupac('NNN')
         self.counts = self.initialize_counts(self.context_list)
         self.results = []
         self.output_file = nucleomutics_folder.joinpath(filename.with_suffix('.counts').name)

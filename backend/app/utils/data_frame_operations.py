@@ -1,13 +1,18 @@
+from . import tools
+
 import numpy as np
 import pandas as pd
 from scipy import stats
 from pathlib import Path
+<<<<<<< HEAD:backend/utils/DataFrameOperations.py
 # from . import Tools
 from math import log2
 
 import sys
 sys.path.append('/home/cam/Documents/repos/ProteoMutics/backend')
 from utils import Tools
+=======
+>>>>>>> 983731144b3d4ba6944ce45928cbac8055ccfc52:backend/app/utils/data_frame_operations.py
 
 class DataFormatter:
     @staticmethod
@@ -34,7 +39,7 @@ class DataFormatter:
     @staticmethod
     def get_all_contexts(contexts, iupac, count_complements):
         if count_complements:
-            reverse_complement_contexts = Tools.contexts_in_iupac(Tools.reverse_complement(iupac))
+            reverse_complement_contexts = tools.contexts_in_iupac(tools.reverse_complement(iupac))
             all_contexts = sorted(list(set(reverse_complement_contexts).union(set(contexts))))
         else:
             all_contexts = contexts
@@ -96,7 +101,7 @@ class DataFormatter:
     def format_dataframe(mutation_counts: str | Path, dyad_counts: 'Path | None' = None, iupac = 'NNN', context_normalize = False, count_complements = False, normalize_to_median = True, z_score_filter: float = None) -> pd.DataFrame:
         mutation_counts = Path(mutation_counts)
         dyad_counts = Path(dyad_counts) if dyad_counts else None
-        contexts = Tools.contexts_in_iupac(iupac)
+        contexts = tools.contexts_in_iupac(iupac)
         all_contexts = DataFormatter.get_all_contexts(contexts, iupac, count_complements)
 
         if dyad_counts and not context_normalize:
