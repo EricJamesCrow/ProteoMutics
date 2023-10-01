@@ -4,15 +4,12 @@ import numpy as np
 import pandas as pd
 from scipy import stats
 from pathlib import Path
-<<<<<<< HEAD:backend/utils/DataFrameOperations.py
 # from . import Tools
 from math import log2
 
 import sys
 sys.path.append('/home/cam/Documents/repos/ProteoMutics/backend')
 from utils import Tools
-=======
->>>>>>> 983731144b3d4ba6944ce45928cbac8055ccfc52:backend/app/utils/data_frame_operations.py
 
 class DataFormatter:
     @staticmethod
