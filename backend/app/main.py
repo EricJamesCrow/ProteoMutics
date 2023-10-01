@@ -3,6 +3,11 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.routes.api import router as api_router
 
+'''
+Need error checking for when a file cannot be found.
+Need error checking for when samtools does not have permission to write to the directory.
+'''
+
 def get_application() -> FastAPI:
     application = FastAPI()
 
