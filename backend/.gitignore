@@ -7,6 +7,7 @@ utils/__pycache__/*
 ubuntuvenv/*
 app/__pycache__/*
 app/api/__pycache__/*
-app/api/data_handlers/__pycache__/*
-app/api/logic/__pycache__/*
-app/api/utils/__pycache__/*
+app/api/routes/__pycache__/*
+app/data_handlers/__pycache__/*
+app/logic/__pycache__/*
+app/utils/__pycache__/*
