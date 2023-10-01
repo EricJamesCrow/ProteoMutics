@@ -4,16 +4,16 @@ import matplotlib.pyplot as plt
 import numpy as np
 import sys
 sys.path.append('/home/cam/Documents/repos/ProteoMutics/backend')
-from utils import DataFrameOperations, Tools
+from app.utils import data_frame_operations, tools
 
 def test_df():
-    uv_total = DataFrameOperations.DataFormatter.read_dataframe('/media/cam/Working/ProteoMuticsTest/UV_nucleomutics/UV.counts')
-    uv_counts = DataFrameOperations.DataFormatter.read_dataframe('/media/cam/Working/ProteoMuticsTest/UV_nucleomutics/UV_dyads.intersect')
-    dyads_counts = DataFrameOperations.DataFormatter.read_dataframe('/media/cam/Working/ProteoMuticsTest/dyads_nucleomutics/dyads.counts')
-    genomic_counts = DataFrameOperations.DataFormatter.read_dataframe('/media/cam/Working/ProteoMuticsTest/hg19.counts')
-    ben_normalized = DataFrameOperations.DataFormatter.ben_genome_wide_normalization(uv_total, dyads_counts, genomic_counts, uv_counts)
-    context_normalized = DataFrameOperations.DataFormatter.context_normalization(uv_counts, dyads_counts)
-    steve_normalized = DataFrameOperations.DataFormatter.genome_wide_normalization(uv_total, dyads_counts, genomic_counts, uv_counts)
+    uv_total = data_frame_operations.DataFormatter.read_dataframe('/media/cam/Working/ProteoMuticsTest/UV_nucleomutics/UV.counts')
+    uv_counts = data_frame_operations.DataFormatter.read_dataframe('/media/cam/Working/ProteoMuticsTest/UV_nucleomutics/UV_dyads.intersect')
+    dyads_counts = data_frame_operations.DataFormatter.read_dataframe('/media/cam/Working/ProteoMuticsTest/dyads_nucleomutics/dyads.counts')
+    genomic_counts = data_frame_operations.DataFormatter.read_dataframe('/media/cam/Working/ProteoMuticsTest/hg19.counts')
+    ben_normalized = data_frame_operations.DataFormatter.ben_genome_wide_normalization(uv_total, dyads_counts, genomic_counts, uv_counts)
+    context_normalized = data_frame_operations.DataFormatter.context_normalization(uv_counts, dyads_counts)
+    steve_normalized = data_frame_operations.DataFormatter.genome_wide_normalization(uv_total, dyads_counts, genomic_counts, uv_counts)
 
     def make_graph_matplotlib(ax, mutation_data: pd.DataFrame, title:str, interpolate_method: bool = False, smoothing_method: None = None):
         indexes = mutation_data.index.tolist()
@@ -25,13 +25,13 @@ def test_df():
         y = np.array(graph_values)
 
         # Your processing with Tools methods
-        overall_period, overall_confidence, overall_signal_to_noise = Tools.find_periodicity(x, y)
+        overall_period, overall_confidence, overall_signal_to_noise = tools.find_periodicity(x, y)
 
         if smoothing_method:
-            x, y = Tools.smooth_data(x, y, method=smoothing_method)
+            x, y = tools.smooth_data(x, y, method=smoothing_method)
 
         if interpolate_method:
-            x, y = Tools.interpolate_missing_data(x, y, -1000, 1000, interpolate_method)
+            x, y = tools.interpolate_missing_data(x, y, -1000, 1000, interpolate_method)
 
         # Identify peaks based on overall_period
         peaks = [0]
