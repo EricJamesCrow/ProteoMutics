@@ -76,7 +76,7 @@ async def run_analysis(request: RunAnalysisRequest):
 class PlotGraphDataRequest(BaseModel):
     mutation_file_path: str
 
-@app.post("/plot_graph_data")
+@app.post("/generate_graph")
 async def plot_graph_data(request: PlotGraphDataRequest):
     mutation_file_path = Path(request.mutation_file_path)
 
