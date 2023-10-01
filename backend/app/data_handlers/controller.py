@@ -1,8 +1,8 @@
 from . import pre_processing
 from app.logic import dyad_context_counter, fasta_counter
+from app.utils import tools
 
 from pathlib import Path
-from utils import Tools
 import shutil
 import subprocess
 
@@ -67,7 +67,7 @@ def pre_process_nucleosome_map(file_path: Path | str, fasta_file: Path | str):
     print('[Nucleosome]Adjusting dyad positions')
     step_1 = pre_processing.adjust_dyad_positions(file_path, temp_folder)
     print('[Nucleosome]Running bedtools getfasta')
-    step_2 = Tools.bedtools_getfasta(step_1, fasta_file)
+    step_2 = tools.bedtools_getfasta(step_1, fasta_file)
     print('[Nucleosome]Filtering lines with N')
     step_3, fasta = pre_processing.filter_lines_with_n(Path(step_2[1]), file_path, temp_folder)
     print('[Nucleosome]Filtering non-canonical chromosomes')

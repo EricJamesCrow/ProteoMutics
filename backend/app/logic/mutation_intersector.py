@@ -1,7 +1,8 @@
+from app.utils import tools
+
 import multiprocessing as mp
 import pandas as pd
 from pathlib import Path
-from utils import Tools
 import traceback
 
 
@@ -11,9 +12,9 @@ class MutationIntersector:
         self.mutation_file = Path(mutation_file)
         self.dyad_file = Path(dyad_file)
         self.output_file = mutation_file.with_name(f'{mutation_file.stem}_{dyad_file.stem}.intersect')
-        self.mut_context = Tools.contexts_in_iupac(mut_context)
-        self.mutation_type = Tools.mutation_combinations(mutation_type)
-        self.context_list = Tools.contexts_in_iupac('NNN')
+        self.mut_context = tools.contexts_in_iupac(mut_context)
+        self.mutation_type = tools.mutation_combinations(mutation_type)
+        self.context_list = tools.contexts_in_iupac('NNN')
         self.counts = self.initialize_counts()
         self.results = []
         self.dyad_chrom_names = []

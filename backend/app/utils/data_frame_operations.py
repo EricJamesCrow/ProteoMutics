@@ -36,7 +36,7 @@ class DataFormatter:
     @staticmethod
     def get_all_contexts(contexts, iupac, count_complements):
         if count_complements:
-            reverse_complement_contexts = Tools.contexts_in_iupac(Tools.reverse_complement(iupac))
+            reverse_complement_contexts = tools.contexts_in_iupac(tools.reverse_complement(iupac))
             all_contexts = sorted(list(set(reverse_complement_contexts).union(set(contexts))))
         else:
             all_contexts = contexts
