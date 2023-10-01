@@ -15,7 +15,7 @@ docker-compose up --build
 ### START BACKEND WITH DOCKER (PRODUCTION) ###
 ```
 docker build -t proteomutics-api .
-docker run -d -p 8080:8000 proteomutics-api
+docker run -d -p 8000:8000 proteomutics-api
 ```
 ### START BACKEND WITHOUT DOCKER ###
 ```
