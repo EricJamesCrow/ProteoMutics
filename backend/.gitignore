@@ -1,10 +1,6 @@
 .venv/*
-server/__pycache__/*
-test/__pycache__/*
-data_handlers/__pycache__/*
-logic/__pycache__/*
-utils/__pycache__/*
 ubuntuvenv/*
+test/__pycache__/*
 app/__pycache__/*
 app/api/__pycache__/*
 app/api/routes/__pycache__/*
