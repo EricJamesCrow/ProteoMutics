@@ -17,4 +17,6 @@ RUN pip3.10 install --no-cache-dir --upgrade -r requirements.txt
 
 COPY . /app
 
-CMD ["python3.10", "manage.py", "runserver", "0.0.0.0:8000"]
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+
+# CMD ["python3.10", "manage.py", "runserver"]
