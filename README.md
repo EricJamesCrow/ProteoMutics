@@ -8,11 +8,19 @@ cd ./frontend
 npm install
 npm run start
 ```
-### START BACKEND WITH DOCKER (DEVELOPMENT) ###
+### CREATE AND START DOCKER ENVIRONMENT (DEVELOPMENT) ###
 ```
-docker-compose up --build
+docker-compose up -d --build
 ```
-### START BACKEND WITH DOCKER (PRODUCTION) ###
+### START DOCKER ENVIRONMENT (DEVELOPMENT) ###
+```
+docker-compose up -d proteomutics-api
+```
+### EXECUTE COMMANDS IN DOCKER ENVIRONMENT (DEVELOPMENT) ###
+```
+docker-compose exec app bash
+```
+### CREATE AND START BACKEND WITH DOCKER (PRODUCTION) ###
 ```
 docker build -t proteomutics-api .
 docker run -d -p 8000:8000 proteomutics-api
