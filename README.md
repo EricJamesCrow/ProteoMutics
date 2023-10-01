@@ -8,6 +8,19 @@ cd ./frontend
 npm install
 npm run start
 ```
+
+### INSTALL AND START BACKEND WITHOUT DOCKER ###
+```
+cd ./backend
+pip3 install -r requirements.txt
+cd ./app
+uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload --reload-include *
+```
+### START BACKEND ###
+```
+cd ./backend/app
+uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload --reload-include *
+```
 ### CREATE AND START DOCKER ENVIRONMENT (DEVELOPMENT) ###
 ```
 docker-compose up -d --build
@@ -24,10 +37,4 @@ docker-compose exec app bash
 ```
 docker build -t proteomutics-api .
 docker run -d -p 8000:8000 proteomutics-api
-```
-### START BACKEND WITHOUT DOCKER ###
-```
-cd ./backend
-pip3 install -r requirements.txt
-python3 manage.py runserver
 ```
