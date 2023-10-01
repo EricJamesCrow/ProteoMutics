@@ -1,8 +1,9 @@
+from . import tools
+
 import numpy as np
 import pandas as pd
 from scipy import stats
 from pathlib import Path
-from . import Tools
 
 class DataFormatter:
     @staticmethod
@@ -73,7 +74,7 @@ class DataFormatter:
     def format_dataframe(mutation_counts: str | Path, dyad_counts: 'Path | None' = None, iupac = 'NNN', context_normalize = False, count_complements = False, normalize_to_median = True, z_score_filter: float = None) -> pd.DataFrame:
         mutation_counts = Path(mutation_counts)
         dyad_counts = Path(dyad_counts) if dyad_counts else None
-        contexts = Tools.contexts_in_iupac(iupac)
+        contexts = tools.contexts_in_iupac(iupac)
         all_contexts = DataFormatter.get_all_contexts(contexts, iupac, count_complements)
 
         if dyad_counts and not context_normalize:

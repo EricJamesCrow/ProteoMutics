@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
 
-from app.data_handlers import Controller
+from app.data_handlers import controller
 
 class CheckPreprocessedFilesRequest(BaseModel):
     file_path: str
@@ -13,5 +13,5 @@ router = APIRouter()
 async def check_preprocessed_files(request: CheckPreprocessedFilesRequest):
     file_path = request.file_path
     file_type = request.type
-    is_preprocessed = Controller.check_if_pre_processed(file_path=file_path, typ=file_type)
+    is_preprocessed = controller.check_if_pre_processed(file_path=file_path, typ=file_type)
     return {'is_preprocessed': is_preprocessed}

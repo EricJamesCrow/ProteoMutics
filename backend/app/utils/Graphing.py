@@ -1,4 +1,5 @@
-from . import Tools
+from . import tools
+
 import numpy as np
 import pandas as pd
 import plotly.graph_objs as go
@@ -12,15 +13,15 @@ def make_graph(mutation_data: pd.DataFrame, interpolate_method: bool = False, sm
     x = np.array(indexes)
     y = np.array(graph_values)
     # within a nucleosome
-    period, confidence, signal_to_noise = Tools.find_periodicity(x, y, 10.2)
+    period, confidence, signal_to_noise = tools.find_periodicity(x, y, 10.2)
     # between nucleosomes
-    overall_period, overall_confidence, overall_signal_to_noise = Tools.find_periodicity(x, y, 300)
+    overall_period, overall_confidence, overall_signal_to_noise = tools.find_periodicity(x, y, 300)
     # if smoothing data, apply smoothing method
     if smoothing_method:
-        x, y = Tools.smooth_data(x, y, method=smoothing_method)
+        x, y = tools.smooth_data(x, y, method=smoothing_method)
     # if interpolating missing data, apply method and adjust values
     if interpolate_method:
-        x, y = Tools.interpolate_missing_data(x, y, -1000, 1000, interpolate_method)
+        x, y = tools.interpolate_missing_data(x, y, -1000, 1000, interpolate_method)
 
     # Identify peaks based on overall_period
     peaks = [0]  # first peak is at 0

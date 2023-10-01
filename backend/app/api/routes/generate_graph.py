@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
-from app.utils import DataFrameOperations, Graphing
+from app.utils import graphing, data_frame_operations
 
 from pathlib import Path
 
@@ -14,7 +14,7 @@ router = APIRouter()
 async def plot_graph_data(request: PlotGraphDataRequest):
     mutation_file_path = Path(request.mutation_file_path)
 
-    df = DataFrameOperations.format_dataframe(
+    df = data_frame_operations.format_dataframe(
         mutation_counts=mutation_file_path, 
         iupac='NNN', 
         count_complements=False, 
@@ -22,7 +22,7 @@ async def plot_graph_data(request: PlotGraphDataRequest):
         z_score_filter=None
     )
     try:
-        graph_object, period, confidence, signal_to_noise = Graphing.display_figure(Graphing.make_graph(df))
+        graph_object, period, confidence, signal_to_noise = graphing.display_figure(graphing.make_graph(df))
         return {
             "graph_html": graph_object,
             "period": period,
