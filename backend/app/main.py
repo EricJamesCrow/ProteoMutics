@@ -1,5 +1,6 @@
 # FastAPI
-from fastapi import FastAPI, HTTPException, Depends, Request
+from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 # python
@@ -12,6 +13,14 @@ import utils.Graphing as Graphing
 import logic.MutationIntersector as MutationIntersector
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allows all origins
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 class CheckPreprocessedFilesRequest(BaseModel):
     file_path: str
     type: str
