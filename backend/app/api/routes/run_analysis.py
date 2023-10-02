@@ -50,6 +50,13 @@ async def run_analysis(request: RunAnalysisRequest):
         mutation_file_path = Path(request.mutation_file_path)
         nucleosome_file_path = Path(request.nucleosome_file_path)
         fasta_file_path = Path(request.fasta_file_path)
+
+        # if not mutation_file_path.exists():
+        #     raise HTTPException(status_code=400, detail="Mutation file not found.")
+        # if not nucleosome_file_path.exists():
+        #     raise HTTPException(status_code=400, detail="Nucleosome file not found.")
+        # if not fasta_file_path.exists():
+        #     raise HTTPException(status_code=400, detail="Fasta file not found.")
         
         mutation_file_path = pre_process_mutation(mutation_file_path, fasta_file_path)
         nucleosome_file_path = pre_process_nucleosome(nucleosome_file_path, fasta_file_path)
