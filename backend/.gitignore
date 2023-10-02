@@ -1,6 +1,7 @@
 .venv/*
 ubuntuvenv/*
 test/__pycache__/*
+test/test_data/*
 server/__pycache__/*
 app/__pycache__/*
 app/api/__pycache__/*

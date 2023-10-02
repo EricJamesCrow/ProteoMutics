@@ -1,3 +1,4 @@
 backend/python/__pycache__
 backend/ubuntuvenv/*
 frontend/node_modules/*
+backend/test/test_data/*
