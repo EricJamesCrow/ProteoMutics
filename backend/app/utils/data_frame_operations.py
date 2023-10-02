@@ -52,7 +52,7 @@ class DataFormatter:
         for dyad_position, dyad_row in dyads_df.iterrows():
             expected_values = []
             for context in contexts:
-                try:    
+                try:
                     expected_value = ((mutations_df.at[context, 'COUNTS']*genome_df.at[context, 'COUNTS'])/total_genome)*(dyad_row[context]/dyad_row.sum())
                     expected_values.append(expected_value)
                 except KeyError:
