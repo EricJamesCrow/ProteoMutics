@@ -3,15 +3,14 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
 import sys
-sys.path.append('/home/cam/Documents/repos/ProteoMutics/backend')
+sys.path.append('/home/cam/Documents/repos/ProteoMutics/backend')                                       
 from app.utils import data_frame_operations, tools
 
 def test_df():
-    uv_total = data_frame_operations.DataFormatter.read_dataframe('/media/cam/Working/ProteoMuticsTest/UV_nucleomutics/UV.counts')
-    uv_counts = data_frame_operations.DataFormatter.read_dataframe('/media/cam/Working/ProteoMuticsTest/UV_nucleomutics/UV_dyads.intersect')
-    dyads_counts = data_frame_operations.DataFormatter.read_dataframe('/media/cam/Working/ProteoMuticsTest/dyads_nucleomutics/dyads.counts')
-    genomic_counts = data_frame_operations.DataFormatter.read_dataframe('/media/cam/Working/ProteoMuticsTest/hg19.counts')
-    ben_normalized = data_frame_operations.DataFormatter.ben_genome_wide_normalization(uv_total, dyads_counts, genomic_counts, uv_counts)
+    uv_total = data_frame_operations.DataFormatter.read_dataframe('backend/test/test_data/UV_nucleomutics/UV.counts')
+    uv_counts = data_frame_operations.DataFormatter.read_dataframe('backend/test/test_data/UV_nucleomutics/UV_dyads.intersect')
+    dyads_counts = data_frame_operations.DataFormatter.read_dataframe('backend/test/test_data/dyads_nucleomutics/dyads.counts')
+    genomic_counts = data_frame_operations.DataFormatter.read_dataframe('backend/test/test_data/hg19.counts')
     context_normalized = data_frame_operations.DataFormatter.context_normalization(uv_counts, dyads_counts)
     steve_normalized = data_frame_operations.DataFormatter.genome_wide_normalization(uv_total, dyads_counts, genomic_counts, uv_counts)
 
@@ -57,10 +56,9 @@ def test_df():
         ax.set_xlabel('Nucleotide Position Relative to Nucleosome Dyad (bp)')
         ax.set_ylabel('Mutation Counts Normalized to Context')
 
-    fig, axs = plt.subplots(3, 2, figsize=(15, 18))
+    fig, axs = plt.subplots(2, 2, figsize=(15, 18))
     datasets = [
         ("context_normalized", context_normalized),
-        ("ben_normalized", ben_normalized),
         ("steve_normalized", steve_normalized)
     ]
 
@@ -71,30 +69,30 @@ def test_df():
     plt.tight_layout()
     plt.show()
 
-# test_df()
+test_df()
 
 
 
-def count_contexts_mut(file):
-    file = Path(file)
-    total = 0
-    keys = tools.contexts_in_iupac('NNN')
-    counts = {key: 0 for key in keys}
-    with open(file, 'r') as f:
-        for line in f:
-            total += 1
-            tsv = line.strip().split('\t')
-            context = tsv[6]
-            counts[context] += 1
+# def count_contexts_mut(file):
+#     file = Path(file)
+#     total = 0
+#     keys = tools.contexts_in_iupac('NNN')
+#     counts = {key: 0 for key in keys}
+#     with open(file, 'r') as f:
+#         for line in f:
+#             total += 1
+#             tsv = line.strip().split('\t')
+#             context = tsv[6]
+#             counts[context] += 1
     
-    df = pd.DataFrame(list(counts.items()), columns=['CONTEXTS', 'COUNTS'])
+#     df = pd.DataFrame(list(counts.items()), columns=['CONTEXTS', 'COUNTS'])
 
-    df = df.sort_values(by='CONTEXTS')
+#     df = df.sort_values(by='CONTEXTS')
     
-    df.to_csv(file.with_suffix('.counts'), sep='\t', index=False)
-    print(total)
-    print(df['COUNTS'].sum())
+#     df.to_csv(file.with_suffix('.counts'), sep='\t', index=False)
+#     print(total)
+#     print(df['COUNTS'].sum())
 
-count_contexts_mut('/media/cam/Working/ProteoMuticsTest/UV_nucleomutics/UV.mut')
+# count_contexts_mut('/media/cam/Working/ProteoMuticsTest/UV_nucleomutics/UV.mut')
 
 

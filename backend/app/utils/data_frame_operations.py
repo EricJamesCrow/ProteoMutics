@@ -46,14 +46,13 @@ class DataFormatter:
     def genome_wide_normalization(mutations_df: pd.DataFrame, dyads_df: pd.DataFrame, genome_df: pd.DataFrame, observed_df: pd.DataFrame):
         expected = {}
         normalized = {}
-        total_mutations = mutations_df.sum()
         total_genome = genome_df.sum()
         contexts = tools.contexts_in_iupac('NNN')
         for dyad_position, dyad_row in dyads_df.iterrows():
             expected_values = []
             for context in contexts:
                 try:
-                    expected_value = ((mutations_df.at[context, 'COUNTS']*genome_df.at[context, 'COUNTS'])/total_genome)*(dyad_row[context]/dyad_row.sum())
+                    expected_value = (mutations_df.at[context, 'COUNTS']*(genome_df.at[context, 'COUNTS']/total_genome))*(dyad_row[context])
                     expected_values.append(expected_value)
                 except KeyError:
                     pass
@@ -62,26 +61,6 @@ class DataFormatter:
             normalized[observed_position] = log2(observed_row.sum()/expected[observed_position])
         return pd.DataFrame.from_dict(normalized, orient='index', columns=['fold_change'])
 
-    @staticmethod
-    def ben_genome_wide_normalization(mutations_df: pd.DataFrame, dyads_df: pd.DataFrame, genome_df: pd.DataFrame, observed_df: pd.DataFrame):
-        expected = {}
-        normalized = {}
-        total_mutations = mutations_df.sum()
-        total_genome = genome_df.sum()
-        contexts = tools.contexts_in_iupac('NNN')
-        for dyad_position, dyad_row in dyads_df.iterrows():
-            ben_values = []
-            for context in contexts:
-                try:    
-                    ben_value = ((mutations_df.at[context, 'COUNTS']/total_mutations)*(genome_df.at[context, 'COUNTS'])/total_genome)*(dyad_row[context])
-                    ben_values.append(ben_value)
-                except KeyError:
-                    pass
-            expected[dyad_position] = sum(ben_values)
-        for observed_position, observed_row in observed_df.iterrows():
-            normalized[observed_position] = observed_row.sum()/expected[observed_position]
-        return pd.DataFrame.from_dict(normalized, orient='index', columns=['Counts'])
-    
     @staticmethod
     def context_normalization(mutations_df, dyads_df):
         results_dict = {}
