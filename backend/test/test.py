@@ -6,70 +6,69 @@ import sys
 sys.path.append('/home/cam/Documents/repos/ProteoMutics/backend')                                       
 from app.utils import data_frame_operations, tools
 
-def test_df():
-    uv_total = data_frame_operations.DataFormatter.read_dataframe('backend/test/test_data/UV_nucleomutics/UV.counts')
-    uv_counts = data_frame_operations.DataFormatter.read_dataframe('backend/test/test_data/UV_nucleomutics/UV_dyads.intersect')
-    dyads_counts = data_frame_operations.DataFormatter.read_dataframe('backend/test/test_data/dyads_nucleomutics/dyads.counts')
-    genomic_counts = data_frame_operations.DataFormatter.read_dataframe('backend/test/test_data/hg19.counts')
-    context_normalized = data_frame_operations.DataFormatter.context_normalization(uv_counts, dyads_counts)
-    steve_normalized = data_frame_operations.DataFormatter.genome_wide_normalization(uv_total, dyads_counts, genomic_counts, uv_counts)
 
-    def make_graph_matplotlib(ax, mutation_data: pd.DataFrame, title:str, interpolate_method: bool = False, smoothing_method: None = None):
-        indexes = mutation_data.index.tolist()
-        graph_values = []
-        for item in indexes:
-            graph_values.append(sum(mutation_data.loc[item]))
-        
-        x = np.array(indexes)
-        y = np.array(graph_values)
+uv_total = data_frame_operations.DataFormatter.read_dataframe('backend/test/test_data/UV_nucleomutics/UV.counts')
+uv_intersect = data_frame_operations.DataFormatter.read_dataframe('backend/test/test_data/UV_new.intersect')
+dyads_counts = data_frame_operations.DataFormatter.read_dataframe('backend/test/test_data/dyads_nucleomutics/dyads.counts')
+genomic_counts = data_frame_operations.DataFormatter.read_dataframe('backend/test/test_data/hg19.counts')
 
-        # Your processing with Tools methods
-        overall_period, overall_confidence, overall_signal_to_noise = tools.find_periodicity(x, y)
+context_normalized = data_frame_operations.DataFormatter.context_normalization(uv_intersect, dyads_counts)
+steve_normalized = data_frame_operations.DataFormatter.genome_wide_normalization(uv_total, dyads_counts, genomic_counts, uv_intersect)
 
-        if smoothing_method:
-            x, y = tools.smooth_data(x, y, method=smoothing_method)
 
-        if interpolate_method:
-            x, y = tools.interpolate_missing_data(x, y, -1000, 1000, interpolate_method)
+def make_graph_matplotlib(ax, mutation_data: pd.DataFrame, title:str, interpolate_method: bool = False, smoothing_method: None = None):
+    indexes = mutation_data.index.tolist()
+    graph_values = []
+    for item in indexes:
+        graph_values.append(sum(mutation_data.loc[item]))
+    
+    x = np.array(indexes)
+    y = np.array(graph_values)
 
-        # Identify peaks based on overall_period
-        peaks = [0]
-        while peaks[-1] + overall_period < x[-1]:
-            peaks.append(peaks[-1] + overall_period)
-        while peaks[0] - overall_period > x[0]:
-            peaks.insert(0, peaks[0] - overall_period)
+    # Your processing with Tools methods
+    overall_period, overall_confidence, overall_signal_to_noise = tools.find_periodicity(x, y)
 
-        def in_red_region(val):
-            for peak in peaks:
-                if peak - 73 <= val <= peak + 73:
-                    return True
-            return False
+    if smoothing_method:
+        x, y = tools.smooth_data(x, y, method=smoothing_method)
 
-        # Plotting on the passed ax
-        ax.scatter(x, y, c='black', s=2)
-        for i in range(1, len(x)):
-            if in_red_region(x[i-1]) and in_red_region(x[i]):
-                ax.plot(x[i-1:i+1], y[i-1:i+1], color='red')
-            else:
-                ax.plot(x[i-1:i+1], y[i-1:i+1], color='blue')
-        ax.set_title(title)
-        ax.set_xlabel('Nucleotide Position Relative to Nucleosome Dyad (bp)')
-        ax.set_ylabel('Mutation Counts Normalized to Context')
+    if interpolate_method:
+        x, y = tools.interpolate_missing_data(x, y, -1000, 1000, interpolate_method)
 
-    fig, axs = plt.subplots(2, 2, figsize=(15, 18))
-    datasets = [
-        ("context_normalized", context_normalized),
-        ("steve_normalized", steve_normalized)
-    ]
+    # Identify peaks based on overall_period
+    peaks = [0]
+    while peaks[-1] + overall_period < x[-1]:
+        peaks.append(peaks[-1] + overall_period)
+    while peaks[0] - overall_period > x[0]:
+        peaks.insert(0, peaks[0] - overall_period)
 
-    for i, (name, data) in enumerate(datasets):
-        make_graph_matplotlib(axs[i, 0], data, name + " No Smoothing", interpolate_method='linear')
-        make_graph_matplotlib(axs[i, 1], data, name + " With Smoothing", interpolate_method='linear', smoothing_method='moving_average')
+    def in_red_region(val):
+        for peak in peaks:
+            if peak - 73 <= val <= peak + 73:
+                return True
+        return False
 
-    plt.tight_layout()
+    # Plotting on the passed ax
+    ax.scatter(x, y, c='black', s=2)
+    for i in range(1, len(x)):
+        if in_red_region(x[i-1]) and in_red_region(x[i]):
+            ax.plot(x[i-1:i+1], y[i-1:i+1], color='red')
+        else:
+            ax.plot(x[i-1:i+1], y[i-1:i+1], color='blue')
+    ax.set_title(title)
+    ax.set_xlabel('Nucleotide Position Relative to Nucleosome Dyad (bp)')
+    ax.set_ylabel('Mutation Counts Normalized to Context')
+
     plt.show()
 
-test_df()
+# make_graph_matplotlib(plt.gca(), context_normalized, 'UV Intersect Context Normalized', interpolate_method='cubic', smoothing_method='moving_average')
+make_graph_matplotlib(plt.gca(), context_normalized, 'UV Intersect Context Normalized')
+# make_graph_matplotlib(plt.gca(), steve_normalized, 'UV Intersect Genome Wide Normalized', interpolate_method='cubic', smoothing_method='moving_average')
+make_graph_matplotlib(plt.gca(), steve_normalized, 'UV Intersect Genome Wide Normalized')
+
+# with open('backend/test/test_data/UV_nucleomutics/test.counts', 'r') as f:
+#     for line in f:
+#         line = line.strip().split('\t')[1:]
+#         print(sum([int(x) for x in line]))
 
 
 

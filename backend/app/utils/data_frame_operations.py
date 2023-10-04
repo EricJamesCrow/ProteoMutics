@@ -44,22 +44,21 @@ class DataFormatter:
 
     @staticmethod
     def genome_wide_normalization(mutations_df: pd.DataFrame, dyads_df: pd.DataFrame, genome_df: pd.DataFrame, observed_df: pd.DataFrame):
-        expected = {}
-        normalized = {}
-        total_genome = genome_df.sum()
+        total_genome = genome_df['COUNTS'].sum()
         contexts = tools.contexts_in_iupac('NNN')
-        for dyad_position, dyad_row in dyads_df.iterrows():
-            expected_values = []
-            for context in contexts:
-                try:
-                    expected_value = (mutations_df.at[context, 'COUNTS']*(genome_df.at[context, 'COUNTS']/total_genome))*(dyad_row[context])
-                    expected_values.append(expected_value)
-                except KeyError:
-                    pass
-            expected[dyad_position] = sum(expected_values)
-        for observed_position, observed_row in observed_df.iterrows():
-            normalized[observed_position] = log2(observed_row.sum()/expected[observed_position])
-        return pd.DataFrame.from_dict(normalized, orient='index', columns=['fold_change'])
+
+        # Calculate the expected values
+        mut_counts = mutations_df.loc[contexts, 'COUNTS']
+        genome_counts = genome_df.loc[contexts, 'COUNTS']
+
+        expected_matrix = dyads_df[contexts].mul(mut_counts * (genome_counts / total_genome))
+        expected_values = expected_matrix.sum(axis=1)
+
+        # Calculate normalized values
+        observed_sums = observed_df.sum(axis=1)
+        fold_changes = np.log2(observed_sums.div(expected_values))
+        print('hi')
+        return fold_changes.to_frame(name='fold_change')
 
     @staticmethod
     def context_normalization(mutations_df, dyads_df):
