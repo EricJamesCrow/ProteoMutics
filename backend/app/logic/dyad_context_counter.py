@@ -6,15 +6,13 @@ from pathlib import Path
 import traceback
 
 class DyadFastaCounter:
-    def __init__(self, file: str | Path, nucleomutics_folder, filename) -> None:
+    def __init__(self, file: str | Path, filename) -> None:
         self.path = Path(file)
         filename = Path(filename)
-        nucleomutics_folder = Path(nucleomutics_folder)
-        self.output_dir = Path(nucleomutics_folder)
+        self.output = file.with_suffix('.counts')
         self.context_list = tools.contexts_in_iupac('NNN')
         self.counts = self.initialize_counts(self.context_list)
         self.results = []
-        self.output_file = nucleomutics_folder.joinpath(filename.with_suffix('.counts').name)
 
     @staticmethod
     def initialize_counts(context_list: list) -> dict:
@@ -29,7 +27,7 @@ class DyadFastaCounter:
         df = pd.DataFrame.from_dict(counts, orient='index')
         df.columns = context_list
         df.index.name = 'Position'
-        df.to_csv(self.output_file, sep='\t')
+        df.to_csv(self.output, sep='\t')
 
     def process_block(self, start_pos: int, end_pos: int) -> dict:
         counts = self.initialize_counts(self.context_list)
@@ -39,7 +37,7 @@ class DyadFastaCounter:
                 line = f.readline()
                 if not line:
                     break
-                sequence = line.split("\t")[1].upper().strip()
+                sequence = line.split("\t")[3].upper().strip()
                 counts = self.update_counts(sequence, counts)
         return counts
 
@@ -56,7 +54,6 @@ class DyadFastaCounter:
         with mp.Pool(num_blocks) as pool:
             end_pos = self.get_file_end_position()
             block_positions = self.get_block_positions(num_blocks, end_pos)
-
             results = []
             for i in range(num_blocks):
                 start_pos = block_positions[i]
@@ -66,7 +63,6 @@ class DyadFastaCounter:
 
             self.aggregate_results(results)
             self.results_to_file(self.context_list, self.counts)
-        return self.output_file
 
     def get_file_end_position(self) -> int:
         with open(self.path) as f:
