@@ -1,5 +1,4 @@
 from app.utils import tools
-
 import multiprocessing as mp
 import pandas as pd
 from pathlib import Path
@@ -12,10 +11,16 @@ class MutationIntersector:
         self.mutation_file = Path(mutation_file)
         self.dyad_file = Path(dyad_file)
         self.output_file = mutation_file.with_name(f'{mutation_file.stem}_{dyad_file.stem}.intersect')
+        self.flipped_output_file = mutation_file.with_name(f'{mutation_file.stem}_{dyad_file.stem}_flipped.counts')  # added this line for flipped counts output
         self.mut_context = tools.contexts_in_iupac(mut_context)
         self.mutation_type = tools.mutation_combinations(mutation_type)
         self.context_list = tools.contexts_in_iupac('NNN')
+        # testing purposes
+        self.mut_contexts = tools.contexts_in_iupac('NGN')
+        self.mutation_type = tools.mutation_combinations('G>T')
+
         self.counts = self.initialize_counts()
+        self.flipped_counts = self.initialize_counts()  # initializing flipped_counts
         self.results = []
         self.dyad_chrom_names = []
         self.mutations_chrom_names = []
@@ -28,15 +33,32 @@ class MutationIntersector:
         print(f"Error in process {task_id}: {error}")
         traceback.print_tb(error.__traceback__)
 
+    def flipped_results_to_file(self) -> None:
+        df = pd.DataFrame.from_dict(self.flipped_counts, orient='index')
+        df.columns = self.context_list
+        df.index.name = 'Position'
+        df.to_csv(self.flipped_output_file, sep='\t')
+
     def results_to_file(self) -> None:
         df = pd.DataFrame.from_dict(self.counts, orient='index')
         df.columns = self.context_list
         df.index.name = 'Position'
         df.to_csv(self.output_file, sep='\t')
 
+    def determine_if_flip_context(self, mutation: str, strand: str, context: str) -> str:
+        if strand == '+':
+            if mutation in self.mut_context:
+                if context in self.context_list:
+                    return True
+        elif strand == '-':
+            if mutation in self.mutation_type:
+                if tools.reverse_complement(context) in self.context_list:
+                    return True
+
     def process_block(self, dyad_start_position: int, dyad_end_position: int, mut_start_position: int, mut_end_position: int) -> dict:
         # Initializing a dictionary similar to the one in __init__ to store counts.
         counts = {i: {key: 0 for key in self.context_list} for i in range(-1000,1001)}
+        flipped_counts = {i: {key: 0 for key in self.context_list} for i in range(-1000,1001)}
         with open(self.dyad_file) as dyad_file, open(self.mutation_file) as mut_file:  # Opening both dyad and mutation files.
             dyad_file.seek(dyad_start_position)  # Moving dyad_file's read/write pointer to dyad_start_position.
             mut_file.seek(mut_start_position)  # Moving mut_file's read/write pointer to mut_start_position.
@@ -45,7 +67,16 @@ class MutationIntersector:
             while mut_data[6] not in self.mut_context and mut_data[7] not in self.mutation_type:
                 mut_data = mut_file.readline().strip().split('\t')
             mut_start = int(mut_data[1])  # Converting second item of mut_data to integer and storing in mut_start.
-            context = mut_data[6]  # Storing sixth item of mut_data in context.
+            
+            context = mut_data[6]   # Storing sixth item of mut_data in context.
+            mutation = mut_data[7]
+            strand = mut_data[5]
+            
+            if self.determine_if_flip_context(mutation, strand, context):
+                count_comp = True
+            else:
+                count_comp = False
+            
             while True:
                 # The dyad_data line reads from a file, removes leading and trailing spaces, and separates by tab.
                 dyad_data = dyad_file.readline().strip().split('\t')                
@@ -64,18 +95,41 @@ class MutationIntersector:
                     if mut_data == ['']:
                         break
                     mut_start = int(mut_data[1])
-                    context = mut_data[6]
+                    
+                    context = mut_data[6]   # Storing sixth item of mut_data in context.
+                    mutation = mut_data[7]
+                    strand = mut_data[5]
+                    
+                    if self.determine_if_flip_context(mutation, strand, context):
+                        count_comp = True
+                    else:
+                        count_comp = False
 
                 # This loop checks if the mutation start position is within a 1000 base pairs range from the dyad start position. If it is, it increments the count for the context of that mutation.
                 while -1000 <= mut_start-dyad_start <= 1000:
-                    counts[mut_start-dyad_start][context] += 1
+                    if count_comp:
+                        flipped_counts[dyad_start-mut_start][context] += 1
+                        counts[mut_start-dyad_start][context] += 1
+                    else:
+                        counts[mut_start-dyad_start][context] += 1
+                        flipped_counts[mut_start-dyad_start][context] += 1
+
                     mut_data = mut_file.readline().strip().split('\t')
                     if mut_file.tell() > mut_end_position:
                         break
                     if mut_data == ['']:
                         break
+                    
                     mut_start = int(mut_data[1])
-                    context = mut_data[6]
+
+                    context = mut_data[6]   # Storing sixth item of mut_data in context.
+                    mutation = mut_data[7]
+                    strand = mut_data[5]
+                    
+                    if self.determine_if_flip_context(mutation, strand, context):
+                        count_comp = True
+                    else:
+                        count_comp = False
 
                 # Here, it sets the pointer of the mutation file back to the start of the previous dyad.
                 mut_file.seek(jump_back_position)
@@ -84,10 +138,19 @@ class MutationIntersector:
                     break
                 if mut_data == ['']:
                     break
-                mut_start = int(mut_data[1])
-                context = mut_data[6]
                 
-        return counts
+                mut_start = int(mut_data[1])
+
+                context = mut_data[6]   # Storing sixth item of mut_data in context.
+                mutation = mut_data[7]
+                strand = mut_data[5]
+                
+                if self.determine_if_flip_context(mutation, strand, context):
+                    count_comp = True
+                else:
+                    count_comp = False
+                
+        return counts, flipped_counts
 
     def extract_chrom_names(self, file_path: Path):
         chroms = [0]
@@ -128,12 +191,15 @@ class MutationIntersector:
             pool.close()
             pool.join()
 
-            for result in results:
-                block_counts = result.get()
-                for i in range(-1000, 1001):
-                    for context in self.context_list:
-                        self.counts[i][context] += block_counts[i][context]
+        for result in results:
+            block_counts, block_flipped_counts = result.get()
+            for i in range(-1000, 1001):
+                for context in self.context_list:
+                    self.counts[i][context] += block_counts[i][context]
+                    self.flipped_counts[i][context] += block_flipped_counts[i][context]  # accumulate flipped_counts
 
         self.results_to_file()
+        self.flipped_results_to_file()
+
 
         return self.output_file

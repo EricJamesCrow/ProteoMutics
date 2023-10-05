@@ -1,12 +1,8 @@
-from . import tools
-
 import numpy as np
 import pandas as pd
 from scipy import stats
 from pathlib import Path
-# from . import Tools
 from math import log2
-
 import sys
 sys.path.append('/home/cam/Documents/repos/ProteoMutics/backend')
 from app.utils import tools
@@ -28,6 +24,57 @@ class DataFormatter:
     @staticmethod
     def normalize_dataframe(df: pd.DataFrame) -> pd.DataFrame:
         return df.divide(df.median())
+    
+    @staticmethod
+    def reverse_complement_strand_conversion(df: pd.DataFrame) -> pd.DataFrame:
+        df_copy = df.copy()
+        
+        # Convert column headers to their reverse complement
+        df_copy.columns = [tools.reverse_complement(col) for col in df_copy.columns]
+        
+        # Ensure that the columns in df_copy match the original order in df
+        df_copy = df_copy[df.columns]
+
+        # Add the two DataFrames together
+        result_df = df.add(df_copy)
+        print(result_df)
+        return result_df
+
+    @staticmethod
+    def reverse_complement_positional_strand_conversion(df: pd.DataFrame) -> pd.DataFrame:
+        df_copy = df.copy()
+
+        # Convert column headers to their reverse complement
+        df_copy.columns = [tools.reverse_complement(col) for col in df_copy.columns]
+
+        # Ensure that the columns in df_copy match the original order in df
+        df_copy = df_copy[df.columns]
+
+        # Reverse the order of the rows in df_copy and adjust indices
+        df_copy = df_copy.iloc[::-1].set_index(-df_copy.index)
+
+        # Reorder rows of df_copy to match the original df
+        df_copy = df_copy.reindex(df.index)
+
+        result_df = df.add(df_copy)
+
+        print(result_df)
+        return result_df
+    
+    @staticmethod
+    def reverse_complement_tri_counts(df: pd.DataFrame) -> pd.DataFrame:
+        df_copy = df.copy()
+        
+        # Convert indices to their reverse complement
+        df_copy.index = [tools.reverse_complement(idx) for idx in df_copy.index]
+        
+        # Ensure that the indices in df_copy match the original order in df
+        df_copy = df_copy.reindex(df.index)
+
+        # Add the two DataFrames together
+        result_df = df.add(df_copy)
+        print(result_df)
+        return result_df
 
     @staticmethod
     def filter_by_z_score(df: pd.DataFrame, threshold: float) -> pd.DataFrame:
@@ -43,22 +90,36 @@ class DataFormatter:
         return all_contexts
 
     @staticmethod
-    def genome_wide_normalization(mutations_df: pd.DataFrame, dyads_df: pd.DataFrame, genome_df: pd.DataFrame, observed_df: pd.DataFrame):
-        total_genome = genome_df['COUNTS'].sum()
-        contexts = tools.contexts_in_iupac('NNN')
+    def genome_wide_normalization(mutations_df: pd.DataFrame, dyads_df: pd.DataFrame, genome_df: pd.DataFrame, observed_df: pd.DataFrame) -> pd.DataFrame:
 
-        # Calculate the expected values
-        mut_counts = mutations_df.loc[contexts, 'COUNTS']
-        genome_counts = genome_df.loc[contexts, 'COUNTS']
+        # Ensure input DataFrames are not empty
+        for df, name in zip([mutations_df, dyads_df, genome_df, observed_df], ['mutations_df', 'dyads_df', 'genome_df', 'observed_df']):
+            if df.empty:
+                raise ValueError(f"The provided {name} is empty.")
 
-        expected_matrix = dyads_df[contexts].mul(mut_counts * (genome_counts / total_genome))
-        expected_values = expected_matrix.sum(axis=1)
 
-        # Calculate normalized values
-        observed_sums = observed_df.sum(axis=1)
-        fold_changes = np.log2(observed_sums.div(expected_values))
-        print('hi')
-        return fold_changes.to_frame(name='fold_change')
+        frequency = mutations_df.div(genome_df, axis=1).T
+        expected_df = dyads_df.mul(frequency.squeeze(), axis=1)
+
+        graphing_data = (observed_df.sum(axis=1) / expected_df.sum(axis=1)).to_frame(name='normalized_column')  # You can name 'result_column' to whatever column name you desire   
+
+        # BENS METHOD
+        # # Calculate the mutation rate for each context
+        # mut_freq = mutations_df/mutations_df.sum()
+        # genome_freq = genome_df/genome_df.sum()
+        # frequency = (mut_freq/genome_freq).T
+        
+        # expected_df = dyads_df.mul(frequency.squeeze(), axis=1)
+
+        # scaling_factor = expected_df.sum().sum()/observed_df.sum().sum()
+
+        # result_series = observed_df.sum(axis=1) / expected_df.sum(axis=1) * scaling_factor
+        # graphing_data = result_series.to_frame(name='normalized_column')  # You can name 'result_column' to whatever column name you desire
+
+        # graphing_data.to_csv('graphing_data.tsv', sep='\t')
+
+        return graphing_data
+
 
     @staticmethod
     def context_normalization(mutations_df, dyads_df):

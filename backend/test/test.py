@@ -8,13 +8,24 @@ from app.utils import data_frame_operations, tools
 
 
 uv_total = data_frame_operations.DataFormatter.read_dataframe('backend/test/test_data/UV_nucleomutics/UV.counts')
-uv_intersect = data_frame_operations.DataFormatter.read_dataframe('backend/test/test_data/UV_new.intersect')
+uv_intersect = data_frame_operations.DataFormatter.read_dataframe('backend/test/test_data/UV_nucleomutics/UV_dyads.intersect')
 dyads_counts = data_frame_operations.DataFormatter.read_dataframe('backend/test/test_data/dyads_nucleomutics/dyads.counts')
 genomic_counts = data_frame_operations.DataFormatter.read_dataframe('backend/test/test_data/hg19.counts')
 
-context_normalized = data_frame_operations.DataFormatter.context_normalization(uv_intersect, dyads_counts)
-steve_normalized = data_frame_operations.DataFormatter.genome_wide_normalization(uv_total, dyads_counts, genomic_counts, uv_intersect)
+new_dyads_counts = data_frame_operations.DataFormatter.reverse_complement_positional_strand_conversion(dyads_counts)
+new_genomic_counts = data_frame_operations.DataFormatter.reverse_complement_tri_counts(genomic_counts)
+new_uv_intersect = data_frame_operations.DataFormatter.read_dataframe('backend/test/test_data/UV_nucleomutics/UV_dyads_flipped.counts')
 
+data_formatter = data_frame_operations.DataFormatter.genome_wide_normalization(uv_total, new_dyads_counts, new_genomic_counts, uv_intersect)
+data_formatter2 = data_frame_operations.DataFormatter.genome_wide_normalization(uv_total, new_dyads_counts, new_genomic_counts, new_uv_intersect)
+
+whole_genome = data_frame_operations.DataFormatter.read_dataframe('backend/test/test_data/UV_nucleomutics/UV_hg19_MNase_nucleosome_map_all.intersect')
+whole_genome_flipped = data_frame_operations.DataFormatter.read_dataframe('backend/test/test_data/UV_nucleomutics/UV_hg19_MNase_nucleosome_map_all_flipped.counts')
+
+whole_genome_dyad = data_frame_operations.DataFormatter.read_dataframe('/media/cam/Working/8-oxodG/8-oxodG_Final_Analysis/nucleosome/hg19_MNase_nucleosome_map_all_nucleomutics/hg19_MNase_nucleosome_map_all.counts')
+
+data_formatter3 = data_frame_operations.DataFormatter.genome_wide_normalization(uv_total, whole_genome_dyad, new_genomic_counts, whole_genome)
+data_formatter4 = data_frame_operations.DataFormatter.genome_wide_normalization(uv_total, whole_genome_dyad, new_genomic_counts, whole_genome_flipped)
 
 def make_graph_matplotlib(ax, mutation_data: pd.DataFrame, title:str, interpolate_method: bool = False, smoothing_method: None = None):
     indexes = mutation_data.index.tolist()
@@ -25,14 +36,15 @@ def make_graph_matplotlib(ax, mutation_data: pd.DataFrame, title:str, interpolat
     x = np.array(indexes)
     y = np.array(graph_values)
 
-    # Your processing with Tools methods
-    overall_period, overall_confidence, overall_signal_to_noise = tools.find_periodicity(x, y)
 
     if smoothing_method:
         x, y = tools.smooth_data(x, y, method=smoothing_method)
 
     if interpolate_method:
         x, y = tools.interpolate_missing_data(x, y, -1000, 1000, interpolate_method)
+
+    # Your processing with Tools methods
+    overall_period, overall_confidence, overall_signal_to_noise = tools.find_periodicity(x, y)
 
     # Identify peaks based on overall_period
     peaks = [0]
@@ -60,38 +72,7 @@ def make_graph_matplotlib(ax, mutation_data: pd.DataFrame, title:str, interpolat
 
     plt.show()
 
-# make_graph_matplotlib(plt.gca(), context_normalized, 'UV Intersect Context Normalized', interpolate_method='cubic', smoothing_method='moving_average')
-make_graph_matplotlib(plt.gca(), context_normalized, 'UV Intersect Context Normalized')
-# make_graph_matplotlib(plt.gca(), steve_normalized, 'UV Intersect Genome Wide Normalized', interpolate_method='cubic', smoothing_method='moving_average')
-make_graph_matplotlib(plt.gca(), steve_normalized, 'UV Intersect Genome Wide Normalized')
-
-# with open('backend/test/test_data/UV_nucleomutics/test.counts', 'r') as f:
-#     for line in f:
-#         line = line.strip().split('\t')[1:]
-#         print(sum([int(x) for x in line]))
-
-
-
-# def count_contexts_mut(file):
-#     file = Path(file)
-#     total = 0
-#     keys = tools.contexts_in_iupac('NNN')
-#     counts = {key: 0 for key in keys}
-#     with open(file, 'r') as f:
-#         for line in f:
-#             total += 1
-#             tsv = line.strip().split('\t')
-#             context = tsv[6]
-#             counts[context] += 1
-    
-#     df = pd.DataFrame(list(counts.items()), columns=['CONTEXTS', 'COUNTS'])
-
-#     df = df.sort_values(by='CONTEXTS')
-    
-#     df.to_csv(file.with_suffix('.counts'), sep='\t', index=False)
-#     print(total)
-#     print(df['COUNTS'].sum())
-
-# count_contexts_mut('/media/cam/Working/ProteoMuticsTest/UV_nucleomutics/UV.mut')
-
-
+# make_graph_matplotlib(plt.gca(), data_formatter, 'UV Dyads')
+# make_graph_matplotlib(plt.gca(), data_formatter2, 'UV Dyads Flipped')
+# make_graph_matplotlib(plt.gca(), data_formatter3, 'UV Whole Genome')
+# make_graph_matplotlib(plt.gca(), data_formatter4, 'UV Whole Genome Flipped')

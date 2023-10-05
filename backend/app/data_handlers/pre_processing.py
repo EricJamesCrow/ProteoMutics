@@ -1,5 +1,5 @@
 from app.utils import tools
-
+import pandas as pd
 from pathlib import Path
 import subprocess
 import os
@@ -23,6 +23,7 @@ def adjust_dyad_positions(dyad_file: str | Path, output_dir):
             tsv = line.strip().split()
             new_start = str(int(tsv[1]) - 1001)
             new_end = str(int(tsv[2]) + 1001)
+            if int(new_start) < 0: continue
             new_line_values = [tsv[0], new_start, new_end] + tsv[3:]
             o.write('\t'.join(new_line_values) + '\n')
     return intermediate_bed
@@ -96,4 +97,20 @@ def expand_context_custom_bed(intermediate_bed: Path, fasta_file: Path, output_d
             new_line = '\t'.join([bed_info[0], str(int(bed_info[1])+1), str(int(bed_info[2])-1), bed_info[3], bed_info[4], bed_info[5], fasta_context.upper(), bed_info[6]])
             o.write(new_line+'\n')
     return bed_file
+
+def count_contexts_mut(file):
+    file = Path(file)
+    total = 0
+    keys = tools.contexts_in_iupac('NNN')
+    counts = {key: 0 for key in keys}
+    with open(file, 'r') as f:
+        for line in f:
+            total += 1
+            tsv = line.strip().split('\t')
+            context = tsv[6]
+            counts[context] += 1
+    
+    df = pd.DataFrame(list(counts.items()), columns=['CONTEXTS', 'COUNTS'])
+    df = df.sort_values(by='CONTEXTS')   
+    df.to_csv(file.with_suffix('.counts'), sep='\t', index=False)
 
