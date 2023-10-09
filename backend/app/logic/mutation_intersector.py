@@ -16,8 +16,8 @@ class MutationIntersector:
         self.mutation_type = tools.mutation_combinations(mutation_type)
         self.context_list = tools.contexts_in_iupac('NNN')
         # testing purposes
-        self.mut_contexts = tools.contexts_in_iupac('NGN')
-        self.mutation_type = tools.mutation_combinations('G>T')
+        # self.mut_contexts = tools.contexts_in_iupac('NN')
+        # self.mutation_type = tools.mutation_combinations('G>T')
 
         self.counts = self.initialize_counts()
         self.flipped_counts = self.initialize_counts()  # initializing flipped_counts

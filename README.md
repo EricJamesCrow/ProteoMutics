@@ -42,4 +42,9 @@ docker run -d -p 8000:8000 proteomutics-api
 /home/cam/Documents/repos/ProteoMutics/backend/test/test_data/dyads.bed
 /home/cam/Documents/repos/ProteoMutics/backend/test/test_data/hg19.fa
 /media/cam/Working/8-oxodG/8-oxodG_Final_Analysis/nucleosome/hg19_MNase_nucleosome_map_all.bed
-/media/cam/Working/8-oxodG/8-oxodG_Final_Analysis/lesion_files/proteomutics/SRR_67-68_adjusted_filtered_sorted.vcf
+/media/cam/Working/8-oxodG/8-oxodG_Final_Analysis/lesion_files/proteomutics/vcf/SRR_64-65-66_subset.vcf
+/media/cam/Working/8-oxodG/8-oxodG_Final_Analysis/lesion_files/proteomutics/vcf/SRR_64-65-66.vcf
+/media/cam/Working/8-oxodG/8-oxodG_Final_Analysis/lesion_files/proteomutics/vcf/SRR_67-68.vcf
+/media/cam/Working/8-oxodG/8-oxodG_Final_Analysis/lesion_files/proteomutics/vcf/SRR_69-70.vcf
+/media/cam/Working/8-oxodG/8-oxodG_Final_Analysis/vcf_files/genotype_split/HMCES_KBr.vcf
+/media/cam/Working/8-oxodG/8-oxodG_Final_Analysis/vcf_files/genotype_split/WT_KBr.vcf

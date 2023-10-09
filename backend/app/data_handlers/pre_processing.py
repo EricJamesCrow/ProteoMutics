@@ -49,6 +49,7 @@ def check_and_sort(input_file: Path | str, output_dir: Path, suffix):
     sorted_name = output_dir / input_file.with_name(input_file.stem + suffix).name
     command = f'sort -k1,1 -k2,2n -k3,3n -k6,6 {input_file} > {sorted_name}'
     with subprocess.Popen(args=command, stdout=subprocess.PIPE, shell=True) as p:
+        print(sorted_name)
         return p, sorted_name
     
 def final_nuc_rename(input_file: Path, output_file: str):
@@ -113,4 +114,5 @@ def count_contexts_mut(file):
     df = pd.DataFrame(list(counts.items()), columns=['CONTEXTS', 'COUNTS'])
     df = df.sort_values(by='CONTEXTS')   
     df.to_csv(file.with_suffix('.counts'), sep='\t', index=False)
+    print('done counting contexts')
 

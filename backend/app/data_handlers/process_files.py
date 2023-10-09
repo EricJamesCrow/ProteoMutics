@@ -2,7 +2,6 @@ from pathlib import Path
 from app.utils import tools
 from app.logic import dyad_context_counter, fasta_counter
 import pandas as pd
-import shutil
 import subprocess
 
 class MutationFile:
@@ -16,54 +15,36 @@ class MutationFile:
         self.fasta = Path(fasta)
 
     def pre_process(self):
-        # checks for scenario where .mut file is selected
+        # For .mut scenario
         if self.filepath.suffix == '.mut':
-            self.mut = self.filepath.with_suffix('.mut')
-            
-            # assumes file is in an appropriate proteomutics folder
-            self.proteomutics_folder = Path(str(self.filepath.parent)+'_proteomutics')
-            
-            # checks if .counts file has been generated, if not, it generates it
-            if self.filepath.with_suffix('.counts').exists():
-                self.counts = self.filepath.with_suffix('.counts')
-            else:
+            self.mut = self.filepath
+            self.proteomutics_folder = self.filepath.parent.joinpath(f"{self.filepath.stem}_proteomutics")
+
+            potential_counts = self.proteomutics_folder.joinpath(f"{self.filepath.stem}.counts")
+
+            if not potential_counts.exists():
                 self.counts = self.count_contexts_mut(self.filepath)
+            else:
+                self.counts = potential_counts
+
+        # For .vcf scenario
+        elif self.filepath.suffix == '.vcf':
+            self.proteomutics_folder = self.filepath.parent.joinpath(f"{self.filepath.stem}_proteomutics")
             
-            # updates to True
-            self.pre_processed = True
+            potential_mut = self.proteomutics_folder.joinpath(f"{self.filepath.stem}.mut")
+            potential_counts = self.proteomutics_folder.joinpath(f"{self.filepath.stem}.counts")
 
-        # checks for scenario where .vcf file is selected
-        if self.filepath.suffix == '.vcf':
-
-            # generates location for proteomutics folder
-            self.proteomutics_folder = self.filepath.parent.joinpath(self.filepath.stem+'_proteomutics')
-            self.mut = self.proteomutics_folder.joinpath(self.filepath.with_suffix('.mut').name)
-
-            # checks if the proteomutics folder exists, if it does not, it generates it
-            # this will also trigger all pre-processing steps since the .mut file does not exist
+            # Create proteomutics folder if it doesn't exist and process files
             if not self.proteomutics_folder.exists():
                 self.proteomutics_folder.mkdir()
-                unsorted = self.process_file(self.filepath, self.fasta)
-                self.check_and_sort(unsorted, self.mut)
-                self.counts = self.count_contexts_mut(self.mut)
-            
-            # if the proteomutics folder exists, it checks for the the .mut file and the .counts file
+                self.process_file(self.filepath, self.fasta)
+                self.counts = self.count_contexts_mut(potential_mut)
+                self.mut = potential_mut
             else:
-                # if the .mut file exists, it tracks the path, otherwise it generates it
-                if self.proteomutics_folder.joinpath(self.filepath.with_suffix('.mut').name).exists():
-                    self.mut = self.proteomutics_folder.joinpath(self.filepath.with_suffix('.mut').name)
-                else:
-                    # rest of pre processing
-                    pass
+                self.mut = potential_mut if potential_mut.exists() else None
+                self.counts = potential_counts if potential_counts.exists() else self.count_contexts_mut(self.filepath)
 
-                # if the .counts file exists, it tracks the path, otherwise it generates it
-                if self.proteomutics_folder.joinpath(self.filepath.with_suffix('.counts').name).exists():
-                    self.counts = self.proteomutics_folder.joinpath(self.filepath.with_suffix('.counts').name)
-                else:
-                    self.counts = self.count_contexts_mut(self.filepath)
-            
-            # updates to True after pre-processing
-            self.pre_processed = True
+        self.pre_processed = True
 
     def process_file(self, file, fasta):
         file = Path(file)
@@ -140,7 +121,40 @@ class DyadFile:
         self.fasta = Path(fasta)
 
     def pre_process(self):
-        pass
+        # Define the potential .nuc and .counts paths for both cases (.bed or .nuc input)
+        if self.filepath.suffix == '.bed':
+            self.proteomutics_folder = self.filepath.parent.joinpath(self.filepath.stem+'_proteomutics')
+            potential_nuc = self.proteomutics_folder.joinpath(self.filepath.stem + '.nuc')
+        else:  # If the file is .nuc, it's expected to be inside the proteomutics folder
+            self.proteomutics_folder = self.filepath.parent
+            potential_nuc = self.filepath
+
+        potential_counts = self.proteomutics_folder.joinpath(self.filepath.stem + '.counts')
+
+        # Ensure the proteomutics folder is there
+        if not self.proteomutics_folder.exists():
+            self.proteomutics_folder.mkdir()
+
+        # Scenario: .nuc exists but .counts does not
+        if potential_nuc.exists() and not potential_counts.exists():
+            self.nuc = potential_nuc
+            dyad_context_counter.DyadFastaCounter(self.fasta, self.nuc).run()
+            self.counts = potential_counts
+
+        # Scenario: Input is a .bed file and .nuc does not exist
+        elif self.filepath.suffix == '.bed' and not potential_nuc.exists():
+            self.process_dyads(self.filepath, self.fasta)
+            dyad_context_counter.DyadFastaCounter(self.fasta, self.nuc).run()
+            self.counts = potential_counts
+
+        # Scenario: Input is a .nuc file
+        elif self.filepath.suffix == '.nuc':
+            self.nuc = self.filepath
+            if not potential_counts.exists():
+                dyad_context_counter.DyadFastaCounter(self.fasta, self.nuc).run()
+                self.counts = potential_counts
+
+        self.pre_processed = True
 
     def process_dyads(self, dyad_file, fasta):
         dyad_file = Path(dyad_file)
@@ -178,7 +192,7 @@ class DyadFile:
                 o.write(new_line + '\n')
         
         # Sort the resulting file
-        command = f'sort -k1,1 -k2,2n -k3,3n -k6,6 {context_intermediate} > {self.nuc}'
+        command = f'sort -k1,1 -k2,2n -k3,3n {context_intermediate} > {self.nuc}'
         subprocess.run(command, shell=True)
         
         # count contexts for the dyad file and create the counts file
@@ -189,3 +203,24 @@ class DyadFile:
         dyad_file.with_suffix('.tmp').unlink()
         context_intermediate.unlink()
 
+
+
+class FastaFile:
+
+    def __init__(self, filepath) -> None:
+        self.filepath = Path(filepath)
+        self.counts = self.filepath.with_suffix('.counts')
+        self.index = self.filepath.with_suffix('.fai')
+        self.pre_processed = False
+
+    def pre_process(self):
+        if self.index.exists() and self.counts.exists():
+            self.pre_processed = True
+            return
+        else:
+            command = f'samtools faidx {self.filepath}'
+            with subprocess.Popen(args=command, stdout=subprocess.PIPE, shell=True) as p:
+                result = p.communicate()
+            self.counts = fasta_counter.GenomeFastaCounter(self.filepath).run()
+            self.pre_processed = True
+            return

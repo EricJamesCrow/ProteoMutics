@@ -47,10 +47,11 @@ def pre_process_mutation_file(file_path: Path | str, fasta_file: Path | str):
     print('[Mutation]Filtering non-canonical chromosomes')
     step_3 = pre_processing.filter_acceptable_chromosomes(step_2, temp_folder)
     print('[Mutation]Filtering lines with N')
-    step_3 = pre_processing.filter_lines_with_n(step_3, file_path, temp_folder)
+    step_3, fasta = pre_processing.filter_lines_with_n(step_3, file_path, temp_folder)
     print('[Mutation]Checking and sorting file and converting to ProteoMutics format')
     _, new_mut = pre_processing.check_and_sort(step_3, nucleomutics_folder, '.mut')
-    shutil.rmtree(temp_folder)
+    # shutil.rmtree(temp_folder)
+    print('counting contexts in '+str(new_mut))
     pre_processing.count_contexts_mut(new_mut)
     print('[Mutation]Finished file')
     return new_mut
