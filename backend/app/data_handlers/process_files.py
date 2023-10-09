@@ -37,12 +37,15 @@ class MutationFile:
             # Create proteomutics folder if it doesn't exist and process files
             if not self.proteomutics_folder.exists():
                 self.proteomutics_folder.mkdir()
+                print('processing_files')
                 self.process_file(self.filepath, self.fasta)
+                print('counting_contexts')
                 self.counts = self.count_contexts_mut(potential_mut)
                 self.mut = potential_mut
-            else:
+            elif self.proteomutics_folder.exists() and not potential_mut.exists():
+                self.process_file(self.filepath, self.fasta)
                 self.mut = potential_mut if potential_mut.exists() else None
-                self.counts = potential_counts if potential_counts.exists() else self.count_contexts_mut(self.filepath)
+                self.counts = potential_counts if potential_counts.exists() else self.count_contexts_mut(self.mut)
 
         self.pre_processed = True
 
@@ -91,7 +94,7 @@ class MutationFile:
         context_intermediate.unlink()
         file.with_suffix('.tmp').unlink()
     
-    def count_contexts_mut(file):
+    def count_contexts_mut(self, file):
         file = Path(file)
         keys = tools.contexts_in_iupac('NNN')
         counts = {key: 0 for key in keys}

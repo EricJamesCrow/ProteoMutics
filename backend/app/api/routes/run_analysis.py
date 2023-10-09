@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
-from app.data_handlers import controller
+from app.data_handlers import process_files
 from app.logic import mutation_intersector
 
 from pathlib import Path
@@ -18,31 +18,24 @@ router = APIRouter()
 
 def pre_process_mutation(mutation_file_path, fasta_file_path):
     logging.info('[Mutation] Checking if pre-processing is needed')
-    if mutation_file_path.suffix != '.mut':
-        if controller.check_if_pre_processed(file_path=mutation_file_path, typ='mutation'):
-            directory = mutation_file_path.parent
-            nucleomutics_folder = directory.joinpath(mutation_file_path.with_name(mutation_file_path.stem+'_nucleomutics').stem)
-            return nucleomutics_folder.joinpath(mutation_file_path.with_suffix('.mut').name)
-        else:
-            return controller.pre_process_mutation_file(file_path=mutation_file_path, fasta_file=fasta_file_path)
-    return mutation_file_path
+    mutation_file = process_files.MutationFile(filepath=mutation_file_path, fasta=fasta_file_path)
+    mutation_file.pre_process()
+    
+    return mutation_file.mut
 
 def pre_process_nucleosome(nucleosome_file_path, fasta_file_path):
     logging.info('[Nucleosome] Checking if pre-processing is needed')
-    if not (nucleosome_file_path.suffix == '.nuc' and nucleosome_file_path.with_suffix('.counts').exists()):
-        if controller.check_if_pre_processed(file_path=nucleosome_file_path, typ='nucleosome'):
-            directory = nucleosome_file_path.parent
-            nucleomutics_folder = directory.joinpath(nucleosome_file_path.with_name(nucleosome_file_path.stem+'_nucleomutics').stem)
-            return nucleomutics_folder.joinpath(nucleosome_file_path.with_suffix('.nuc').name)
-        else:
-            return controller.pre_process_nucleosome_map(file_path=nucleosome_file_path, fasta_file=fasta_file_path)[0]
-    return nucleosome_file_path
+    nucleosome_file = process_files.DyadFile(filepath=nucleosome_file_path, fasta=fasta_file_path)
+    nucleosome_file.pre_process()
+
+    return nucleosome_file.nuc
 
 def pre_process_fasta(fasta_file_path):
     logging.info('[Fasta] Checking if pre-processing is needed')
-    if not controller.check_if_pre_processed(file_path=fasta_file_path, typ='fasta'):
-        return controller.pre_process_fasta(fasta_file=fasta_file_path)
-    return fasta_file_path
+    fasta_file = process_files.FastaFile(filepath=fasta_file_path)
+    fasta_file.pre_process()
+
+    return fasta_file.filepath
 
 @router.post("/run_analysis")
 async def run_analysis(request: RunAnalysisRequest):
