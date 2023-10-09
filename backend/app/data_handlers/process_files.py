@@ -8,31 +8,24 @@ class MutationFile:
 
     def __init__(self, filepath, fasta) -> None:
         self.filepath = Path(filepath)
-        self.counts = None
-        self.mut = None
-        self.proteomutics_folder = None
+        self.proteomutics_folder = self.filepath.parent.joinpath(f"{self.filepath.stem}_proteomutics")
+        self.counts = self.proteomutics_folder.joinpath(f"{self.filepath.stem}.counts")
+        self.mut = self.proteomutics_folder.joinpath(f"{self.filepath.stem}.mut")
         self.pre_processed = False
         self.fasta = Path(fasta)
 
     def pre_process(self):
         # For .mut scenario
         if self.filepath.suffix == '.mut':
-            self.mut = self.filepath
-            self.proteomutics_folder = self.filepath.parent.joinpath(f"{self.filepath.stem}_proteomutics")
-
-            potential_counts = self.proteomutics_folder.joinpath(f"{self.filepath.stem}.counts")
-
-            if not potential_counts.exists():
-                self.counts = self.count_contexts_mut(self.filepath)
-            else:
-                self.counts = potential_counts
-
+            if self.mut.exists() and self.counts.exists():
+                self.pre_processed = True
+                return
+            elif self.mut.exists and not self.counts.exists():
+                self.counts = self.count_contexts_mut(self.mut)
+                self.pre_processed = True
+                return
         # For .vcf scenario
         elif self.filepath.suffix == '.vcf':
-            self.proteomutics_folder = self.filepath.parent.joinpath(f"{self.filepath.stem}_proteomutics")
-            
-            potential_mut = self.proteomutics_folder.joinpath(f"{self.filepath.stem}.mut")
-            potential_counts = self.proteomutics_folder.joinpath(f"{self.filepath.stem}.counts")
 
             # Create proteomutics folder if it doesn't exist and process files
             if not self.proteomutics_folder.exists():
@@ -40,12 +33,10 @@ class MutationFile:
                 print('processing_files')
                 self.process_file(self.filepath, self.fasta)
                 print('counting_contexts')
-                self.counts = self.count_contexts_mut(potential_mut)
-                self.mut = potential_mut
-            elif self.proteomutics_folder.exists() and not potential_mut.exists():
+                self.counts = self.count_contexts_mut(self.mut)
+            elif self.proteomutics_folder.exists() and not self.mut.exists():
                 self.process_file(self.filepath, self.fasta)
-                self.mut = potential_mut if potential_mut.exists() else None
-                self.counts = potential_counts if potential_counts.exists() else self.count_contexts_mut(self.mut)
+                self.counts = self.count_contexts_mut(self.mut)
 
         self.pre_processed = True
 
@@ -75,24 +66,27 @@ class MutationFile:
                 if filtered_chrom not in human:
                     continue
 
-                fasta_context = fasta_line.strip().split('\t')[-1]
-                if 'N' in fasta_context.upper():
+                fasta_context = fasta_line.strip()
+                if 'N' in fasta_context.split('\t')[-1].upper():
                     continue
 
                 if not all(info in fasta_context for info in bed_info[:3]):
                     print(f'ERROR: BED {bed_info} and FASTA {fasta_context} do not match')
                     break
 
-                new_line = '\t'.join([bed_info[0], str(int(bed_info[1])+1), str(int(bed_info[2])-1), bed_info[3], bed_info[4], bed_info[5], fasta_context.upper(), bed_info[6]])
+                new_line = '\t'.join([bed_info[0], str(int(bed_info[1])+1), str(int(bed_info[2])-1), bed_info[3], bed_info[4], bed_info[5], fasta_context.split('\t')[-1].upper(), bed_info[6]])
                 o.write(new_line+'\n')
 
         # Sort the file
-        command = f'sort -k1,1 -k2,2n -k3,3n -k6,6 {context_intermediate} > {self.mut}'
+        print(str(context_intermediate))
+        print(str(self.mut))
+        command = f'sort -k1,1 -k2,2n -k3,3n {context_intermediate} > {self.mut}'
         subprocess.run(command, shell=True)
         
         # Cleanup the intermediate files
         context_intermediate.unlink()
         file.with_suffix('.tmp').unlink()
+        getfasta_output.unlink()
     
     def count_contexts_mut(self, file):
         file = Path(file)
@@ -205,6 +199,7 @@ class DyadFile:
         # Cleanup the intermediate files
         dyad_file.with_suffix('.tmp').unlink()
         context_intermediate.unlink()
+        getfasta_output.unlink()
 
 
 
