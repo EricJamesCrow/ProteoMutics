@@ -46,25 +46,22 @@ def pre_process_fasta(fasta_file_path):
 
 @router.post("/run_analysis")
 async def run_analysis(request: RunAnalysisRequest):
-    try:
-        mutation_file_path = Path(request.mutation_file_path)
-        nucleosome_file_path = Path(request.nucleosome_file_path)
-        fasta_file_path = Path(request.fasta_file_path)
+    mutation_file_path = Path(request.mutation_file_path)
+    nucleosome_file_path = Path(request.nucleosome_file_path)
+    fasta_file_path = Path(request.fasta_file_path)
 
-        # if not mutation_file_path.exists():
-        #     raise HTTPException(status_code=400, detail="Mutation file not found.")
-        # if not nucleosome_file_path.exists():
-        #     raise HTTPException(status_code=400, detail="Nucleosome file not found.")
-        # if not fasta_file_path.exists():
-        #     raise HTTPException(status_code=400, detail="Fasta file not found.")
-        
-        mutation_file_path = pre_process_mutation(mutation_file_path, fasta_file_path)
-        nucleosome_file_path = pre_process_nucleosome(nucleosome_file_path, fasta_file_path)
-        fasta_file_path = pre_process_fasta(fasta_file_path)
-        
-        print('###################################################################\nRUNNING INTERSRCTOR\n###################################################################')
-        results_file = mutation_intersector.MutationIntersector(mutation_file=mutation_file_path, dyad_file=nucleosome_file_path).run()
-        print('Done')
-        return {"result_file": results_file}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Unexpected error occurred: {e}")
+    if not mutation_file_path.is_file():
+        raise HTTPException(status_code=400, detail="Mutation file not found.")
+    if not nucleosome_file_path.is_file():
+        raise HTTPException(status_code=400, detail="Nucleosome file not found.")
+    if not fasta_file_path.is_file():
+        raise HTTPException(status_code=400, detail="Fasta file not found.")
+    
+    mutation_file_path = pre_process_mutation(mutation_file_path, fasta_file_path)
+    nucleosome_file_path = pre_process_nucleosome(nucleosome_file_path, fasta_file_path)
+    fasta_file_path = pre_process_fasta(fasta_file_path)
+    
+    print('###################################################################\nRUNNING INTERSRCTOR\n###################################################################')
+    results_file = mutation_intersector.MutationIntersector(mutation_file=mutation_file_path, dyad_file=nucleosome_file_path).run()
+    print('Done')
+    return {"result_file": results_file}

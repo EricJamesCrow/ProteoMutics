@@ -1,4 +1,4 @@
--# ProteoMutics
+# ProteoMutics (In-Development)
 a bioinformatics program that plots patterns between mutations and nucleosomes
 
 ### START FRONTEND ###
@@ -13,12 +13,12 @@ npm run start
 ```
 cd ./backend
 pip install -r requirements.txt
-uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload --reload-include *
+uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload --reload-include "*"
 ```
 ### START BACKEND ###
 ```
 cd ./backend
-uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload --reload-include *
+uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload --reload-include "*"
 ```
 ### CREATE AND START DOCKER ENVIRONMENT (DEVELOPMENT) ###
 ```
