@@ -6,9 +6,8 @@ from pathlib import Path
 import traceback
 
 class DyadFastaCounter:
-    def __init__(self, file: str | Path, filename) -> None:
+    def __init__(self, file: str | Path) -> None:
         self.path = Path(file)
-        filename = Path(filename)
         self.output = file.with_suffix('.counts')
         self.context_list = tools.contexts_in_iupac('NNN')
         self.counts = self.initialize_counts(self.context_list)
@@ -37,8 +36,11 @@ class DyadFastaCounter:
                 line = f.readline()
                 if not line:
                     break
-                sequence = line.split("\t")[3].upper().strip()
-                counts = self.update_counts(sequence, counts)
+                try:
+                    sequence = line.strip().split('\t')[3].upper()
+                    counts = self.update_counts(sequence, counts)
+                except IndexError:
+                    print(f"Error in process {mp.current_process().pid}: Invalid line {line}")
         return counts
 
     def update_counts(self, sequence: str, counts: dict) -> dict:

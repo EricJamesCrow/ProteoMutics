@@ -7,25 +7,17 @@ sys.path.append('/home/cam/Documents/repos/ProteoMutics/backend')
 from app.utils import data_frame_operations, tools
 
 
-uv_total = data_frame_operations.DataFormatter.read_dataframe('backend/test/test_data/UV_nucleomutics/UV.counts')
-uv_intersect = data_frame_operations.DataFormatter.read_dataframe('backend/test/test_data/UV_nucleomutics/UV_dyads.intersect')
-dyads_counts = data_frame_operations.DataFormatter.read_dataframe('backend/test/test_data/dyads_nucleomutics/dyads.counts')
-genomic_counts = data_frame_operations.DataFormatter.read_dataframe('backend/test/test_data/hg19.counts')
+wt_total = data_frame_operations.DataFormatter.read_dataframe('/media/cam/Working/ProteoMuticsTest/WT_KBr_proteomutics/WT_KBr.counts')
+wt_intersect = data_frame_operations.DataFormatter.read_dataframe('/media/cam/Working/ProteoMuticsTest/WT_KBr_proteomutics/WT_KBr_hg19_MNase_nucleosome_map_intergenic.intersect')
+dyads_counts = data_frame_operations.DataFormatter.read_dataframe('/media/cam/Working/ProteoMuticsTest/hg19_MNase_nucleosome_map_all_proteomutics/hg19_MNase_nucleosome_map_all.counts')
+genomic_counts = data_frame_operations.DataFormatter.read_dataframe('/media/cam/Working/ProteoMuticsTest/hg19.counts')
 
 new_dyads_counts = data_frame_operations.DataFormatter.reverse_complement_positional_strand_conversion(dyads_counts)
 new_genomic_counts = data_frame_operations.DataFormatter.reverse_complement_tri_counts(genomic_counts)
-new_uv_intersect = data_frame_operations.DataFormatter.read_dataframe('backend/test/test_data/UV_nucleomutics/UV_dyads_flipped.counts')
+new_wt_intersect = data_frame_operations.DataFormatter.read_dataframe('/media/cam/Working/ProteoMuticsTest/WT_KBr_proteomutics/WT_KBr_hg19_MNase_nucleosome_map_intergenic_flipped.intersect')
 
-data_formatter = data_frame_operations.DataFormatter.genome_wide_normalization(uv_total, new_dyads_counts, new_genomic_counts, uv_intersect)
-data_formatter2 = data_frame_operations.DataFormatter.genome_wide_normalization(uv_total, new_dyads_counts, new_genomic_counts, new_uv_intersect)
-
-whole_genome = data_frame_operations.DataFormatter.read_dataframe('backend/test/test_data/UV_nucleomutics/UV_hg19_MNase_nucleosome_map_all.intersect')
-whole_genome_flipped = data_frame_operations.DataFormatter.read_dataframe('backend/test/test_data/UV_nucleomutics/UV_hg19_MNase_nucleosome_map_all_flipped.counts')
-
-whole_genome_dyad = data_frame_operations.DataFormatter.read_dataframe('/media/cam/Working/8-oxodG/8-oxodG_Final_Analysis/nucleosome/hg19_MNase_nucleosome_map_all_nucleomutics/hg19_MNase_nucleosome_map_all.counts')
-
-data_formatter3 = data_frame_operations.DataFormatter.genome_wide_normalization(uv_total, whole_genome_dyad, new_genomic_counts, whole_genome)
-data_formatter4 = data_frame_operations.DataFormatter.genome_wide_normalization(uv_total, whole_genome_dyad, new_genomic_counts, whole_genome_flipped)
+data_formatter = data_frame_operations.DataFormatter.genome_wide_normalization(wt_total, dyads_counts, genomic_counts, wt_intersect)
+data_formatter2 = data_frame_operations.DataFormatter.genome_wide_normalization(wt_total, new_dyads_counts, new_genomic_counts, new_wt_intersect)
 
 def make_graph_matplotlib(ax, mutation_data: pd.DataFrame, title:str, interpolate_method: bool = False, smoothing_method: None = None):
     indexes = mutation_data.index.tolist()
@@ -72,7 +64,35 @@ def make_graph_matplotlib(ax, mutation_data: pd.DataFrame, title:str, interpolat
 
     plt.show()
 
-# make_graph_matplotlib(plt.gca(), data_formatter, 'UV Dyads')
-# make_graph_matplotlib(plt.gca(), data_formatter2, 'UV Dyads Flipped')
-# make_graph_matplotlib(plt.gca(), data_formatter3, 'UV Whole Genome')
-# make_graph_matplotlib(plt.gca(), data_formatter4, 'UV Whole Genome Flipped')
+
+def make_73_graph_matplotlib(ax, mutation_data: pd.DataFrame, title:str):
+    # Filter the data for the desired range (-72 to +72)
+    mutation_data = mutation_data[(mutation_data.index >= -72) & (mutation_data.index <= 72)]
+
+    # Now, the 'indexes' will only contain values from -72 to +72
+    indexes = mutation_data.index.tolist()
+    graph_values = [sum(mutation_data.loc[item]) for item in indexes]
+    
+    x = np.array(indexes)
+    y = np.array(graph_values)
+
+    # No smoothing or interpolation applied, so we can skip the related conditions
+
+    # We'll directly plot the data without considering peaks or red regions,
+    # as we're focusing on a specific section of the data.
+
+    # Plotting on the passed ax
+    ax.scatter(x, y, c='black', s=2)  # This creates the scatter plot
+    ax.plot(x, y, color='blue')  # This creates a blue line connecting the points
+
+    # Setting the title and labels
+    ax.set_title(title)
+    ax.set_xlabel('Nucleotide Position Relative to Nucleosome Dyad (bp)')
+    ax.set_ylabel('Mutation Counts Normalized to Context')
+
+    plt.show()  # Make sure to display the plot
+
+make_graph_matplotlib(plt.gca(), data_formatter, 'WT Dyads', smoothing_method='moving_average')
+make_73_graph_matplotlib(plt.gca(), data_formatter, 'WT Dyads')
+# make_graph_matplotlib(plt.gca(), data_formatter2, 'WT Dyads Flipped')
+

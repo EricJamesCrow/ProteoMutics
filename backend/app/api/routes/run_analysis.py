@@ -54,7 +54,7 @@ async def run_analysis(request: RunAnalysisRequest):
     nucleosome_file_path = pre_process_nucleosome(nucleosome_file_path, fasta_file_path)
     fasta_file_path = pre_process_fasta(fasta_file_path)
     
-    print('###################################################################\nRUNNING INTERSRCTOR\n###################################################################')
+    print('[Intersector] Beginning intersection')
     results_file = mutation_intersector.MutationIntersector(mutation_file=mutation_file_path, dyad_file=nucleosome_file_path).run()
-    print('Done')
+    print('[Intersector] Intersection complete, file saved to:', results_file)
     return {"result_file": results_file}

@@ -37,7 +37,7 @@ class DataFormatter:
 
         # Add the two DataFrames together
         result_df = df.add(df_copy)
-        print(result_df)
+
         return result_df
 
     @staticmethod
@@ -58,7 +58,6 @@ class DataFormatter:
 
         result_df = df.add(df_copy)
 
-        print(result_df)
         return result_df
     
     @staticmethod
@@ -73,7 +72,7 @@ class DataFormatter:
 
         # Add the two DataFrames together
         result_df = df.add(df_copy)
-        print(result_df)
+
         return result_df
 
     @staticmethod
@@ -90,6 +89,44 @@ class DataFormatter:
         return all_contexts
 
     @staticmethod
+    def aggregate_counts(dataframe):
+        """
+        Aggregates counts by context from the provided dataframe.
+
+        Args:
+        dataframe (pd.DataFrame): A dataframe containing mutation contexts and their counts.
+
+        Returns:
+        pd.DataFrame: A dataframe with the total counts for each context.
+        """
+        # Check if the dataframe is empty (retain this check as it's important)
+        if dataframe.empty:
+            raise ValueError("Input DataFrame is empty.")
+
+        # No need to check for the 'Position' column because we're aggregating values,
+        # and 'Position' is not used here. This is assuming 'Position' is an index or not relevant
+        # for the sum operation.
+
+        # The actual aggregation operation: summing across rows (for each column) as you are 
+        # dealing with counts across different contexts (columns).
+        total_counts = dataframe.sum(axis=0)  # axis=0 is default and can be omitted, added here for clarity.
+
+        # Transposing the result, so the output is a DataFrame with contexts as the index 
+        # and a single column 'COUNTS' containing the sums. This is more a reshaping than a 
+        # transposition in the traditional sense, as we're not swapping rows and columns but 
+        # rather converting a Series to a DataFrame.
+        df_aggregated = total_counts.to_frame(name='COUNTS')
+
+        # If you want 'COUNTS' to be your index, you can uncomment the following line. 
+        # This will transpose the DataFrame, making the single row of totals into a single 
+        # column of totals with the index being 'COUNTS'.
+        # df_aggregated = df_aggregated.T  # Uncomment if 'COUNTS' should be the index.
+
+        # Returning the resulting dataframe
+        return df_aggregated
+
+
+    @staticmethod
     def genome_wide_normalization(mutations_df: pd.DataFrame, dyads_df: pd.DataFrame, genome_df: pd.DataFrame, observed_df: pd.DataFrame) -> pd.DataFrame:
 
         # Ensure input DataFrames are not empty
@@ -97,29 +134,14 @@ class DataFormatter:
             if df.empty:
                 raise ValueError(f"The provided {name} is empty.")
 
-
+        # aggregate_mutations_df = DataFormatter.aggregate_counts(observed_df)
+        # frequency = aggregate_mutations_df.div(genome_df, axis=1).T
         frequency = mutations_df.div(genome_df, axis=1).T
         expected_df = dyads_df.mul(frequency.squeeze(), axis=1)
 
         graphing_data = (observed_df.sum(axis=1) / expected_df.sum(axis=1)).to_frame(name='normalized_column')  # You can name 'result_column' to whatever column name you desire   
 
-        # BENS METHOD
-        # # Calculate the mutation rate for each context
-        # mut_freq = mutations_df/mutations_df.sum()
-        # genome_freq = genome_df/genome_df.sum()
-        # frequency = (mut_freq/genome_freq).T
-        
-        # expected_df = dyads_df.mul(frequency.squeeze(), axis=1)
-
-        # scaling_factor = expected_df.sum().sum()/observed_df.sum().sum()
-
-        # result_series = observed_df.sum(axis=1) / expected_df.sum(axis=1) * scaling_factor
-        # graphing_data = result_series.to_frame(name='normalized_column')  # You can name 'result_column' to whatever column name you desire
-
-        # graphing_data.to_csv('graphing_data.tsv', sep='\t')
-
         return graphing_data
-
 
     @staticmethod
     def context_normalization(mutations_df, dyads_df):

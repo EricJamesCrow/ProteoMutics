@@ -11,7 +11,7 @@ class MutationIntersector:
         self.mutation_file = Path(mutation_file)
         self.dyad_file = Path(dyad_file)
         self.output_file = mutation_file.with_name(f'{mutation_file.stem}_{dyad_file.stem}.intersect')
-        self.flipped_output_file = mutation_file.with_name(f'{mutation_file.stem}_{dyad_file.stem}_flipped.counts')  # added this line for flipped counts output
+        self.flipped_output_file = mutation_file.with_name(f'{mutation_file.stem}_{dyad_file.stem}_flipped.intersect')  # added this line for flipped counts output
         self.mut_context = tools.contexts_in_iupac(mut_context)
         self.mutation_type = tools.mutation_combinations(mutation_type)
         self.context_list = tools.contexts_in_iupac('NNN')
@@ -175,6 +175,8 @@ class MutationIntersector:
 
         if self.mutations_chrom_names != self.dyad_chrom_names:
             print('NOT THE SAME')
+            print(self.mutations_chrom_names)
+            print(self.dyad_chrom_names)
             return
 
         with mp.Pool(mp.cpu_count()) as pool:
