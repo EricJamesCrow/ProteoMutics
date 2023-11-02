@@ -140,8 +140,8 @@ class DataFormatter:
         expected_df = dyads_df.mul(frequency.squeeze(), axis=1)
 
         graphing_data = (observed_df.sum(axis=1) / expected_df.sum(axis=1)).to_frame(name='normalized_column')  # You can name 'result_column' to whatever column name you desire   
-
-        return graphing_data
+        log2_data = graphing_data.applymap(lambda x: log2(x))
+        return log2_data
 
     @staticmethod
     def context_normalization(mutations_df, dyads_df):

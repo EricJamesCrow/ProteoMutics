@@ -58,6 +58,7 @@ class MutationFile:
                 tsv = line.strip().split('\t')
                 if not (len(tsv[3]) == 1 and len(tsv[4]) == 1 and tsv[3] in 'ACGT' and tsv[4] in 'ACGT'): continue
                 chrom = tsv[0]
+                if 'chr' not in chrom: chrom = 'chr'+chrom
                 base_0 = str(int(tsv[1])-2)
                 base_1 = str(int(tsv[1])+1)
                 new_line = '\t'.join([chrom, base_0, base_1, '.', '0', '+', f'{tsv[3]}>{tsv[4]}'])

@@ -97,7 +97,7 @@ def smooth_data(x, y, method='moving_average', window_size=10, poly_order=2, alp
         x (array-like): The x-coordinates of the data points.
         y (array-like): The y-coordinates of the data points.
         method (str): The smoothing method to use. Can be 'moving_average', 'savgol_filter', 'loess', 'median_filter', 'gaussian_filter', or 'exponential_smoothing'.
-        window_size (int): The size of the moving average or Savitzky-Golay filter window.
+        window_size (int): The size of the window for the respective filter (for loess, it's the number of points to use).
         poly_order (int): The polynomial order for the Savitzky-Golay filter.
         alpha (float): The smoothing factor for exponential smoothing.
         sigma (float): The standard deviation for Gaussian filter.
@@ -119,8 +119,12 @@ def smooth_data(x, y, method='moving_average', window_size=10, poly_order=2, alp
         smoothed_y = savgol_filter(y, window_size, poly_order)
         smoothed_x = x
     elif method == 'loess':
-        smoothed_y = lowess(y, x, frac=1./window_size)[:, 1]
-        smoothed_x = x
+        # Here we adjust frac to be the window_size divided by the number of data points
+        n = len(x)
+        frac = window_size / float(n)
+        smoothed_values = lowess(y, x, frac=frac)
+        smoothed_y = smoothed_values[:, 1]
+        smoothed_x = x  # x doesn't change
     elif method == 'median_filter':
         smoothed_y = medfilt(y, window_size)
         smoothed_x = x
@@ -128,7 +132,11 @@ def smooth_data(x, y, method='moving_average', window_size=10, poly_order=2, alp
         smoothed_y = gaussian_filter1d(y, sigma=sigma, mode=mode)
         smoothed_x = x
     elif method == 'exponential_smoothing':
-        smoothed_y = exponential_smoothing(y, alpha)
+        # Assuming this is a simple implementation of exponential smoothing
+        smoothed_y = np.empty_like(y)
+        smoothed_y[0] = y[0]
+        for i in range(1, len(y)):
+            smoothed_y[i] = alpha * y[i] + (1 - alpha) * smoothed_y[i - 1]
         smoothed_x = x
     else:
         raise ValueError("Invalid method specified.")

@@ -7,17 +7,15 @@ import traceback
 
 class MutationIntersector:
     
-    def __init__(self, mutation_file: Path | str, dyad_file: Path | str, mut_context='NNN', mutation_type='N>N') -> None:
+    def __init__(self, mutation_file: Path | str, dyad_file: Path | str, mut_context='NNN', mutation_type='G>T') -> None:
         self.mutation_file = Path(mutation_file)
         self.dyad_file = Path(dyad_file)
         self.output_file = mutation_file.with_name(f'{mutation_file.stem}_{dyad_file.stem}.intersect')
         self.flipped_output_file = mutation_file.with_name(f'{mutation_file.stem}_{dyad_file.stem}_flipped.intersect')  # added this line for flipped counts output
         self.mut_context = tools.contexts_in_iupac(mut_context)
         self.mutation_type = tools.mutation_combinations(mutation_type)
+        self.rev_mutation_type = tools.mutation_combinations(tools.reverse_complement(mutation_type[0])+">"+tools.reverse_complement(mutation_type[2]))
         self.context_list = tools.contexts_in_iupac('NNN')
-        # testing purposes
-        # self.mut_contexts = tools.contexts_in_iupac('NN')
-        # self.mutation_type = tools.mutation_combinations('G>T')
 
         self.counts = self.initialize_counts()
         self.flipped_counts = self.initialize_counts()  # initializing flipped_counts
@@ -46,14 +44,11 @@ class MutationIntersector:
         df.to_csv(self.output_file, sep='\t')
 
     def determine_if_flip_context(self, mutation: str, strand: str, context: str) -> str:
-        if strand == '+':
-            if mutation in self.mut_context:
-                if context in self.context_list:
-                    return True
-        elif strand == '-':
-            if mutation in self.mutation_type:
-                if tools.reverse_complement(context) in self.context_list:
-                    return True
+        if mutation in self.rev_mutation_type:
+            if tools.reverse_complement(context) in self.mut_context:
+                return True
+        else:
+            return False
 
     def process_block(self, dyad_start_position: int, dyad_end_position: int, mut_start_position: int, mut_end_position: int) -> dict:
         # Initializing a dictionary similar to the one in __init__ to store counts.
@@ -66,16 +61,12 @@ class MutationIntersector:
             mut_data = mut_file.readline().strip().split('\t')  # Reading a line from mut_file, stripping whitespaces, splitting it by tabs, and storing in mut_data.
             while mut_data[6] not in self.mut_context and mut_data[7] not in self.mutation_type:
                 mut_data = mut_file.readline().strip().split('\t')
+            
             mut_start = int(mut_data[1])  # Converting second item of mut_data to integer and storing in mut_start.
             
-            context = mut_data[6]   # Storing sixth item of mut_data in context.
+            context = mut_data[6]
             mutation = mut_data[7]
             strand = mut_data[5]
-            
-            if self.determine_if_flip_context(mutation, strand, context):
-                count_comp = True
-            else:
-                count_comp = False
             
             while True:
                 # The dyad_data line reads from a file, removes leading and trailing spaces, and separates by tab.
@@ -99,17 +90,14 @@ class MutationIntersector:
                     context = mut_data[6]   # Storing sixth item of mut_data in context.
                     mutation = mut_data[7]
                     strand = mut_data[5]
-                    
-                    if self.determine_if_flip_context(mutation, strand, context):
-                        count_comp = True
-                    else:
-                        count_comp = False
 
                 # This loop checks if the mutation start position is within a 1000 base pairs range from the dyad start position. If it is, it increments the count for the context of that mutation.
                 while -1000 <= mut_start-dyad_start <= 1000:
-                    if count_comp:
-                        flipped_counts[dyad_start-mut_start][context] += 1
+                    if self.determine_if_flip_context(mutation, strand, context):
                         counts[mut_start-dyad_start][context] += 1
+                        print(mut_start-dyad_start)
+                        flipped_counts[dyad_start-mut_start][tools.reverse_complement(context)] += 1
+                        print(dyad_start-mut_start)
                     else:
                         counts[mut_start-dyad_start][context] += 1
                         flipped_counts[mut_start-dyad_start][context] += 1
@@ -125,11 +113,6 @@ class MutationIntersector:
                     context = mut_data[6]   # Storing sixth item of mut_data in context.
                     mutation = mut_data[7]
                     strand = mut_data[5]
-                    
-                    if self.determine_if_flip_context(mutation, strand, context):
-                        count_comp = True
-                    else:
-                        count_comp = False
 
                 # Here, it sets the pointer of the mutation file back to the start of the previous dyad.
                 mut_file.seek(jump_back_position)
@@ -144,11 +127,6 @@ class MutationIntersector:
                 context = mut_data[6]   # Storing sixth item of mut_data in context.
                 mutation = mut_data[7]
                 strand = mut_data[5]
-                
-                if self.determine_if_flip_context(mutation, strand, context):
-                    count_comp = True
-                else:
-                    count_comp = False
                 
         return counts, flipped_counts
 
