@@ -95,9 +95,7 @@ class MutationIntersector:
                 while -1000 <= mut_start-dyad_start <= 1000:
                     if self.determine_if_flip_context(mutation, strand, context):
                         counts[mut_start-dyad_start][context] += 1
-                        print(mut_start-dyad_start)
                         flipped_counts[dyad_start-mut_start][tools.reverse_complement(context)] += 1
-                        print(dyad_start-mut_start)
                     else:
                         counts[mut_start-dyad_start][context] += 1
                         flipped_counts[mut_start-dyad_start][context] += 1
@@ -130,47 +128,59 @@ class MutationIntersector:
                 
         return counts, flipped_counts
 
-    def extract_chrom_names(self, file_path: Path):
-        chroms = [0]
-        chrom_names = []
+    def extract_chrom_positions(self, file_path: Path):
+        chrom_positions = {}
         with open(file_path, 'r') as file:
-            current_chrom = file.readline().strip().split('\t')[0]
-            while current_chrom:
+            start_pos = 0
+            current_chrom = None
+            while True:
                 location = file.tell()
-                next_chrom = file.readline().strip().split('\t')[0]
-                if current_chrom != next_chrom or not next_chrom:
-                    chroms.append(location)
-                    chrom_names.append(current_chrom)
+                line = file.readline()
+                if not line:  # Check for EOF
+                    if current_chrom is not None:
+                        # Assign the last position when EOF is reached
+                        chrom_positions[current_chrom] = (start_pos, location)
+                    break  # Exit the loop at EOF
+                next_chrom, *_ = line.strip().split('\t')
+                if current_chrom and current_chrom != next_chrom:
+                    chrom_positions[current_chrom] = (start_pos, location)
+                    start_pos = location
                 current_chrom = next_chrom
-            file.seek(0, 2)
-            chroms[-1] = file.tell()
-            chrom_names.append(current_chrom)
-        return chroms, chrom_names
-
+        return chrom_positions
+    
     def run(self) -> None:
-        dyad_chroms, self.dyad_chrom_names = self.extract_chrom_names(self.dyad_file)
-        mut_chroms, self.mutations_chrom_names = self.extract_chrom_names(self.mutation_file)
+        # Extract chromosome positions from the files
+        dyad_positions = self.extract_chrom_positions(self.dyad_file)
+        mutation_positions = self.extract_chrom_positions(self.mutation_file)
 
-        if self.mutations_chrom_names != self.dyad_chrom_names:
-            print('NOT THE SAME')
-            print(self.mutations_chrom_names)
-            print(self.dyad_chrom_names)
+        # Find the common chromosomes
+        common_chroms = set(dyad_positions).intersection(mutation_positions)
+        if not common_chroms:
+            print('No common chromosomes found.')
             return
+        else:
+            sorted_common_chroms = sorted(common_chroms)
+            print(f'Found {len(common_chroms)} common chromosomes: {sorted_common_chroms}')
 
-        with mp.Pool(mp.cpu_count()) as pool:
+        # Process the blocks in parallel
+        with mp.Pool() as pool:
             results = []
-            for i in range(len(mut_chroms) - 1):
-                dyad_start, dyad_end = dyad_chroms[i], dyad_chroms[i+1]
-                mut_start, mut_end = mut_chroms[i], mut_chroms[i+1]
-                result = pool.apply_async(self.process_block, (dyad_start, dyad_end, mut_start, mut_end), error_callback=lambda e: self.handle_error(e, i))
+            # Process all common chromosome ranges
+            for chrom in sorted_common_chroms:
+                dyad_start, dyad_end = dyad_positions[chrom]
+                mut_start, mut_end = mutation_positions[chrom]
+                result = pool.apply_async(self.process_block, (dyad_start, dyad_end, mut_start, mut_end),
+                                          error_callback=lambda e, chrom=chrom: self.handle_error(e, chrom))
                 results.append(result)
 
+            # Collect results
             for result in results:
                 result.wait()
 
             pool.close()
             pool.join()
 
+        # Process results as before
         for result in results:
             block_counts, block_flipped_counts = result.get()
             for i in range(-1000, 1001):
@@ -180,6 +190,5 @@ class MutationIntersector:
 
         self.results_to_file()
         self.flipped_results_to_file()
-
 
         return self.output_file

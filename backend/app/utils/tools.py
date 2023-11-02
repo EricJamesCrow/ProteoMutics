@@ -143,13 +143,13 @@ def smooth_data(x, y, method='moving_average', window_size=10, poly_order=2, alp
 
     return smoothed_x, smoothed_y
 
-def find_periodicity(x, y, min_period=10):
+def find_periodicity(x, y, min_period=10, max_period=300):
     # Calculate power spectrum using Lomb-Scargle periodogram
     freq, power = LombScargle(x, y).autopower()
     period = 1 / freq
 
-    # Filter out periods below the minimum threshold
-    valid_indices = np.where(period >= min_period)
+    # Filter out periods below the minimum threshold and above the maximum threshold
+    valid_indices = np.where((period >= min_period) & (period <= max_period))
     period = period[valid_indices]
     power = power[valid_indices]
 

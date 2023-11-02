@@ -5,16 +5,19 @@ import numpy as np
 import sys
 sys.path.append('/home/cam/Documents/repos/ProteoMutics/backend')                                       
 from app.utils import data_frame_operations, tools
+from scipy.stats import linregress
+from scipy.interpolate import make_interp_spline
 
 
-wt_total = data_frame_operations.DataFormatter.read_dataframe('/media/cam/Working/8-oxodG/hmces/vcf_files/genotype_split/HMCES_KBr_proteomutics/HMCES_KBr.counts')
-wt_intersect = data_frame_operations.DataFormatter.read_dataframe('/media/cam/Working/8-oxodG/hmces/vcf_files/genotype_split/HMCES_KBr_proteomutics/HMCES_KBr_hg19_MNase_nucleosome_map_all.intersect')
+wt_total = data_frame_operations.DataFormatter.read_dataframe('/media/cam/Working/8-oxodG/lesion_files/vcf/SRR_treated_cellular_69-70_proteomutics/SRR_treated_cellular_69-70.counts')
+wt_intersect = data_frame_operations.DataFormatter.read_dataframe('/media/cam/Working/8-oxodG/lesion_files/vcf/SRR_treated_cellular_69-70_proteomutics/SRR_treated_cellular_69-70_hg19_MNase_nucleosome_map_all.intersect')
+
 dyads_counts = data_frame_operations.DataFormatter.read_dataframe('/media/cam/Working/ProteoMuticsTest/hg19_MNase_nucleosome_map_all_proteomutics/hg19_MNase_nucleosome_map_all.counts')
 genomic_counts = data_frame_operations.DataFormatter.read_dataframe('/media/cam/Working/ProteoMuticsTest/hg19.counts')
 
 new_dyads_counts = data_frame_operations.DataFormatter.reverse_complement_positional_strand_conversion(dyads_counts)
 new_genomic_counts = data_frame_operations.DataFormatter.reverse_complement_tri_counts(genomic_counts)
-new_wt_intersect = data_frame_operations.DataFormatter.read_dataframe('/media/cam/Working/8-oxodG/hmces/vcf_files/genotype_split/HMCES_KBr_proteomutics/HMCES_KBr_hg19_MNase_nucleosome_map_all_flipped.intersect')
+new_wt_intersect = data_frame_operations.DataFormatter.read_dataframe('/media/cam/Working/8-oxodG/lesion_files/vcf/SRR_treated_cellular_69-70_proteomutics/SRR_treated_cellular_69-70_hg19_MNase_nucleosome_map_all_flipped.intersect')
 
 data_formatter = data_frame_operations.DataFormatter.genome_wide_normalization(wt_total, dyads_counts, genomic_counts, wt_intersect)
 data_formatter2 = data_frame_operations.DataFormatter.genome_wide_normalization(wt_total, new_dyads_counts, new_genomic_counts, new_wt_intersect)
@@ -29,14 +32,15 @@ def make_graph_matplotlib(ax, mutation_data: pd.DataFrame, title:str, interpolat
     y = np.array(graph_values)
 
 
-    # if smoothing_method:
-    #     x, y = tools.smooth_data(x, y, method=smoothing_method, window_size=55, poly_order=3)
+    if smoothing_method:
+        x, y = tools.smooth_data(x, y, method=smoothing_method, window_size=55, poly_order=3)
 
     if interpolate_method:
         x, y = tools.interpolate_missing_data(x, y, -1000, 1000, interpolate_method)
 
     # Your processing with Tools methods
-    overall_period, overall_confidence, overall_signal_to_noise = tools.find_periodicity(x, y)
+    overall_period, overall_confidence, overall_signal_to_noise = tools.find_periodicity(x, y, min_period=50)
+    print(f"Overall period: {overall_period}, confidence: {overall_confidence}, signal to noise: {overall_signal_to_noise}")
 
     # Identify peaks based on overall_period
     peaks = [0]
@@ -62,12 +66,9 @@ def make_graph_matplotlib(ax, mutation_data: pd.DataFrame, title:str, interpolat
     ax.set_xlabel('Nucleotide Position Relative to Nucleosome Dyad (bp)')
     ax.set_ylabel('Mutation Counts Normalized to Context')
 
-    # plt.show()
-
-
 def make_73_graph_matplotlib(ax, mutation_data: pd.DataFrame, title:str, smoothing_method):
     # Filter the data for the desired range (-72 to +72)
-    mutation_data = mutation_data[(mutation_data.index >= -65) & (mutation_data.index <= 65)]
+    mutation_data = mutation_data[(mutation_data.index >= -72) & (mutation_data.index <= 72)]
 
     # Now, the 'indexes' will only contain values from -72 to +72
     indexes = mutation_data.index.tolist()
@@ -76,28 +77,42 @@ def make_73_graph_matplotlib(ax, mutation_data: pd.DataFrame, title:str, smoothi
     x = np.array(indexes)
     y = np.array(graph_values)
 
+    # Calculate the polynomial coefficients for a 2nd order polynomial
+    poly_coeffs = np.polyfit(x, y, 2)
+    # Generate a polynomial function from the coefficients
+    poly_func = np.poly1d(poly_coeffs)
+
+    # Generate new y values using the polynomial function
+    poly_y = poly_func(x)
+
+    # Perform linear regression to find the trend
+    slope, intercept, r_value, p_value, std_err = linregress(x, y)
+    # Calculate the y values of the trend line
+    trend_y = intercept + slope * x
+
+    # Print the equations of the trend line and polynomial
+    print(f"Linear trend line: y = {slope:.2f}x + {intercept:.2f}")
+    print(f"Polynomial trend line: y = {poly_coeffs[0]:.2f}x^2 + {poly_coeffs[1]:.2f}x + {poly_coeffs[2]:.2f}")
+
     if smoothing_method:
-        x, y = tools.smooth_data(x, y, method=smoothing_method, window_size=7, poly_order=3)
+        x_smooth, y_smooth = tools.smooth_data(x, y, method=smoothing_method, window_size=5, poly_order=3)
+        # x_smooth, y_smooth = x, y
+        # Use spline interpolation for a smooth curve
+        spline = make_interp_spline(x_smooth, y_smooth, k=3)
+        x_spline = np.linspace(x_smooth.min(), x_smooth.max(), 500)
+        y_spline = spline(x_spline)
+        ax.plot(x_spline, y_spline, color='green', label='Smoothed Curve')
 
-    # No smoothing or interpolation applied, so we can skip the related conditions
-
-    # We'll directly plot the data without considering peaks or red regions,
-    # as we're focusing on a specific section of the data.
-
-    # Plotting on the passed ax
-    ax.scatter(x, y, c='black', s=2)  # This creates the scatter plot
-    ax.plot(x, y, color='blue')  # This creates a blue line connecting the points
+    # Plot the original data, the linear trend, and the polynomial fit
+    ax.scatter(x, y, c='black', s=2, label='Original Data')  # Scatter plot of the original data
+    ax.plot(x, trend_y, color='red', label='Linear Trend')   # Linear trend line
+    ax.plot(x, poly_y, color='blue', label='Polynomial Fit') # Polynomial trend line
 
     # Setting the title and labels
     ax.set_title(title)
     ax.set_xlabel('Nucleotide Position Relative to Nucleosome Dyad (bp)')
     ax.set_ylabel('Mutation Counts Normalized to Context')
-
-    # plt.show()  # Make sure to display the plot
-
-# make_graph_matplotlib(plt.gca(), data_formatter, 'WT Dyads', smoothing_method='moving_average')
-# make_73_graph_matplotlib(plt.gca(), data_formatter2, 'WT Dyads', smoothing_method='moving_average')
-# make_graph_matplotlib(plt.gca(), data_formatter2, 'WT Dyads Flipped')
+    ax.legend() # Show the legend to differentiate the lines
 
 # Create a figure and a grid of subplots with 2 rows and 1 column.
 fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(10, 8))
@@ -110,3 +125,15 @@ plt.tight_layout()
 
 # Show the plot.
 plt.show()
+
+# # Create a figure and a grid of subplots with 2 rows and 1 column.
+# fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(10, 8))
+
+# # Use the first Axes (ax1) for the first function and the second Axes (ax2) for the second function.
+# make_graph_matplotlib(ax1, data_formatter, 'WT Dyads', smoothing_method=None)
+# make_73_graph_matplotlib(ax2, data_formatter, 'WT Dyads 73', smoothing_method=None)
+# # Adjust the layout of the subplots to prevent overlap.
+# plt.tight_layout()
+
+# # Show the plot.
+# plt.show()
