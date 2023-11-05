@@ -7,8 +7,6 @@ sys.path.append('/home/cam/Documents/repos/ProteoMutics/backend')
 from app.utils import data_frame_operations, tools
 from scipy.stats import linregress
 from scipy.interpolate import make_interp_spline
-from scipy.signal import find_peaks
-from matplotlib.collections import LineCollection
 
 
 def make_graph_matplotlib(ax, mutation_data: pd.DataFrame, title:str, interpolate_method: bool = False, smoothing_method: None = None):
@@ -60,66 +58,53 @@ def make_graph_matplotlib(ax, mutation_data: pd.DataFrame, title:str, interpolat
     ax.set_xlabel('Nucleotide Position Relative to Nucleosome Dyad (bp)')
     ax.set_ylabel('Mutation Counts Normalized to Context')
 
-def make_73_graph_matplotlib(ax, mutation_data: pd.DataFrame, title: str, smoothing_method):
+def make_73_graph_matplotlib(ax, mutation_data: pd.DataFrame, title:str, smoothing_method):
     # Filter the data for the desired range (-72 to +72)
     mutation_data = mutation_data[(mutation_data.index >= -72) & (mutation_data.index <= 72)]
 
-    # Extract the indexes and values from the data frame
+    # Now, the 'indexes' will only contain values from -72 to +72
     indexes = mutation_data.index.tolist()
     graph_values = [sum(mutation_data.loc[item]) for item in indexes]
-
+    
     x = np.array(indexes)
     y = np.array(graph_values)
 
-    # Assuming 'tools.find_periodicity' gives you the overall period
-    overall_period, overall_confidence, overall_signal_to_noise = tools.find_periodicity(x, y, min_period=2, max_period=30)
-    print(f"Overall period: {overall_period}, confidence: {overall_confidence}, signal to noise: {overall_signal_to_noise}")
-    half_period = overall_period / 2
+    # Calculate the polynomial coefficients for a 2nd order polynomial
+    poly_coeffs = np.polyfit(x, y, 2)
+    # Generate a polynomial function from the coefficients
+    poly_func = np.poly1d(poly_coeffs)
 
-    # Perform smoothing if specified
+    # Generate new y values using the polynomial function
+    poly_y = poly_func(x)
+
+    # Perform linear regression to find the trend
+    slope, intercept, r_value, p_value, std_err = linregress(x, y)
+    # Calculate the y values of the trend line
+    trend_y = intercept + slope * x
+
+    # Print the equations of the trend line and polynomial
+    print(f"Linear trend line: y = {slope:.2f}x + {intercept:.2f}")
+    print(f"Polynomial trend line: y = {poly_coeffs[0]:.2f}x^2 + {poly_coeffs[1]:.2f}x + {poly_coeffs[2]:.2f}")
+
     if smoothing_method:
         x_smooth, y_smooth = tools.smooth_data(x, y, method=smoothing_method, window_size=5, poly_order=3)
+        # x_smooth, y_smooth = x, y
+        # Use spline interpolation for a smooth curve
+        spline = make_interp_spline(x_smooth, y_smooth, k=3)
+        x_spline = np.linspace(x_smooth.min(), x_smooth.max(), 500)
+        y_spline = spline(x_spline)
+        ax.plot(x_spline, y_spline, color='green', label='Smoothed Curve')
 
-        # Manually determine expected peak positions
-        expected_peaks = [i for i in range(int(x_smooth.min()), int(x_smooth.max()), int(overall_period))]
-
-        # Find the actual peaks in the smoothed data
-        peaks, _ = find_peaks(y_smooth, distance=half_period)
-        # Filter peaks that are within a 5 bp window of expected peaks
-        actual_peaks = [peak for peak in peaks if any(abs(peak - exp_peak) <= 5 for exp_peak in expected_peaks)]
-
-        # Color the graph based on inward/outward facing DNA
-        for peak in actual_peaks:
-            # Define the region around the peak as inward facing (blue)
-            start_inward = max(0, peak - int(half_period))
-            end_inward = min(len(x_smooth) - 1, peak + int(half_period))
-            ax.plot(x_smooth[start_inward:end_inward], y_smooth[start_inward:end_inward], color='blue', linewidth=2)
-
-    # Plot the entire smooth line (if smoothing was done) in black as the background
-    ax.plot(x_smooth, y_smooth, color='black', linewidth=1, label='Smoothed Data')
-
-    # Label outward facing regions (not covered by peaks) as green
-    outward_mask = np.ones(len(y_smooth), dtype=bool)
-    for peak in actual_peaks:
-        start_inward = max(0, peak - int(half_period))
-        end_inward = min(len(y_smooth) - 1, peak + int(half_period))
-        outward_mask[start_inward:end_inward] = False
-
-    ax.plot(x_smooth[outward_mask], y_smooth[outward_mask], color='green', linewidth=2)
-
-    # Add a custom legend for the colors
-    from matplotlib.lines import Line2D
-    legend_elements = [
-        Line2D([0], [0], color='black', lw=1, label='Background'),
-        Line2D([0], [0], color='green', lw=2, label='Outward Facing DNA'),
-        Line2D([0], [0], color='blue', lw=2, label='Inward Facing DNA'),
-    ]
-    ax.legend(handles=legend_elements, loc='upper right')
+    # Plot the original data, the linear trend, and the polynomial fit
+    ax.scatter(x, y, c='black', s=2, label='Original Data')  # Scatter plot of the original data
+    ax.plot(x, trend_y, color='red', label='Linear Trend')   # Linear trend line
+    ax.plot(x, poly_y, color='blue', label='Polynomial Fit') # Polynomial trend line
 
     # Setting the title and labels
     ax.set_title(title)
     ax.set_xlabel('Nucleotide Position Relative to Nucleosome Dyad (bp)')
     ax.set_ylabel('Mutation Counts Normalized to Context')
+    ax.legend() # Show the legend to differentiate the lines
 
 
 wt_total = data_frame_operations.DataFormatter.read_dataframe('/media/cam/Working/8-oxodG/lesion_files/vcf/SRR_treated_cellular_69-70_proteomutics/SRR_treated_cellular_69-70.counts')
