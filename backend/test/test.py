@@ -121,23 +121,6 @@ def make_73_graph_matplotlib(ax, mutation_data: pd.DataFrame, title:str, smoothi
     green_points = valley_x_coordinates if 0 in valley_x_coordinates else peak_x_coordinates
     blue_points = peak_x_coordinates if 0 not in valley_x_coordinates else valley_x_coordinates
 
-    
-
-
-    # Function to color a region around a point
-    def color_region(ax, x, y, point, window_size, color):
-        idx = np.abs(x - point).argmin()
-        start_idx = max(idx - window_size, 0)
-        end_idx = min(idx + window_size + 1, len(x))
-        ax.plot(x[start_idx:end_idx], y[start_idx:end_idx], color=color, lw=2)
-
-    # Color the regions
-    for point in green_points:
-        color_region(ax, x, y, point, window_size, 'green')
-
-    for point in blue_points:
-        color_region(ax, x, y, point, window_size, 'blue')
-
     # Plot the original data, the linear trend, and the polynomial fit
     ax.scatter(x, y, c='black', s=2, label='Original Data')  # Scatter plot of the original data
     ax.plot(x, trend_y, color='red', label='Linear Trend')   # Linear trend line
