@@ -7,6 +7,7 @@ sys.path.append('/home/cam/Documents/repos/ProteoMutics/backend')
 from app.utils import data_frame_operations, tools
 from scipy.stats import linregress
 from scipy.interpolate import make_interp_spline
+from scipy.signal import find_peaks
 
 
 def make_graph_matplotlib(ax, mutation_data: pd.DataFrame, title:str, interpolate_method: bool = False, smoothing_method: None = None):
@@ -93,7 +94,60 @@ def make_73_graph_matplotlib(ax, mutation_data: pd.DataFrame, title:str, smoothi
         spline = make_interp_spline(x_smooth, y_smooth, k=3)
         x_spline = np.linspace(x_smooth.min(), x_smooth.max(), 500)
         y_spline = spline(x_spline)
-        ax.plot(x_spline, y_spline, color='green', label='Smoothed Curve')
+        ax.plot(x_spline, y_spline, color='black', label='Smoothed Curve', lw=1)
+
+    # Your processing with Tools methods
+    overall_period, overall_confidence, overall_signal_to_noise = tools.find_periodicity(x, y, min_period=50)
+    print(f"Overall period: {overall_period}, confidence: {overall_confidence}, signal to noise: {overall_signal_to_noise}")
+
+    # Determine which set contains the zero point and color it green
+    half_period = overall_period / 2
+
+    # Find peaks (local maxima) and valleys (local minima)
+    # For peaks
+    peaks, _ = find_peaks(y, distance=7)
+    peak_x_coordinates = x[peaks]
+    print(f"Peaks: {peak_x_coordinates}")
+    # For valleys (minima), you invert the y array
+    valleys, _ = find_peaks(-y, distance=7)
+    valley_x_coordinates = x[valleys]
+    print(f"Valleys: {valley_x_coordinates}")
+
+    window_size = int(overall_period // 2)
+
+    # Select the right set to color in green and the other to color in blue
+    # If 0 is within the x range of your data, check if it's closer to a peak or a valley
+    # Then color that set green, and the other blue
+    green_points = valley_x_coordinates if 0 in valley_x_coordinates else peak_x_coordinates
+    blue_points = peak_x_coordinates if 0 not in valley_x_coordinates else valley_x_coordinates
+
+    # Function to color a region around a point
+    def color_region(ax, x, y, points, window_size, color):
+        for point in points:
+            # Find the index of the x value that corresponds to the current point
+            idx = np.abs(x - point).argmin()
+            start_idx = max(idx - window_size, 0)
+            end_idx = min(idx + window_size + 1, len(x))
+            ax.plot(x[start_idx:end_idx], y[start_idx:end_idx], color=color, lw=2)
+
+    # Color the regions
+    color_region(ax, x, y, green_points, window_size, 'green')
+    color_region(ax, x, y, blue_points, window_size, 'blue')
+
+
+    # Function to color a region around a point
+    def color_region(ax, x, y, point, window_size, color):
+        idx = np.abs(x - point).argmin()
+        start_idx = max(idx - window_size, 0)
+        end_idx = min(idx + window_size + 1, len(x))
+        ax.plot(x[start_idx:end_idx], y[start_idx:end_idx], color=color, lw=2)
+
+    # Color the regions
+    for point in green_points:
+        color_region(ax, x, y, point, window_size, 'green')
+
+    for point in blue_points:
+        color_region(ax, x, y, point, window_size, 'blue')
 
     # Plot the original data, the linear trend, and the polynomial fit
     ax.scatter(x, y, c='black', s=2, label='Original Data')  # Scatter plot of the original data
