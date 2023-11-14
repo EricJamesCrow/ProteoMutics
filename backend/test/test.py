@@ -8,60 +8,134 @@ from app.utils import data_frame_operations, tools
 from scipy.stats import linregress
 from scipy.interpolate import make_interp_spline
 from scipy.signal import find_peaks
+import matplotlib.lines as mlines
 
+# Define your color palette
+colors_graph1 = ['#008B8B', '#960018']  # Dark Cyan, Carmine Red
+colors_graph2 = ['#4B0082', '#FF8C00', '#228B22']  # Indigo, Dark Orange, Forest Green
+plt.style.use('seaborn-whitegrid')  # A clean style for the plot
+plt.rcParams['font.family'] = 'Arial'  # Set a global font family
 
-def make_graph_matplotlib(ax, mutation_data: pd.DataFrame, title:str, interpolate_method: bool = False, smoothing_method: None = None):
+def make_graph_matplotlib(ax, mutation_data: pd.DataFrame, title:str, smoothing_method: None = None):
+    plt.style.use('seaborn-whitegrid')  # A clean style for the plot
+    plt.rcParams['font.family'] = 'Arial'  # Set a global font family
     indexes = mutation_data.index.tolist()
     graph_values = []
     for item in indexes:
         graph_values.append(sum(mutation_data.loc[item]))
     
+    ax.set_xlim([-1000, 1000])  # Set the limits for the x-axis
+
     x = np.array(indexes)
     y = np.array(graph_values)
 
-
     if smoothing_method:
-        x, y = tools.smooth_data(x, y, method=smoothing_method, window_size=55, poly_order=3)
-        # x_smooth, y_smooth = tools.smooth_data(x, y, method=smoothing_method, window_size=55, poly_order=3)
-        # spline = make_interp_spline(x_smooth, y_smooth, k=3)
-        # x_spline = np.linspace(x_smooth.min(), x_smooth.max(), 500)
-        # y_spline = spline(x_spline)
-        # ax.plot(x_spline, y_spline, color='green', label='Smoothed Curve')
+        # Assuming tools is an object with methods for smoothing and interpolation.
+        x_smooth, y_smooth = tools.smooth_data(x, y, method=smoothing_method, window_size=101, poly_order=7)
+        spline = make_interp_spline(x_smooth, y_smooth, k=3)
+        x_spline = np.linspace(x_smooth.min(), x_smooth.max(), 10000)
+        y_spline = spline(x_spline)
+    else:
+        # No smoothing or interpolation, create spline data directly from raw data.
+        spline = make_interp_spline(x, y, k=3)
+        x_spline = np.linspace(x.min(), x.max(), 10000)
+        y_spline = spline(x_spline)
 
-    if interpolate_method:
-        x, y = tools.interpolate_missing_data(x, y, -1000, 1000, interpolate_method)
-
-    # Your processing with Tools methods
-    overall_period, overall_confidence, overall_signal_to_noise = tools.find_periodicity(x, y, min_period=50)
+    # Your processing with Tools methods to find periodicity
+    overall_period, overall_confidence, overall_signal_to_noise = tools.find_periodicity(x_spline, y_spline, min_period=50)
     print(f"Overall period: {overall_period}, confidence: {overall_confidence}, signal to noise: {overall_signal_to_noise}")
 
-    # Identify peaks based on overall_period
-    peaks = [0]
-    while peaks[-1] + overall_period < x[-1]:
-        peaks.append(peaks[-1] + overall_period)
-    while peaks[0] - overall_period > x[0]:
-        peaks.insert(0, peaks[0] - overall_period)
+    # X-axis range and number of data points
+    x_axis_range = 1000 - (-1000)  # 2000 units
+    num_data_points = 10000  # You have this many points in your spline
+
+    # Number of data points per x-axis unit
+    data_points_per_unit = num_data_points / x_axis_range
+
+    # Desired peak width in x-axis units
+    # If you want the width of the peak to be say 1/5th of the period:
+    desired_peak_width_x_units = overall_period // 7
+
+    # Convert this width to data points
+    desired_peak_width_data_points = desired_peak_width_x_units * data_points_per_unit
+
+    # Calculate peak distance as 80% of overall period in data points
+    peak_distance = round(overall_period * 0.8 * data_points_per_unit)
+
+    # For peaks
+    peaks, properties = find_peaks(y_spline, distance=peak_distance, width=desired_peak_width_data_points)
+    if peaks.size > 0:
+        peak_x_coordinates = x_spline[peaks]
+        peak_widths = properties["widths"]  # This gives you the widths of the found peaks
+    else:
+        peak_x_coordinates = []
+        peak_widths = []
+
+    # Now, find the index of the peak that is closest to zero
+    if peaks.size > 0:
+        peak_x_coordinates = x_spline[peaks]
+        # Get the index within 'peak_x_coordinates' array that is closest to zero
+        closest_peak_index = np.argmin(np.abs(peak_x_coordinates))
+        closest_peak_to_zero = peak_x_coordinates[closest_peak_index]
+
+        # If the closest peak is not exactly at zero, adjust it to be at zero
+        if closest_peak_to_zero != 0:
+            # Replace the x-coordinate of this peak with zero
+            peak_x_coordinates[closest_peak_index] = 0
+
+        # Update peaks array after setting the closest peak to zero
+        peaks[closest_peak_index] = np.argmin(np.abs(x_spline - 0))
+
+        # Now, ensure there are no peaks within 73 units of the zero peak
+        valid_peak_indices = [i for i in range(len(peak_x_coordinates)) if i == closest_peak_index or np.abs(peak_x_coordinates[i]) > 73]
+
+        # Update the 'peaks' and 'peak_x_coordinates' to only include the valid peaks
+        peaks = peaks[valid_peak_indices]
+        peak_x_coordinates = peak_x_coordinates[valid_peak_indices]
 
     def in_red_region(val):
-        for peak in peaks:
+        for peak in peak_x_coordinates:
             if peak - 73 <= val <= peak + 73:
                 return True
         return False
 
-    # Plotting on the passed ax
-    ax.scatter(x, y, c='black', s=2)
-    for i in range(1, len(x)):
-        if in_red_region(x[i-1]) and in_red_region(x[i]):
-            ax.plot(x[i-1:i+1], y[i-1:i+1], color='red')
+    # Plotting on the passed ax using spline data
+    ax.scatter(x, y, marker='.', s=2, color='darkgrey', alpha=0.6) # Scatter plot of the original data
+    for i in range(1, len(x_spline)):
+        if in_red_region(x_spline[i-1]) and in_red_region(x_spline[i]):
+            ax.plot(x_spline[i-1:i+1], y_spline[i-1:i+1], color=colors_graph1[0])
         else:
-            ax.plot(x[i-1:i+1], y[i-1:i+1], color='blue')
-    ax.set_title(title)
-    ax.set_xlabel('Nucleotide Position Relative to Nucleosome Dyad (bp)')
-    ax.set_ylabel('Mutation Counts Normalized to Context')
+            ax.plot(x_spline[i-1:i+1], y_spline[i-1:i+1], color=colors_graph1[1])
+
+    # Set the x-axis limits based on the min and max of the spline data
+    # ax.set_ylim([y_spline.min()*1.10, y_spline.max()*1.10])
+    # SPECIFIC USE CASE
+    ax.set_ylim([-0.1, 0.2])
+
+    ax.set_title(title, fontsize=20, weight='bold')
+    ax.set_xlabel('Nucleotide Position Relative to Nucleosome Dyad (bp)', fontsize=16, weight='bold')
+    ax.set_ylabel('Fold Change', fontsize=16, weight='bold')
+    ax.tick_params(axis='both', which='major', labelsize=12)
+
+    # Create custom legend handles
+    green_line = mlines.Line2D([], [], color=colors_graph1[0], markersize=15, label='Nucleosomal DNA')
+    orange_line = mlines.Line2D([], [], color=colors_graph1[1], markersize=15, label='Linker DNA')
+    # black_dot = mlines.Line2D([], [], marker='.', markersize=5, color='darkgrey', linestyle='None', label='Original Data')
+
+    # Add custom legend handles
+    legend = ax.legend(handles=[green_line, orange_line], loc='upper right', fontsize=12,
+                   framealpha=0.5, facecolor='white', edgecolor='black', frameon=True, 
+                   borderpad=0.2, labelspacing=0.2, handletextpad=0.2)
+    # ax.legend(handles=[green_line, orange_line], loc='upper right', fontsize=12)
 
 def make_73_graph_matplotlib(ax, mutation_data: pd.DataFrame, title:str, smoothing_method):
+    plt.style.use('seaborn-whitegrid')  # A clean style for the plot
+    plt.rcParams['font.family'] = 'Arial'  # Set a global font family
     # Filter the data for the desired range (-72 to +72)
     mutation_data = mutation_data[(mutation_data.index >= -72) & (mutation_data.index <= 72)]
+
+    ax.set_xlim([-72, 72])  # Set the limits for the x-axis
+    # ax.set_ylim([-10, 10])  # Set the limits for the y-axis
 
     # Now, the 'indexes' will only contain values from -72 to +72
     indexes = mutation_data.index.tolist()
@@ -92,45 +166,110 @@ def make_73_graph_matplotlib(ax, mutation_data: pd.DataFrame, title:str, smoothi
         # x_smooth, y_smooth = x, y
         # Use spline interpolation for a smooth curve
         spline = make_interp_spline(x_smooth, y_smooth, k=3)
-        x_spline = np.linspace(x_smooth.min(), x_smooth.max(), 500)
+        x_spline = np.linspace(x_smooth.min(), x_smooth.max(), 10000)
         y_spline = spline(x_spline)
         ax.plot(x_spline, y_spline, color='black', label='Smoothed Curve', lw=1)
 
     # Your processing with Tools methods
-    overall_period, overall_confidence, overall_signal_to_noise = tools.find_periodicity(x, y, min_period=50)
+    overall_period, overall_confidence, overall_signal_to_noise = tools.find_periodicity(x, y, min_period=2, max_period=25)
     print(f"Overall period: {overall_period}, confidence: {overall_confidence}, signal to noise: {overall_signal_to_noise}")
 
-    # Determine which set contains the zero point and color it green
-    half_period = overall_period / 2
+    # Calculate the distance parameter as half the period in data points
+    peak_distance = round(overall_period*0.8)
 
-    # Find peaks (local maxima) and valleys (local minima)
+    # X-axis range and number of data points
+    x_axis_range = 72 - (-72)  # 144 units
+    num_data_points = 10000  # You have this many points in your spline
+
+    # Number of data points per x-axis unit
+    data_points_per_unit = num_data_points / x_axis_range
+
+    # Desired peak width in x-axis units, say you want a peak width of 2 units as an example
+    desired_peak_width_x_units = overall_period // 3
+
+    # Convert this width to data points
+    desired_peak_width_data_points = desired_peak_width_x_units * data_points_per_unit
+
     # For peaks
-    peaks, _ = find_peaks(y, distance=7)
-    peak_x_coordinates = x[peaks]
-    print(f"Peaks: {peak_x_coordinates}")
-    # For valleys (minima), you invert the y array
-    valleys, _ = find_peaks(-y, distance=7)
-    valley_x_coordinates = x[valleys]
-    print(f"Valleys: {valley_x_coordinates}")
+    peaks, properties = find_peaks(y_spline, distance=peak_distance, width=desired_peak_width_data_points)
+    if peaks.size > 0:
+        peak_x_coordinates = x_spline[peaks]
+        peak_widths = properties["widths"]  # This gives you the widths of the found peaks
+    else:
+        peak_x_coordinates = []
+        peak_widths = []
 
-    window_size = int(overall_period // 2)
+    # Similarly for valleys, but inverted
+    valleys, properties = find_peaks(-y_spline, distance=peak_distance, width=desired_peak_width_data_points)
+    if valleys.size > 0:
+        valley_x_coordinates = x_spline[valleys]
+        valley_widths = properties["widths"]
+    else:
+        valley_x_coordinates = []
+        valley_widths = []
 
-    # Select the right set to color in green and the other to color in blue
-    # If 0 is within the x range of your data, check if it's closer to a peak or a valley
-    # Then color that set green, and the other blue
-    green_points = valley_x_coordinates if 0 in valley_x_coordinates else peak_x_coordinates
-    blue_points = peak_x_coordinates if 0 not in valley_x_coordinates else valley_x_coordinates
+    # Helper function to color a segment
+    def color_segment(start, end, color):
+        mask = (x_spline >= start) & (x_spline <= end)
+        ax.plot(x_spline[mask], y_spline[mask], color=color, lw=2)
+
+    # Combine the arrays
+    combined_points = np.concatenate((peak_x_coordinates, valley_x_coordinates))
+
+    # Sort the combined array
+    sorted_points = np.sort(combined_points)
+
+    # Calculate midpoints between every two points
+    midpoints = (sorted_points[:-1] + sorted_points[1:]) / 2
+    midpoints = np.append(midpoints, [-72, 72])
+    midpoints = np.sort(midpoints)
+
+    for i in range(len(midpoints)):
+        if midpoints[i] <= 0 <= midpoints[i+1]:
+            color_segment(midpoints[i], midpoints[i+1], colors_graph2[0])
+            zero_index = i
+    green = True
+    for i in range(zero_index, -1, -1):
+        if green:
+            color_segment(midpoints[i-1], midpoints[i], colors_graph2[1])
+            green = False
+        else:
+            color_segment(midpoints[i-1], midpoints[i], colors_graph2[0])
+            green = True
+    for i in range(zero_index + 1, len(midpoints)-1, 1):
+        if green:
+            color_segment(midpoints[i], midpoints[i+1], colors_graph2[1])
+            green = False
+        else:
+            color_segment(midpoints[i], midpoints[i+1], colors_graph2[0])
+            green = True
 
     # Plot the original data, the linear trend, and the polynomial fit
-    ax.scatter(x, y, c='black', s=2, label='Original Data')  # Scatter plot of the original data
-    ax.plot(x, trend_y, color='red', label='Linear Trend')   # Linear trend line
-    ax.plot(x, poly_y, color='blue', label='Polynomial Fit') # Polynomial trend line
+    ax.scatter(x, y, marker='.', s=10, color='darkgrey', alpha=0.6, label='Original Data')  # Scatter plot of the original data
+    # ax.plot(x, trend_y, color='red', label='Linear Trend')   # Linear trend line
+    ax.plot(x, poly_y, color=colors_graph2[2], label='Polynomial Fit', linestyle = '--') # Polynomial trend line
+
+    # set the y limit to include the smoothed data and the trend line
+    # ax.set_ylim([y_spline.min()*1.10, y_spline.max()*1.10])
+    # SPECIFIC USE CASE
+    ax.set_ylim([-0.2, 0.4])
 
     # Setting the title and labels
-    ax.set_title(title)
-    ax.set_xlabel('Nucleotide Position Relative to Nucleosome Dyad (bp)')
-    ax.set_ylabel('Mutation Counts Normalized to Context')
-    ax.legend() # Show the legend to differentiate the lines
+    ax.set_title(title, fontsize=20, weight='bold')
+    ax.set_xlabel('Nucleotide Position Relative to Nucleosome Dyad (bp)', fontsize=16, weight='bold')
+    ax.set_ylabel('Fold Change', fontsize=16, weight='bold')
+    ax.tick_params(axis='both', which='major', labelsize=12)
+    
+    # Create custom legend handles
+    green_line = mlines.Line2D([], [], color=colors_graph2[1], markersize=15, label='Inward Facing DNA')
+    orange_line = mlines.Line2D([], [], color=colors_graph2[0], markersize=15, label='Outward Facing DNA')
+    # black_dot = mlines.Line2D([], [], marker='.', markersize=5, color='darkgrey', linestyle='None', label='Original Data')
+    blue_line = mlines.Line2D([], [], color=colors_graph2[2], markersize=15, linestyle='--', label='Binomial Fit')
+
+    # Add custom legend handles
+    ax.legend(handles=[green_line, orange_line, blue_line],  loc='upper right', fontsize=12,
+                   framealpha=0.5, facecolor='white', edgecolor='black', frameon=True, 
+                   borderpad=0.2, labelspacing=0.2, handletextpad=0.2)
 
 
 wt_total = data_frame_operations.DataFormatter.read_dataframe('/media/cam/Working/8-oxodG/lesion_files/vcf/SRR_treated_cellular_69-70_proteomutics/SRR_treated_cellular_69-70.counts')
@@ -147,11 +286,11 @@ data_formatter = data_frame_operations.DataFormatter.genome_wide_normalization(w
 data_formatter2 = data_frame_operations.DataFormatter.genome_wide_normalization(wt_total, new_dyads_counts, new_genomic_counts, new_wt_intersect)
 
 # Create a figure and a grid of subplots with 2 rows and 1 column.
-fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(10, 8))
+fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(8, 6))
 
 # Use the first Axes (ax1) for the first function and the second Axes (ax2) for the second function.
-make_graph_matplotlib(ax1, data_formatter, 'WT Dyads', smoothing_method='savgol_filter')
-make_73_graph_matplotlib(ax2, data_formatter, 'WT Dyads 73', smoothing_method='savgol_filter')
+make_graph_matplotlib(ax1, data_formatter2, 'Mutations Across Nucleosomes', smoothing_method='savgol_filter')
+make_73_graph_matplotlib(ax2, data_formatter2, 'Mutations Within Nucleosomes', smoothing_method='savgol_filter')
 # Adjust the layout of the subplots to prevent overlap.
 plt.tight_layout()
 
