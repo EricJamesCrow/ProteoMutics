@@ -47,7 +47,7 @@ class DyadFastaCounter:
         for i in range(-1000, 1001):
             context = sequence[i+1000 : i + 1003]
             if context not in self.context_list:
-                raise ValueError(f"Error in process {mp.current_process().pid}: Invalid context {context} at position {i}")
+                raise ValueError(f"Error in process {mp.current_process().pid}: Invalid context {context} at position {i}, sequence: {sequence}")
             counts[i][context] += 1
         return counts
 
@@ -84,7 +84,13 @@ class DyadFastaCounter:
 
     def aggregate_results(self, results: list) -> None:
         for result in results:
-            block_counts = result.get()
+            try:
+                block_counts = result.get()
+            except:
+                raise ValueError(f"Error in process {mp.current_process().pid}: Invalid result {result.get()}")
             for i in range(-1000, 1001):
-                for context in self.context_list:
-                    self.counts[i][context] += block_counts[i][context]
+                try:    
+                    for context in self.context_list:
+                        self.counts[i][context] += block_counts[i][context]
+                except:
+                    raise ValueError(f"Error in process {mp.current_process().pid}: Invalid counts {block_counts[i]} at position {i}")

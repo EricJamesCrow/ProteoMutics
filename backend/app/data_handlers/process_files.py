@@ -225,8 +225,12 @@ class DyadFile:
         with open(dyad_file, 'r') as f, open(dyad_file.with_suffix('.tmp'), 'w') as o:
             for line in f:
                 tsv = line.strip().split()
-                new_start = str(int(tsv[1]) - 1001)
-                new_end = str(int(tsv[2]) + 1001)
+                midpoint = int(tsv[1]) + (int(tsv[2]) - int(tsv[1])) / 2
+                rounded_midpoint = int(midpoint)
+                new_start = str(int(rounded_midpoint) - 1001)
+                new_end = str(int(rounded_midpoint) + 1002)
+                # new_start = str(int(tsv[1]) - 1001)
+                # new_end = str(int(tsv[2]) + 1001)
                 if int(new_start) < 0: continue
                 new_line_values = [tsv[0], new_start, new_end] + tsv[3:]
                 o.write('\t'.join(new_line_values) + '\n')

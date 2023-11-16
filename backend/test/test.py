@@ -13,11 +13,11 @@ import matplotlib.lines as mlines
 # Define your color palette
 colors_graph1 = ['#008B8B', '#960018']  # Dark Cyan, Carmine Red
 colors_graph2 = ['#4B0082', '#FF8C00', '#228B22']  # Indigo, Dark Orange, Forest Green
-plt.style.use('seaborn-whitegrid')  # A clean style for the plot
+# plt.style.use('seaborn-whitegrid')  # A clean style for the plot
 plt.rcParams['font.family'] = 'Arial'  # Set a global font family
 
 def make_graph_matplotlib(ax, mutation_data: pd.DataFrame, title:str, smoothing_method: None = None):
-    plt.style.use('seaborn-whitegrid')  # A clean style for the plot
+    # plt.style.use('seaborn-whitegrid')  # A clean style for the plot
     plt.rcParams['font.family'] = 'Arial'  # Set a global font family
     indexes = mutation_data.index.tolist()
     graph_values = []
@@ -31,7 +31,7 @@ def make_graph_matplotlib(ax, mutation_data: pd.DataFrame, title:str, smoothing_
 
     if smoothing_method:
         # Assuming tools is an object with methods for smoothing and interpolation.
-        x_smooth, y_smooth = tools.smooth_data(x, y, method=smoothing_method, window_size=101, poly_order=7)
+        x_smooth, y_smooth = tools.smooth_data(x, y, method=smoothing_method, window_size=301, poly_order=7)
         spline = make_interp_spline(x_smooth, y_smooth, k=3)
         x_spline = np.linspace(x_smooth.min(), x_smooth.max(), 10000)
         y_spline = spline(x_spline)
@@ -108,9 +108,9 @@ def make_graph_matplotlib(ax, mutation_data: pd.DataFrame, title:str, smoothing_
             ax.plot(x_spline[i-1:i+1], y_spline[i-1:i+1], color=colors_graph1[1])
 
     # Set the x-axis limits based on the min and max of the spline data
-    # ax.set_ylim([y_spline.min()*1.10, y_spline.max()*1.10])
+    ax.set_ylim([y_spline.min()*1.10, y_spline.max()*1.10])
     # SPECIFIC USE CASE
-    ax.set_ylim([-0.1, 0.2])
+    # ax.set_ylim([-0.1, 0.2])
 
     ax.set_title(title, fontsize=20, weight='bold')
     ax.set_xlabel('Nucleotide Position Relative to Nucleosome Dyad (bp)', fontsize=16, weight='bold')
@@ -129,13 +129,12 @@ def make_graph_matplotlib(ax, mutation_data: pd.DataFrame, title:str, smoothing_
     # ax.legend(handles=[green_line, orange_line], loc='upper right', fontsize=12)
 
 def make_73_graph_matplotlib(ax, mutation_data: pd.DataFrame, title:str, smoothing_method):
-    plt.style.use('seaborn-whitegrid')  # A clean style for the plot
+    # plt.style.use('seaborn-whitegrid')  # A clean style for the plot
     plt.rcParams['font.family'] = 'Arial'  # Set a global font family
     # Filter the data for the desired range (-72 to +72)
     mutation_data = mutation_data[(mutation_data.index >= -72) & (mutation_data.index <= 72)]
 
     ax.set_xlim([-72, 72])  # Set the limits for the x-axis
-    # ax.set_ylim([-10, 10])  # Set the limits for the y-axis
 
     # Now, the 'indexes' will only contain values from -72 to +72
     indexes = mutation_data.index.tolist()
@@ -250,9 +249,9 @@ def make_73_graph_matplotlib(ax, mutation_data: pd.DataFrame, title:str, smoothi
     ax.plot(x, poly_y, color=colors_graph2[2], label='Polynomial Fit', linestyle = '--') # Polynomial trend line
 
     # set the y limit to include the smoothed data and the trend line
-    # ax.set_ylim([y_spline.min()*1.10, y_spline.max()*1.10])
+    ax.set_ylim([y_spline.min()*1.10, y_spline.max()*1.10])
     # SPECIFIC USE CASE
-    ax.set_ylim([-0.2, 0.4])
+    # ax.set_ylim([-0.2, 0.4])
 
     # Setting the title and labels
     ax.set_title(title, fontsize=20, weight='bold')
@@ -272,27 +271,34 @@ def make_73_graph_matplotlib(ax, mutation_data: pd.DataFrame, title:str, smoothi
                    borderpad=0.2, labelspacing=0.2, handletextpad=0.2)
 
 
-wt_total = data_frame_operations.DataFormatter.read_dataframe('/media/cam/Working/8-oxodG/lesion_files/vcf/SRR_treated_cellular_69-70_proteomutics/SRR_treated_cellular_69-70.counts')
-wt_intersect = data_frame_operations.DataFormatter.read_dataframe('/media/cam/Working/8-oxodG/lesion_files/vcf/SRR_treated_cellular_69-70_proteomutics/SRR_treated_cellular_69-70_hg19_MNase_nucleosome_map_all.intersect')
+wt_total = data_frame_operations.DataFormatter.read_dataframe("/home/cam/Documents/AtHomeAnalysis/KBr_treated_proteomutics/KBr_treated.counts")
+wt_intersect = data_frame_operations.DataFormatter.read_dataframe("/home/cam/Documents/AtHomeAnalysis/KBr_treated_proteomutics/KBr_treated_non_filtered_TF_map_1000.intersect")
 
-dyads_counts = data_frame_operations.DataFormatter.read_dataframe('/media/cam/Working/ProteoMuticsTest/hg19_MNase_nucleosome_map_all_proteomutics/hg19_MNase_nucleosome_map_all.counts')
-genomic_counts = data_frame_operations.DataFormatter.read_dataframe('/media/cam/Working/ProteoMuticsTest/hg19.counts')
+dyads_counts = data_frame_operations.DataFormatter.read_dataframe("/home/cam/Documents/AtHomeAnalysis/non_filtered_TF_map_1000_proteomutics/non_filtered_TF_map_1000.counts")
+genomic_counts = data_frame_operations.DataFormatter.read_dataframe('/home/cam/Documents/AtHomeAnalysis/hg19/hg19.counts')
 
 new_dyads_counts = data_frame_operations.DataFormatter.reverse_complement_positional_strand_conversion(dyads_counts)
 new_genomic_counts = data_frame_operations.DataFormatter.reverse_complement_tri_counts(genomic_counts)
-new_wt_intersect = data_frame_operations.DataFormatter.read_dataframe('/media/cam/Working/8-oxodG/lesion_files/vcf/SRR_treated_cellular_69-70_proteomutics/SRR_treated_cellular_69-70_hg19_MNase_nucleosome_map_all_flipped.intersect')
+# new_wt_intersect = data_frame_operations.DataFormatter.read_dataframe('/media/cam/Working/8-oxodG/lesion_files/vcf/SRR_treated_cellular_69-70_proteomutics/SRR_treated_cellular_69-70_hg19_MNase_nucleosome_map_all_flipped.intersect')
 
 data_formatter = data_frame_operations.DataFormatter.genome_wide_normalization(wt_total, dyads_counts, genomic_counts, wt_intersect)
-data_formatter2 = data_frame_operations.DataFormatter.genome_wide_normalization(wt_total, new_dyads_counts, new_genomic_counts, new_wt_intersect)
+# data_formatter2 = data_frame_operations.DataFormatter.genome_wide_normalization(wt_total, new_dyads_counts, new_genomic_counts, new_wt_intersect)
 
 # Create a figure and a grid of subplots with 2 rows and 1 column.
 fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(8, 6))
 
 # Use the first Axes (ax1) for the first function and the second Axes (ax2) for the second function.
-make_graph_matplotlib(ax1, data_formatter2, 'Mutations Across Nucleosomes', smoothing_method='savgol_filter')
-make_73_graph_matplotlib(ax2, data_formatter2, 'Mutations Within Nucleosomes', smoothing_method='savgol_filter')
+make_graph_matplotlib(ax1, data_formatter, 'Mutations Across Nucleosomes', smoothing_method='savgol_filter')
+make_73_graph_matplotlib(ax2, data_formatter, 'Mutations Within Nucleosomes', smoothing_method='savgol_filter')
 # Adjust the layout of the subplots to prevent overlap.
 plt.tight_layout()
 
 # Show the plot.
+plt.savefig('/home/cam/Documents/AtHomeAnalysis/figures/301_smoothed_tf.svg', format='svg')
 plt.show()
+
+with open('/home/cam/Documents/AtHomeAnalysis/ensGeneList_condensed_no_zero.bed') as f, open('/home/cam/Documents/AtHomeAnalysis/ensGeneList_condensed_no_zero_TSS.bed', 'w') as o:
+    for line in f:
+        line = line.strip().split('\t')
+        line[2] = str(int(line[1]) + 1)
+        o.write('\t'.join(line) + '\n')
