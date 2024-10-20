@@ -37,9 +37,3 @@ docker-compose exec app bash
 docker build -t proteomutics-api .
 docker run -d -p 8000:8000 proteomutics-api
 ```
-
-/media/cam/Working/ProteoMuticsTest/WT_KBr.vcf
-/media/cam/Working/ProteoMuticsTest/hg19_MNase_nucleosome_map_all_subset.bed
-/media/cam/Working/ProteoMuticsTest/hg19.fa
-/media/cam/Working/ProteoMuticsTest/hg19_MNase_nucleosome_map_all.bed
-/media/cam/Working/ProteoMuticsTest/hg19_MNase_nucleosome_map_intergenic.bed

@@ -108,13 +108,13 @@ def make_graph_matplotlib(ax, mutation_data: pd.DataFrame, title:str, smoothing_
             ax.plot(x_spline[i-1:i+1], y_spline[i-1:i+1], color=colors_graph1[1])
 
     # Set the x-axis limits based on the min and max of the spline data
-    ax.set_ylim([y_spline.min()*1.10, y_spline.max()*1.10])
+    # ax.set_ylim([y_spline.min()*1.10, y_spline.max()*1.10])
     # SPECIFIC USE CASE
     ax.set_ylim([-0.1, 0.2])
 
     ax.set_title(title, fontsize=20, weight='bold')
     ax.set_xlabel('Nucleotide Position Relative to Nucleosome Dyad (bp)', fontsize=16, weight='bold')
-    ax.set_ylabel('Fold Change', fontsize=16, weight='bold')
+    ax.set_ylabel(r'$\mathbf{log_{2}}\left(\frac{\mathbf{observed}}{\mathbf{expected}}\right)$', fontsize=16, weight='bold')
     ax.tick_params(axis='both', which='major', labelsize=12)
 
     # Create custom legend handles
@@ -249,14 +249,14 @@ def make_73_graph_matplotlib(ax, mutation_data: pd.DataFrame, title:str, smoothi
     ax.plot(x, poly_y, color=colors_graph2[2], label='Polynomial Fit', linestyle = '--') # Polynomial trend line
 
     # set the y limit to include the smoothed data and the trend line
-    ax.set_ylim([y_spline.min()*1.10, y_spline.max()*1.10])
+    # ax.set_ylim([y_spline.min()*1.10, y_spline.max()*1.10])
     # SPECIFIC USE CASE
     ax.set_ylim([-0.2, 0.4])
 
     # Setting the title and labels
     ax.set_title(title, fontsize=20, weight='bold')
     ax.set_xlabel('Nucleotide Position Relative to Nucleosome Dyad (bp)', fontsize=16, weight='bold')
-    ax.set_ylabel('Fold Change', fontsize=16, weight='bold')
+    ax.set_ylabel(r'$\mathbf{log_{2}}\left(\frac{\mathbf{observed}}{\mathbf{expected}}\right)$', fontsize=16, weight='bold')
     ax.tick_params(axis='both', which='major', labelsize=12)
     
     # Create custom legend handles
@@ -271,11 +271,11 @@ def make_73_graph_matplotlib(ax, mutation_data: pd.DataFrame, title:str, smoothi
                    borderpad=0.2, labelspacing=0.2, handletextpad=0.2)
 
 
-wt_total = data_frame_operations.DataFormatter.read_dataframe("/media/cam/Working/8-oxodG/pcawg/cosmic/Assignment_Solution/Activities/Decomposed_Mutation_Probabilities/70_combined_sorted_proteomutics/70_combined_sorted.counts")
-wt_intersect = data_frame_operations.DataFormatter.read_dataframe("/media/cam/Working/8-oxodG/pcawg/cosmic/Assignment_Solution/Activities/Decomposed_Mutation_Probabilities/70_combined_sorted_proteomutics/70_combined_sorted_hg19_MNase_nucleosome_map_all.intersect")
+wt_total = data_frame_operations.DataFormatter.read_dataframe("/media/cam/Storage/8-oxodG/REVISIONS/lesion_bed_with_sample_column/69-70_cellular_KBrO3.sorted_proteomutics/69-70_cellular_KBrO3.sorted.counts")
+wt_intersect = data_frame_operations.DataFormatter.read_dataframe("/media/cam/Storage/8-oxodG/REVISIONS/lesion_bed_with_sample_column/69-70_cellular_KBrO3.sorted_proteomutics/69-70_cellular_KBrO3.sorted_hg19_MNase_nucleosome_map_all.intersect")
 
-dyads_counts = data_frame_operations.DataFormatter.read_dataframe("/media/cam/Working/ProteoMuticsTest/hg19_MNase_nucleosome_map_all_proteomutics/hg19_MNase_nucleosome_map_all.counts")
-genomic_counts = data_frame_operations.DataFormatter.read_dataframe('/media/cam/Working/ProteoMuticsTest/hg19.counts')
+dyads_counts = data_frame_operations.DataFormatter.read_dataframe("/media/cam/Storage/8-oxodG/hmces/nucleosome/hg19_MNase_nucleosome_map_all_proteomutics/hg19_MNase_nucleosome_map_all.counts")
+genomic_counts = data_frame_operations.DataFormatter.read_dataframe('/home/cam/Documents/repos/ProteoMutics/backend/test/test_data/hg19.counts')
 
 new_dyads_counts = data_frame_operations.DataFormatter.reverse_complement_positional_strand_conversion(dyads_counts)
 new_genomic_counts = data_frame_operations.DataFormatter.reverse_complement_tri_counts(genomic_counts)
