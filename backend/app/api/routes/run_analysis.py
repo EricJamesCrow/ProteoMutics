@@ -1,5 +1,5 @@
 import sys
-sys.path.append(r'C:\Users\educa\Documents\Github\ProteoMutics\backend')
+sys.path.append('backend')
 
 #!/usr/bin/env python3
 import argparse
