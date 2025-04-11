@@ -23,6 +23,11 @@ def make_graph_matplotlib(ax, mutation_data: pd.DataFrame, title:str, smoothing_
     graph_values = []
     for item in indexes:
         graph_values.append(sum(mutation_data.loc[item]))
+
+    ######################################################
+    #write graph values to a table using pandas
+    table = pd.DataFrame(graph_values, index=indexes)
+    table.to_csv('/media/cam/Working/Data_Table/nucleosome_table.csv')
     
     ax.set_xlim([-1000, 1000])  # Set the limits for the x-axis
 
@@ -271,8 +276,8 @@ def make_73_graph_matplotlib(ax, mutation_data: pd.DataFrame, title:str, smoothi
                    borderpad=0.2, labelspacing=0.2, handletextpad=0.2)
 
 
-wt_total = data_frame_operations.DataFormatter.read_dataframe("/media/cam/Storage/8-oxodG/REVISIONS/lesion_bed_with_sample_column/69-70_cellular_KBrO3.sorted_proteomutics/69-70_cellular_KBrO3.sorted.counts")
-wt_intersect = data_frame_operations.DataFormatter.read_dataframe("/media/cam/Storage/8-oxodG/REVISIONS/lesion_bed_with_sample_column/69-70_cellular_KBrO3.sorted_proteomutics/69-70_cellular_KBrO3.sorted_hg19_MNase_nucleosome_map_all.intersect")
+wt_total = data_frame_operations.DataFormatter.read_dataframe("/media/cam/Storage/8-oxodG/pcawg/cosmic/Assignment_Solution/Activities/Decomposed_Mutation_Probabilities/70_combined_sorted_proteomutics/70_combined_sorted.counts")
+wt_intersect = data_frame_operations.DataFormatter.read_dataframe("/media/cam/Storage/8-oxodG/pcawg/cosmic/Assignment_Solution/Activities/Decomposed_Mutation_Probabilities/70_combined_sorted_proteomutics/70_combined_sorted_hg19_MNase_nucleosome_map_all.intersect")
 
 dyads_counts = data_frame_operations.DataFormatter.read_dataframe("/media/cam/Storage/8-oxodG/hmces/nucleosome/hg19_MNase_nucleosome_map_all_proteomutics/hg19_MNase_nucleosome_map_all.counts")
 genomic_counts = data_frame_operations.DataFormatter.read_dataframe('/home/cam/Documents/repos/ProteoMutics/backend/test/test_data/hg19.counts')
